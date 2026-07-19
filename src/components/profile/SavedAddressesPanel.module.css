@@ -1,0 +1,32 @@
+@media (max-width: 600px) {
+  .panel {
+    padding: 16px !important;
+  }
+
+  .addressRow {
+    flex-direction: column;
+  }
+
+  .addressRow > div {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .addressRow > div:last-child {
+    justify-content: flex-start !important;
+  }
+
+  .cityRow {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions > button {
+    width: 100%;
+  }
+}

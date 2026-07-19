@@ -1,0 +1,14 @@
+@media (max-width: 820px) {
+  .popover {
+    position: fixed !important;
+    top: auto !important;
+    right: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-height: min(78dvh, 640px) !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 60 !important;
+  }
+}

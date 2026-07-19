@@ -1,0 +1,32 @@
+@media (max-width: 600px) {
+  .container {
+    padding: 24px 14px 36px !important;
+  }
+
+  .container h1 {
+    font-size: 28px !important;
+  }
+
+  .container section {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .twoColumns {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .photoRow {
+    align-items: flex-start !important;
+  }
+
+  .photoRow > div:last-child {
+    min-width: 0;
+  }
+
+  .photoRow > div:last-child > div:nth-child(2) {
+    overflow-wrap: anywhere;
+  }
+}

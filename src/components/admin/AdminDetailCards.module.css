@@ -1,0 +1,36 @@
+@media (max-width: 600px) {
+  .card > button,
+  .card > div,
+  .userHeading {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .cardHeading {
+    align-items: flex-start !important;
+    flex-direction: column;
+  }
+
+  .cardHeading > div:last-child,
+  .cardHeading > span:last-child {
+    align-self: flex-start;
+  }
+
+  .userHeading {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  .userHeading > button:last-child {
+    width: 100%;
+  }
+
+  .metaGrid,
+  .recentGrid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .dashboard {
+    gap: 14px !important;
+  }
+}

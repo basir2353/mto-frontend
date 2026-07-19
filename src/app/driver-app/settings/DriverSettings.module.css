@@ -1,0 +1,153 @@
+.page {
+  min-height: 100vh;
+  background: #0e0e10;
+  color: #fff;
+  padding: calc(20px + env(safe-area-inset-top)) 24px calc(48px + env(safe-area-inset-bottom));
+}
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.headerCopy {
+  min-width: 0;
+}
+
+.saveButton {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 12px;
+  border: none;
+  color: #0e0e10;
+  font: 800 15px "Archivo";
+}
+
+.saveButtonDesktop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stickySave {
+  display: none;
+}
+
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  background: #f5f4ef;
+  color: #0e0e10;
+  border-radius: 16px;
+  padding: 22px 24px;
+  min-width: 0;
+}
+
+.avatarRow,
+.fieldsRow,
+.hoursRow {
+  display: flex;
+  gap: 14px;
+}
+
+.avatarRow {
+  align-items: center;
+  gap: 16px;
+}
+
+.map {
+  position: relative;
+  height: 220px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 820px) {
+  .page {
+    padding: calc(14px + env(safe-area-inset-top)) 12px calc(88px + env(safe-area-inset-bottom));
+  }
+
+  .header {
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+
+  .headerCopy {
+    width: 100%;
+  }
+
+  .header h1 {
+    font-size: 24px !important;
+  }
+
+  .saveButtonDesktop {
+    display: none;
+  }
+
+  .stickySave {
+    position: fixed;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: block;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(14, 14, 16, 0.94);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  .stickySave .saveButton {
+    width: 100%;
+  }
+
+  .section {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+
+  .section h2 {
+    font-size: 18px !important;
+  }
+
+  .fieldsRow,
+  .hoursRow {
+    flex-direction: column;
+  }
+
+  .fieldsRow > div,
+  .hoursRow > div {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .avatarRow {
+    align-items: flex-start;
+  }
+
+  .map {
+    height: 180px;
+  }
+}
+
+@media (max-width: 380px) {
+  .page {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}

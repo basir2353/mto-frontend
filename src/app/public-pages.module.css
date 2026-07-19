@@ -1,0 +1,347 @@
+.aboutHero,
+.aboutStats,
+.aboutStory,
+.aboutValues,
+.aboutSafety,
+.businessHero,
+.businessTrust,
+.businessFeatures,
+.businessCases,
+.businessContact,
+.helpHero,
+.helpCategories,
+.helpArticles,
+.helpContact {
+  box-sizing: border-box;
+}
+
+@media (max-width: 1000px) {
+  .aboutHero {
+    padding: 72px 32px 64px !important;
+  }
+
+  .aboutStats {
+    padding-inline: 32px !important;
+    gap: 28px 48px !important;
+    flex-wrap: wrap;
+  }
+
+  .aboutStats > * {
+    min-width: calc(25% - 36px);
+  }
+
+  .aboutStory {
+    padding: 64px 32px !important;
+    align-items: stretch !important;
+    flex-direction: column;
+    gap: 36px !important;
+  }
+
+  .aboutStoryCopy {
+    width: auto !important;
+  }
+
+  .aboutValues {
+    padding: 0 32px 64px !important;
+  }
+
+  .aboutValuesGrid,
+  .businessFeatureGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .aboutSafety {
+    padding: 0 32px 64px !important;
+  }
+
+  .aboutSafetyCard {
+    padding: 44px 40px !important;
+    align-items: stretch !important;
+    flex-direction: column;
+    gap: 32px !important;
+  }
+
+  .aboutSafetyList {
+    width: auto !important;
+  }
+
+  .businessHero {
+    padding: 64px 32px 72px !important;
+    align-items: stretch !important;
+    flex-direction: column;
+    gap: 40px !important;
+  }
+
+  .businessHeroCopy {
+    width: auto !important;
+  }
+
+  .businessHeroMedia {
+    min-height: 380px !important;
+  }
+
+  .businessTrust {
+    padding-inline: 32px !important;
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .businessTrustLogos {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 18px 32px !important;
+  }
+
+  .businessFeatures {
+    padding: 64px 32px 32px !important;
+  }
+
+  .businessCases {
+    padding: 40px 32px 64px !important;
+  }
+
+  .businessCaseGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .businessContact {
+    padding: 0 32px 64px !important;
+  }
+
+  .businessContactCard {
+    flex-direction: column;
+  }
+
+  .businessContactCopy {
+    padding: 44px 40px 28px !important;
+  }
+
+  .businessForm,
+  .businessFormSuccess {
+    width: 100% !important;
+    padding: 32px 40px 40px !important;
+  }
+
+  .helpHero {
+    padding: 64px 32px 56px !important;
+  }
+
+  .helpCategories {
+    padding: 56px 32px 32px !important;
+  }
+
+  .helpCategoryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .helpArticles {
+    padding: 24px 32px 36px !important;
+  }
+
+  .helpContact {
+    padding: 0 32px 64px !important;
+  }
+
+  .helpContactCard {
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 28px;
+    padding: 40px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .aboutHero,
+  .businessHero,
+  .helpHero {
+    padding: 52px 20px 48px !important;
+  }
+
+  .aboutHeroTitle {
+    font-size: 42px !important;
+    line-height: 1.04 !important;
+  }
+
+  .aboutHeroText {
+    font-size: 17px !important;
+  }
+
+  .aboutStats {
+    padding: 24px 20px !important;
+    gap: 24px 16px !important;
+  }
+
+  .aboutStats > * {
+    min-width: calc(50% - 8px);
+  }
+
+  .aboutStory {
+    padding: 48px 20px !important;
+    gap: 28px !important;
+  }
+
+  .aboutStoryMedia {
+    min-height: 260px !important;
+  }
+
+  .sectionTitle {
+    font-size: 30px !important;
+  }
+
+  .aboutValues {
+    padding: 0 20px 48px !important;
+  }
+
+  .aboutValuesGrid,
+  .businessFeatureGrid,
+  .businessCaseGrid,
+  .helpCategoryGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .aboutValueCard,
+  .businessFeatureCard,
+  .helpCategoryCard {
+    padding: 22px !important;
+  }
+
+  .aboutSafety {
+    padding: 0 20px 48px !important;
+  }
+
+  .aboutSafetyCard {
+    border-radius: 18px !important;
+    padding: 32px 22px !important;
+    gap: 26px !important;
+  }
+
+  .businessHero {
+    gap: 32px !important;
+  }
+
+  .businessHeroTitle {
+    font-size: 42px !important;
+    line-height: 1.02 !important;
+  }
+
+  .businessHeroActions {
+    flex-direction: column;
+  }
+
+  .businessHeroActions > * {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .businessHeroMedia {
+    min-height: 280px !important;
+  }
+
+  .businessHeroStat {
+    right: 16px;
+    bottom: 16px !important;
+    left: 16px !important;
+  }
+
+  .businessHeroStatValue {
+    font-size: 18px !important;
+  }
+
+  .businessTrust {
+    padding: 22px 20px !important;
+  }
+
+  .businessTrustLogos {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    font-size: 15px !important;
+    gap: 14px !important;
+  }
+
+  .businessFeatures {
+    padding: 48px 20px 28px !important;
+  }
+
+  .businessFeaturesHeading {
+    font-size: 34px !important;
+  }
+
+  .businessCases {
+    padding: 36px 20px 48px !important;
+  }
+
+  .businessContact {
+    padding: 0 20px 48px !important;
+  }
+
+  .businessContactCard {
+    border-radius: 18px !important;
+  }
+
+  .businessContactCopy {
+    padding: 32px 22px 20px !important;
+  }
+
+  .businessContactHeading {
+    font-size: 32px !important;
+  }
+
+  .businessForm,
+  .businessFormSuccess {
+    padding: 24px 22px 30px !important;
+  }
+
+  .helpHeroTitle {
+    font-size: 40px !important;
+  }
+
+  .helpSearch {
+    height: 56px !important;
+    padding-inline: 16px !important;
+    overflow: hidden;
+  }
+
+  .helpSearchText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .helpPopularTerms {
+    line-height: 1.7 !important;
+  }
+
+  .helpCategories {
+    padding: 48px 20px 28px !important;
+  }
+
+  .helpArticles {
+    padding: 20px 20px 32px !important;
+  }
+
+  .helpArticle {
+    align-items: flex-start !important;
+    gap: 16px;
+    padding: 17px 18px !important;
+    line-height: 1.4 !important;
+  }
+
+  .helpContact {
+    padding: 0 20px 48px !important;
+  }
+
+  .helpContactCard {
+    border-radius: 18px !important;
+    padding: 30px 22px !important;
+  }
+
+  .helpContactTitle {
+    font-size: 30px !important;
+  }
+
+  .helpContactButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

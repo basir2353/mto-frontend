@@ -1,0 +1,1532 @@
+"use client";
+
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { ChipToggle, TextArea } from "@/components/FormControls";
+import { formatMoveDate } from "@/components/DatePicker";
+import AuthGuard from "@/components/AuthGuard";
+import { AppIcon, StarRating } from "@/components/ui/Icons";
+import { PartyProfileCard, DeliveryProofGallery, moverDisplayName } from "@/components/move/JobPanels";
+import { PlanScreen } from "@/components/move/PlanScreen";
+import { DetailsScreen } from "@/components/move/DetailsScreen";
+import { QuotesScreen } from "@/components/move/QuotesScreen";
+import { BookScreen } from "@/components/move/BookScreen";
+import { TrackScreen } from "@/components/move/TrackScreen";
+import { WizardHeader, type WizardStepId } from "@/components/move/WizardChrome";
+import { FormCtx, useForm, type FormState, type Photo, type WhenChoice } from "@/contexts/MoveFormContext";
+import { CustomerWalletCheckout, CustomerWalletPanel, InvoicePreviewCard } from "@/components/move/WalletPanels";
+import { customerDisplayName } from "@/lib/displayNames";
+import type { CustomerWallet, PaymentInvoice, Booking } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { MoveFlowProvider, useMoveFlow } from "@/contexts/MoveFlowContext";
+import { customersApi, savedAddressesApi } from "@/lib/api";
+import { isTrackableBooking, isBookingJobPaid } from "@/lib/bookingFlow";
+import { isOpenRequest, resolveMoveScreen } from "@/lib/customerMoveNav";
+import type { MovingRequest } from "@/lib/api";
+import { computeMoveEstimate } from "@/lib/moveEstimate";
+import { downloadInvoicePdf, shareInvoice } from "@/lib/invoiceDocument";
+import type { MapPlace } from "@/lib/maps";
+import { CustomerAppShell, type CustomerNavId } from "@/components/customer/CustomerAppShell";
+import { resolveCustomerNotificationAction } from "@/lib/notificationNav";
+import { PageLoader } from "@/components/ui/MtoLoader";
+import type { Notification } from "@/lib/api/types";
+import { BookingManageActions } from "@/components/booking/BookingManageActions";
+import { BookingInsightsPanel } from "@/components/booking/BookingInsightsPanel";
+import { BookingTimelinePanel } from "@/components/booking/BookingTimelinePanel";
+import { MessagesInbox } from "@/components/messaging/MessagesInbox";
+import type { MoveType } from "@/components/booking/MoveTimingTabs";
+import { defaultTimeZone } from "@/components/booking/TimeZoneSelect";
+import { formatMoveRoute } from "@/components/move/MovesSwitcher";
+
+type Screen = "plan" | "details" | "quotes" | "book" | "track" | "messages" | "rate" | "history" | "wallet";
+const WIZARD_SCREENS: Screen[] = ["plan", "details", "quotes", "book", "track"];
+const RESUMABLE_SCREENS: Screen[] = ["plan", "details", "quotes", "track", "messages", "rate", "history", "wallet"];
+const LEGACY_SCREEN_MAP: Record<string, Screen> = {
+  home: "plan",
+  request: "details",
+  published: "track",
+  chat: "track",
+  done: "track",
+};
+
+const SELECTED_QUOTE_KEY = "mto_selected_quote";
+const SELECTED_REQUEST_KEY = "mto_selected_request";
+const SCREEN_KEY = "mto_customer_screen";
+const MOVE_DRAFT_KEY = "mto_customer_move_draft";
+
+type MoveFormDraft = {
+  pickup: string;
+  pickupPlace: MapPlace;
+  destination: string;
+  destinationPlace: MapPlace;
+  moveType: MoveType;
+  whenChoice: WhenChoice;
+  moveDate: string;
+  timeWindow: string;
+  timeZone: string;
+  flexibleTime: boolean;
+  vehicleFilter: string;
+  selectedVehicleId: string | null;
+  selectedVehicleName: string;
+  estimatedLoad: string;
+  moveDescription: string;
+  photos: Photo[];
+};
+
+type MoveTabItem = {
+  id: string;
+  kind: "request" | "booking";
+  label: string;
+  badge: string;
+};
+
+function normalizeMoveDraft(raw: Record<string, unknown> | null): MoveFormDraft | null {
+  if (!raw) return null;
+  const legacyDescription =
+    typeof raw.moveDescription === "string" && raw.moveDescription.trim()
+      ? raw.moveDescription
+      : [
+          raw.loadType ? `Load: ${raw.loadType}` : "",
+          Array.isArray(raw.handlingNotes) ? (raw.handlingNotes as string[]).join(", ") : "",
+          Array.isArray(raw.items)
+            ? (raw.items as Array<{ name: string; qty?: number }>).map((i) => `${i.name}x${i.qty ?? 1}`).join(", ")
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
+  return {
+    pickup: String(raw.pickup ?? ""),
+    pickupPlace: (raw.pickupPlace as MapPlace) ?? { address: String(raw.pickup ?? "") },
+    destination: String(raw.destination ?? ""),
+    destinationPlace: (raw.destinationPlace as MapPlace) ?? { address: String(raw.destination ?? "") },
+    moveType: raw.moveType === "scheduled" ? "scheduled" : "now",
+    whenChoice: raw.whenChoice === "tomorrow" ? "tomorrow" : raw.whenChoice === "custom" ? "custom" : "today",
+    moveDate: String(raw.moveDate ?? ""),
+    timeWindow: String(raw.timeWindow ?? "Morning"),
+    timeZone: String(raw.timeZone ?? defaultTimeZone()),
+    flexibleTime: Boolean(raw.flexibleTime),
+    vehicleFilter: String(raw.vehicleFilter ?? "All vehicles"),
+    selectedVehicleId: typeof raw.selectedVehicleId === "string" ? raw.selectedVehicleId : null,
+    selectedVehicleName: String(raw.selectedVehicleName ?? raw.vehicleFit ?? ""),
+    estimatedLoad: String(raw.estimatedLoad ?? ""),
+    moveDescription: legacyDescription,
+    photos: Array.isArray(raw.photos) ? (raw.photos as Photo[]) : [],
+  };
+}
+
+function estimateItemsFromForm(description: string, vehicleName: string, estimatedLoad: string) {
+  const trimmed = description.trim();
+  if (trimmed) return [{ name: trimmed.slice(0, 160), qty: 1 }];
+  if (estimatedLoad) return [{ name: estimatedLoad, qty: 1 }];
+  if (vehicleName) return [{ name: vehicleName, qty: 1 }];
+  return [{ name: "Household move", qty: 1 }];
+}
+
+function hydrateFormFromRequest(
+  request: MovingRequest,
+  apply: {
+    setPickup: (v: string) => void;
+    setPickupPlace: (v: MapPlace) => void;
+    setDestination: (v: string) => void;
+    setDestinationPlace: (v: MapPlace) => void;
+    setMoveDate: (v: string) => void;
+    setMoveType: (v: MoveType) => void;
+    setMoveDescription: (v: string) => void;
+  },
+) {
+  apply.setPickup(request.pickupAddress);
+  apply.setPickupPlace({ address: request.pickupAddress });
+  apply.setDestination(request.destinationAddress);
+  apply.setDestinationPlace({ address: request.destinationAddress });
+  if (request.movingDate) {
+    apply.setMoveDate(String(request.movingDate).slice(0, 10));
+    apply.setMoveType("scheduled");
+  }
+  if (request.additionalNotes) {
+    apply.setMoveDescription(request.additionalNotes);
+  }
+}
+
+function loadMoveDraft(): MoveFormDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(MOVE_DRAFT_KEY);
+    if (!raw) return null;
+    return normalizeMoveDraft(JSON.parse(raw) as Record<string, unknown>);
+  } catch {
+    return null;
+  }
+}
+
+function saveMoveDraft(draft: MoveFormDraft) {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(MOVE_DRAFT_KEY, JSON.stringify(draft));
+}
+
+function clearMoveDraft() {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(MOVE_DRAFT_KEY);
+}
+
+function parseCoord(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+export default function CustomerAppPage() {
+  return (
+    <Suspense fallback={<PageLoader label="Loading your move…" />}>
+      <AuthGuard roles={["customer"]}>
+        <MoveFlowProvider>
+          <CustomerAppContent />
+        </MoveFlowProvider>
+      </AuthGuard>
+    </Suspense>
+  );
+}
+
+function CustomerAppContent() {
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const flow = useMoveFlow();
+  const [screen, setScreenState] = useState<Screen>(() => {
+    if (typeof window === "undefined") return "plan";
+    const saved = sessionStorage.getItem(SCREEN_KEY);
+    if (saved) {
+      if ((RESUMABLE_SCREENS as string[]).includes(saved)) return saved as Screen;
+      if (saved in LEGACY_SCREEN_MAP) return LEGACY_SCREEN_MAP[saved];
+    }
+    return "plan";
+  });
+  const setScreen = (s: Screen) => {
+    setScreenState(s);
+    if (typeof window !== "undefined") sessionStorage.setItem(SCREEN_KEY, s);
+  };
+  const [selectedMessagesBookingId, setSelectedMessagesBookingId] = useState<string | null>(null);
+  const [historyFocusId, setHistoryFocusId] = useState<string | null>(null);
+  const [selectedQuoteId, setSelectedQuoteIdState] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem(SELECTED_QUOTE_KEY);
+  });
+
+  const setSelectedQuoteId = (id: string | null) => {
+    setSelectedQuoteIdState(id);
+    if (typeof window === "undefined") return;
+    if (id) sessionStorage.setItem(SELECTED_QUOTE_KEY, id);
+    else sessionStorage.removeItem(SELECTED_QUOTE_KEY);
+  };
+
+  const [selectedRequestId, setSelectedRequestIdState] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem(SELECTED_REQUEST_KEY);
+  });
+
+  const setSelectedRequestId = (id: string | null) => {
+    setSelectedRequestIdState(id);
+    if (typeof window === "undefined") return;
+    if (id) sessionStorage.setItem(SELECTED_REQUEST_KEY, id);
+    else sessionStorage.removeItem(SELECTED_REQUEST_KEY);
+  };
+
+  const draft = typeof window !== "undefined" ? loadMoveDraft() : null;
+
+  const [pickup, setPickup] = useState(() => searchParams.get("pickup") ?? draft?.pickup ?? "");
+  const [pickupPlace, setPickupPlace] = useState<MapPlace>(() => ({
+    address: searchParams.get("pickup") ?? draft?.pickupPlace?.address ?? "",
+    lat: parseCoord(searchParams.get("pickupLat")) ?? draft?.pickupPlace?.lat,
+    lng: parseCoord(searchParams.get("pickupLng")) ?? draft?.pickupPlace?.lng,
+  }));
+  const [destination, setDestination] = useState(() => searchParams.get("destination") ?? draft?.destination ?? "");
+  const [destinationPlace, setDestinationPlace] = useState<MapPlace>(() => ({
+    address: searchParams.get("destination") ?? draft?.destinationPlace?.address ?? "",
+    lat: parseCoord(searchParams.get("destinationLat")) ?? draft?.destinationPlace?.lat,
+    lng: parseCoord(searchParams.get("destinationLng")) ?? draft?.destinationPlace?.lng,
+  }));
+  const [moveDate, setMoveDate] = useState(() => draft?.moveDate ?? "");
+  const [moveType, setMoveType] = useState<MoveType>(() => draft?.moveType ?? "now");
+  const [whenChoice, setWhenChoice] = useState<WhenChoice>(() => draft?.whenChoice ?? "today");
+  const [timeWindow, setTimeWindow] = useState(() => draft?.timeWindow ?? "Morning");
+  const [timeZone, setTimeZone] = useState(() => draft?.timeZone ?? defaultTimeZone());
+  const [flexibleTime, setFlexibleTime] = useState(() => draft?.flexibleTime ?? false);
+  const [vehicleFilter, setVehicleFilter] = useState(() => draft?.vehicleFilter ?? "All vehicles");
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(() => draft?.selectedVehicleId ?? null);
+  const [selectedVehicleName, setSelectedVehicleName] = useState(() => draft?.selectedVehicleName ?? "");
+  const [estimatedLoad, setEstimatedLoad] = useState(() => draft?.estimatedLoad ?? "");
+  const [moveDescription, setMoveDescription] = useState(() => draft?.moveDescription ?? "");
+  const [photos, setPhotos] = useState<Photo[]>(() => draft?.photos ?? []);
+  const [stars, setStars] = useState(0);
+  const [ratingTags, setRatingTags] = useState<string[]>([]);
+  const [reviewText, setReviewText] = useState("");
+  const [tip, setTip] = useState("$10");
+  const [customTip, setCustomTip] = useState("");
+  const [bootReady, setBootReady] = useState(false);
+  const bootedRef = useRef(false);
+
+  const [counterBusy, setCounterBusy] = useState(false);
+  const [bookBusy, setBookBusy] = useState(false);
+  const [bookError, setBookError] = useState<string | null>(null);
+
+  const toggleRatingTag = (v: string) =>
+    setRatingTags((n) => (n.includes(v) ? n.filter((x) => x !== v) : [...n, v]));
+  const addPhoto = (photo: Photo) => setPhotos((p) => [...p, photo]);
+
+  useEffect(() => {
+    saveMoveDraft({
+      pickup,
+      pickupPlace,
+      destination,
+      destinationPlace,
+      moveType,
+      whenChoice,
+      moveDate,
+      timeWindow,
+      timeZone,
+      flexibleTime,
+      vehicleFilter,
+      selectedVehicleId,
+      selectedVehicleName,
+      estimatedLoad,
+      moveDescription,
+      photos,
+    });
+  }, [
+    pickup,
+    pickupPlace,
+    destination,
+    destinationPlace,
+    moveType,
+    whenChoice,
+    moveDate,
+    timeWindow,
+    timeZone,
+    flexibleTime,
+    vehicleFilter,
+    selectedVehicleId,
+    selectedVehicleName,
+    estimatedLoad,
+    moveDescription,
+    photos,
+  ]);
+
+  useEffect(() => {
+    if (bootedRef.current) return;
+    bootedRef.current = true;
+
+    let cancelled = false;
+    (async () => {
+      const savedScreen =
+        typeof window !== "undefined" ? sessionStorage.getItem(SCREEN_KEY) : null;
+
+      const bookings = (await flow.loadBookings()) ?? [];
+      const openRequestFirst = (await flow.restoreActiveRequest(selectedRequestId ?? undefined)) ?? null;
+      if (openRequestFirst?.id && isOpenRequest(openRequestFirst)) {
+        if (cancelled) return;
+        setSelectedRequestId(openRequestFirst.id);
+        hydrateFormFromRequest(openRequestFirst, {
+          setPickup,
+          setPickupPlace,
+          setDestination,
+          setDestinationPlace,
+          setMoveDate,
+          setMoveType,
+          setMoveDescription,
+        });
+        setScreen("quotes");
+        setBootReady(true);
+        return;
+      }
+      const trackable = bookings.find((b) => isTrackableBooking(b) && b.status !== "completed");
+
+      if (trackable) {
+        const full = await flow.selectTrackableBooking(trackable.id);
+        if (cancelled) return;
+        if (full?.requestId) setSelectedRequestId(full.requestId);
+        if (full?.quoteId) setSelectedQuoteId(full.quoteId);
+        if (full?.request) {
+          hydrateFormFromRequest(full.request, {
+            setPickup,
+            setPickupPlace,
+            setDestination,
+            setDestinationPlace,
+            setMoveDate,
+            setMoveType,
+            setMoveDescription,
+          });
+        }
+        setScreen(resolveMoveScreen({ trackableBooking: full ?? trackable, savedScreen }));
+        setBootReady(true);
+        return;
+      }
+
+      const request = openRequestFirst ?? (await flow.restoreActiveRequest(selectedRequestId ?? undefined));
+      if (cancelled) {
+        setBootReady(true);
+        return;
+      }
+
+      if (request?.id) {
+        setSelectedRequestId(request.id);
+        hydrateFormFromRequest(request, {
+          setPickup,
+          setPickupPlace,
+          setDestination,
+          setDestinationPlace,
+          setMoveDate,
+          setMoveType,
+          setMoveDescription,
+        });
+
+        if (isOpenRequest(request)) {
+          setScreen("quotes");
+        } else if (!savedScreen || savedScreen === "plan") {
+          setScreen("plan");
+        }
+        setBootReady(true);
+        return;
+      }
+
+      if (!cancelled) setBootReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!bootReady || !user || pickup.trim()) return;
+    let cancelled = false;
+    savedAddressesApi
+      .getDefault()
+      .then((addr) => {
+        if (cancelled || pickup.trim()) return;
+        const line = [addr.street, addr.city, addr.province, addr.postalCode].filter(Boolean).join(", ");
+        setPickup(line);
+        setPickupPlace({
+          address: line,
+          lat: addr.latitude ?? undefined,
+          lng: addr.longitude ?? undefined,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, bootReady, pickup]);
+
+  const goMyMove = async () => {
+    const list = (await flow.loadBookings()) ?? [];
+    const requestFirst = flow.activeRequest ?? (await flow.restoreActiveRequest(selectedRequestId ?? undefined));
+    if (requestFirst?.id && isOpenRequest(requestFirst)) {
+      setSelectedRequestId(requestFirst.id);
+      hydrateFormFromRequest(requestFirst, {
+        setPickup,
+        setPickupPlace,
+        setDestination,
+        setDestinationPlace,
+        setMoveDate,
+        setMoveType,
+        setMoveDescription,
+      });
+      setScreen("quotes");
+      return;
+    }
+    const trackable = list.find((b) => isTrackableBooking(b) && b.status !== "completed");
+    if (trackable) {
+      const full = await flow.selectTrackableBooking(trackable.id);
+      if (full?.requestId) setSelectedRequestId(full.requestId);
+      if (full?.quoteId) setSelectedQuoteId(full.quoteId);
+      if (full?.request) {
+        hydrateFormFromRequest(full.request, {
+          setPickup,
+          setPickupPlace,
+          setDestination,
+          setDestinationPlace,
+          setMoveDate,
+          setMoveType,
+          setMoveDescription,
+        });
+      }
+      setScreen("track");
+      return;
+    }
+
+    flow.setActiveBooking(null);
+    const request = requestFirst ?? flow.activeRequest ?? (await flow.restoreActiveRequest(selectedRequestId ?? undefined));
+    if (request?.id) {
+      setSelectedRequestId(request.id);
+      hydrateFormFromRequest(request, {
+        setPickup,
+        setPickupPlace,
+        setDestination,
+        setDestinationPlace,
+        setMoveDate,
+        setMoveType,
+        setMoveDescription,
+      });
+      if (isOpenRequest(request)) {
+        setScreen("quotes");
+        return;
+      }
+    }
+
+    setScreen("plan");
+  };
+
+  const goMessages = (bookingId?: string) => {
+    if (bookingId) setSelectedMessagesBookingId(bookingId);
+    else if (flow.activeBooking?.id) setSelectedMessagesBookingId(flow.activeBooking.id);
+    setScreen("messages");
+  };
+
+  const form: FormState = {
+    pickup, setPickup, pickupPlace, setPickupPlace, destination, setDestination, destinationPlace, setDestinationPlace,
+    moveType, setMoveType, whenChoice, setWhenChoice, moveDate, setMoveDate, timeWindow, setTimeWindow, timeZone, setTimeZone, flexibleTime, setFlexibleTime,
+    vehicleFilter, setVehicleFilter,
+    selectedVehicleId, setSelectedVehicleId, selectedVehicleName, setSelectedVehicleName,
+    estimatedLoad, setEstimatedLoad,
+    moveDescription, setMoveDescription, photos, addPhoto,
+    stars, setStars, ratingTags, toggleRatingTag, reviewText, setReviewText, tip, setTip, customTip, setCustomTip,
+  };
+
+  const resetMoveForm = () => {
+    setPickup("");
+    setPickupPlace({ address: "" });
+    setDestination("");
+    setDestinationPlace({ address: "" });
+    setMoveType("now");
+    setWhenChoice("today");
+    setMoveDate("");
+    setTimeWindow("Morning");
+    setTimeZone(defaultTimeZone());
+    setFlexibleTime(false);
+    setVehicleFilter("All vehicles");
+    setSelectedVehicleId(null);
+    setSelectedVehicleName("");
+    setEstimatedLoad("");
+    setMoveDescription("");
+    setPhotos([]);
+    clearMoveDraft();
+  };
+
+  const startNewMove = () => {
+    resetMoveForm();
+    setScreen("plan");
+  };
+
+  const handlePublish = async () => {
+    const scheduleLabel =
+      moveType === "now"
+        ? "Move Now"
+        : `${formatMoveDate(moveDate) || "Scheduled"} · ${timeWindow} (${timeZone.replace(/_/g, " ")})`;
+    const notes = [
+      `Vehicle: ${selectedVehicleName || vehicleFilter}`,
+      `Timing: ${scheduleLabel}`,
+      flexibleTime ? "Flexible time: yes" : "Flexible time: no",
+      estimatedLoad ? `Load: ${estimatedLoad}` : "",
+      `Description: ${moveDescription.trim()}`,
+      photos.length ? `Photos: ${photos.map((p) => p.url).join(", ")}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const publishDate =
+      moveType === "now"
+        ? new Date().toISOString().slice(0, 10)
+        : moveDate;
+
+    const publishItems = estimateItemsFromForm(moveDescription, selectedVehicleName, estimatedLoad);
+    const { estimatedPrice, distanceKm } = await computeMoveEstimate(pickupPlace, destinationPlace, publishItems);
+    const req = await flow.publishRequest({
+      pickup,
+      destination,
+      moveDate: publishDate,
+      items: publishItems,
+      notes,
+      estimatedPrice,
+      distanceKm,
+    });
+    if (req) {
+      setSelectedRequestId(req.id);
+      clearMoveDraft();
+      setScreen("quotes");
+    }
+  };
+
+  const quotesForRequest = flow.quotesFromRequest(flow.activeRequest).filter(
+    (q) => q.status === "pending" || q.status === "countered",
+  );
+  const bookQuote = quotesForRequest.find((q) => q.id === selectedQuoteId) ?? null;
+
+  const sendCounter = async (price: number, notes?: string) => {
+    const request = flow.activeRequest;
+    if (!request?.id || !bookQuote) return false;
+    setCounterBusy(true);
+    try {
+      return !!(await flow.sendCounteroffer(request.id, bookQuote.id, price, notes));
+    } finally {
+      setCounterBusy(false);
+    }
+  };
+
+  const handleConfirmBooking = async (paymentMethod: "cash_on_site" | "wallet") => {
+    const request = flow.activeRequest;
+    if (!request?.id || !bookQuote) return;
+    setBookBusy(true);
+    setBookError(null);
+    try {
+      const result = await flow.acceptQuote(request.id, bookQuote.id, paymentMethod);
+      if (result) {
+        setScreen("track");
+      } else {
+        setBookError(flow.error ?? "Could not confirm booking. Please try again.");
+      }
+    } finally {
+      setBookBusy(false);
+    }
+  };
+
+  const go = (s: Screen) => () => setScreen(s);
+
+  const openFromNotification = async (n: Notification) => {
+    const action = resolveCustomerNotificationAction(n);
+    switch (action.kind) {
+      case "messages":
+        goMessages(action.bookingId);
+        break;
+      case "wallet":
+        setScreen("wallet");
+        if (action.bookingId) void flow.loadBooking(action.bookingId);
+        break;
+      case "history":
+        if (action.bookingId) setHistoryFocusId(action.bookingId);
+        setScreen("history");
+        if (action.bookingId) void flow.loadBooking(action.bookingId);
+        break;
+      case "support":
+        window.location.href = "/customer-app/support";
+        break;
+      case "track": {
+        if (action.requestId) setSelectedRequestId(action.requestId);
+        if (action.quoteId) setSelectedQuoteId(action.quoteId);
+
+        if (action.bookingId) {
+          const booking = await flow.loadBooking(action.bookingId);
+          if (booking && !isTrackableBooking(booking)) {
+            setHistoryFocusId(booking.id);
+            setScreen("history");
+            return;
+          }
+          setScreen("track");
+          return;
+        }
+
+        if (action.requestId) {
+          flow.setActiveBooking(null);
+          await flow.selectRequest(action.requestId);
+          setScreen("quotes");
+          return;
+        }
+
+        await goMyMove();
+        break;
+      }
+      default:
+        setScreen("plan");
+        break;
+    }
+  };
+
+  const displayName = customerDisplayName(user);
+  const isWizardScreen = (WIZARD_SCREENS as Screen[]).includes(screen);
+  const isMyMoveScreen = screen === "quotes" || screen === "book" || screen === "track";
+  const moveTabs = useMemo<MoveTabItem[]>(() => {
+    const bookingTabs = flow.trackableBookings.filter((b) => b.status !== "completed").map((b) => {
+      const pickup =
+        (b.pickupAddress as { street?: string } | undefined)?.street ??
+        b.request?.pickupAddress;
+      const destination =
+        (b.destinationAddress as { street?: string } | undefined)?.street ??
+        b.request?.destinationAddress;
+      return {
+        id: b.id,
+        kind: "booking" as const,
+        label: formatMoveRoute(pickup, destination, 36),
+        badge: b.status === "in_progress" ? "Live" : "Track",
+      };
+    });
+    const requestTabs = flow.openRequests.map((r) => {
+      const quotes = (r.quotes ?? []).filter((q) => q.status === "pending" || q.status === "countered").length;
+      return {
+        id: r.id,
+        kind: "request" as const,
+        label: formatMoveRoute(r.pickupAddress, r.destinationAddress, 36),
+        badge: quotes > 0 ? `${quotes} quote${quotes === 1 ? "" : "s"}` : "Finding",
+      };
+    });
+    return [...bookingTabs, ...requestTabs];
+  }, [flow.trackableBookings, flow.openRequests]);
+
+  const activeMoveTabKey =
+    screen === "track" ? (flow.activeBooking ? `booking:${flow.activeBooking.id}` : null) : flow.activeRequest ? `request:${flow.activeRequest.id}` : null;
+
+  const handleSelectMoveTab = async (tab: MoveTabItem) => {
+    if (tab.kind === "booking") {
+      const full = await flow.selectTrackableBooking(tab.id);
+      if (full?.requestId) setSelectedRequestId(full.requestId);
+      if (full?.quoteId) setSelectedQuoteId(full.quoteId);
+      setScreen("track");
+      return;
+    }
+    flow.setActiveBooking(null);
+    const request = await flow.selectRequest(tab.id);
+    if (request?.id) {
+      setSelectedRequestId(request.id);
+      setScreen("quotes");
+    }
+  };
+  const activeNav: CustomerNavId =
+    screen === "messages"
+      ? "messages"
+      : screen === "history"
+        ? "history"
+        : screen === "wallet"
+          ? "wallet"
+          : "move";
+
+  const handleSidebarNav = (nav: CustomerNavId) => {
+    if (nav === "new") {
+      startNewMove();
+      return;
+    }
+    if (nav === "move") {
+      void goMyMove();
+      return;
+    }
+    if (nav === "messages") {
+      goMessages();
+      return;
+    }
+    if (nav === "history") {
+      setScreen("history");
+      return;
+    }
+    if (nav === "wallet") {
+      setScreen("wallet");
+    }
+  };
+
+  return (
+    <FormCtx.Provider value={form}>
+      <CustomerAppShell activeNav={activeNav} onNav={handleSidebarNav} displayName={displayName} onOpenNotification={openFromNotification}>
+        <div className="customer-page-stage" style={{ background: "#e4e2db", minHeight: "100%" }}>
+        {flow.error && screen !== "details" && screen !== "book" && (
+          <div style={{ margin: "8px 10px 0", padding: "12px 20px", borderRadius: 10, background: "#fff0f0", color: "#b00020", font: "600 14px 'Hanken Grotesk'" }}>
+            {flow.error}
+          </div>
+        )}
+        <style>{`
+          @keyframes ping{0%{transform:scale(.9);opacity:.7}70%,100%{transform:scale(2.4);opacity:0}}
+          @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+          .customer-page-stage{height:100%;display:flex;flex-direction:column;min-width:0}
+          @media(max-width:900px){
+            .customer-page-stage{min-height:0!important;flex:1;position:relative}
+            .wizard-form-pane>div[style*="overflow: auto"]{padding:24px 20px 14px!important}
+            .wizard-form-pane>div[style*="border-top"]{padding:12px 20px 16px!important}
+            .customer-move-tabs{
+              position:absolute;z-index:35;top:64px;left:10px;right:10px;height:42px!important;
+              padding:0!important;background:transparent!important;border:0!important;pointer-events:none
+            }
+            .customer-move-tabs>div,.customer-move-tabs>button{pointer-events:auto}
+            .customer-move-tabs>div{scrollbar-width:none}
+            .customer-move-tabs>div::-webkit-scrollbar{display:none}
+            .customer-move-tabs button{box-shadow:0 5px 16px rgba(0,0,0,.15)}
+            .customer-page-stage:has(.customer-move-tabs) .wizard-map-pane>div[style*="top: 24px"]{top:114px!important}
+            .customer-wallet-wrap,.customer-rating-wrap{width:100%!important;padding:28px 20px 36px!important}
+            .customer-history-inner{padding:28px 20px 40px!important}
+          }
+          @media(max-width:560px){
+            .wizard-form-pane>div[style*="overflow: auto"]{padding:24px 16px 12px!important}
+            .wizard-form-pane>div[style*="border-top"]{padding:10px 16px 14px!important}
+            .wizard-form-pane h1{font-size:28px!important}
+            .wizard-form-pane h2{font-size:23px!important}
+            .customer-wallet-wrap,.customer-rating-wrap{padding:24px 14px 32px!important}
+            .customer-wallet-wrap h1,.customer-history-inner h1{font-size:29px!important}
+            .customer-rating-wrap h1{font-size:25px!important}
+            .customer-rating-wrap>div[style*="display: flex"][style*="gap: 10px"]{flex-wrap:wrap}
+            .customer-rating-wrap>div[style*="display: flex"][style*="gap: 10px"]>div{min-width:calc(50% - 5px)}
+            .customer-history-inner{padding:24px 14px 36px!important}
+            .customer-history-header{align-items:center!important;gap:12px}
+            .customer-history-header>div{padding:0 13px!important}
+            .customer-history-card-row{padding:15px!important;gap:11px!important;align-items:flex-start!important}
+            .customer-history-card-row>div:first-child{width:42px!important;height:42px!important;flex:none}
+            .customer-history-card-row>b{font-size:17px!important}
+            .customer-history-detail{padding:15px!important}
+            .customer-history-route-grid{grid-template-columns:1fr!important;gap:12px!important}
+          }
+        `}</style>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            margin: 0,
+            background: "#F5F4EF",
+            borderRadius: 0,
+            overflow: "hidden",
+            boxShadow: "none",
+            display: "flex",
+            flexDirection: "column",
+            color: "#0E0E10",
+            position: "relative",
+          }}
+        >
+          {isWizardScreen ? (
+            <WizardHeader
+              stepId={screen as WizardStepId}
+              displayName={displayName}
+              onLogoClick={() => void goMyMove()}
+              onOpenNotification={openFromNotification}
+            />
+          ) : null}
+
+          {isMyMoveScreen && moveTabs.length > 1 && (
+            <div
+              className="customer-move-tabs"
+              style={{
+                height: 54,
+                flex: "none",
+                background: "#fff",
+                borderBottom: "1px solid rgba(0,0,0,.08)",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "0 14px",
+              }}
+            >
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", flex: 1, minWidth: 0 }}>
+                {moveTabs.map((tab) => {
+                  const key = `${tab.kind}:${tab.id}`;
+                  const active = key === activeMoveTabKey;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => void handleSelectMoveTab(tab)}
+                      style={{
+                        height: 36,
+                        borderRadius: 999,
+                        border: active ? "none" : "1px solid rgba(0,0,0,.14)",
+                        background: active ? "#0E0E10" : "#fff",
+                        color: active ? "#fff" : "#0E0E10",
+                        padding: "0 12px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                        flex: "none",
+                      }}
+                    >
+                      <span style={{ font: active ? "700 12px 'Archivo'" : "600 12px 'Hanken Grotesk'" }}>{tab.label}</span>
+                      <span
+                        style={{
+                          font: "700 10px 'Hanken Grotesk'",
+                          letterSpacing: ".04em",
+                          textTransform: "uppercase",
+                          padding: "2px 7px",
+                          borderRadius: 999,
+                          background: active ? "rgba(255,255,255,.16)" : "#eceae2",
+                          color: active ? "rgba(255,255,255,.85)" : "#6B6B70",
+                        }}
+                      >
+                        {tab.badge}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={startNewMove}
+                style={{
+                  height: 34,
+                  padding: "0 12px",
+                  borderRadius: 999,
+                  border: "1.5px solid rgba(0,0,0,.12)",
+                  background: "var(--accent)",
+                  font: "800 12px 'Archivo'",
+                  color: "#0E0E10",
+                  cursor: "pointer",
+                  flex: "none",
+                }}
+              >
+                + New
+              </button>
+            </div>
+          )}
+
+          <div key={screen} className="app-screen-motion">
+            {screen === "plan" && <PlanScreen onNext={() => setScreen("details")} />}
+            {screen === "details" && (
+              <DetailsScreen onNext={handlePublish} onBack={() => setScreen("plan")} publishing={flow.loading} error={flow.error} />
+            )}
+            {screen === "quotes" && (
+              <QuotesScreen
+                request={flow.activeRequest}
+                quotes={quotesForRequest}
+                selectedQuoteId={selectedQuoteId}
+                onSelectQuote={setSelectedQuoteId}
+                onBook={() => setScreen("book")}
+                onSendCounter={sendCounter}
+                counterBusy={counterBusy}
+                myUserId={user?.id ?? ""}
+              />
+            )}
+            {screen === "book" && (
+              bookQuote ? (
+                <BookScreen quote={bookQuote} onBack={() => setScreen("quotes")} onConfirm={handleConfirmBooking} busy={bookBusy} error={bookError} />
+              ) : (
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#F5F4EF" }}>
+                  <p style={{ font: "600 15px 'Hanken Grotesk'", color: "#6B6B70" }}>Loading your quote…</p>
+                </div>
+              )
+            )}
+            {screen === "messages" && user?.id && (
+              <MessagesInbox
+                myUserId={user.id}
+                selectedBookingId={selectedMessagesBookingId}
+                onSelectBooking={setSelectedMessagesBookingId}
+              />
+            )}
+            {screen === "track" && <TrackScreen onRate={go("rate")} onHistory={go("history")} onWallet={go("wallet")} />}
+            {screen === "wallet" && <WalletScreen onRate={go("rate")} onHistory={go("history")} />}
+            {screen === "rate" && <RatingScreen onWallet={go("wallet")} onHistory={go("history")} />}
+            {screen === "history" && (
+              <HistoryScreen
+                onStartRequest={startNewMove}
+                focusBookingId={historyFocusId}
+                onFocusConsumed={() => setHistoryFocusId(null)}
+              />
+            )}
+          </div>
+        </div>
+        </div>
+      </CustomerAppShell>
+    </FormCtx.Provider>
+  );
+}
+
+/* ============ WALLET ============ */
+
+function WalletScreen({ onRate, onHistory }: { onRate: () => void; onHistory: () => void }) {
+  const flow = useMoveFlow();
+  const booking = flow.activeBooking;
+  const [wallet, setWallet] = useState<CustomerWallet | null>(null);
+  const [invoice, setInvoice] = useState<PaymentInvoice | null>(null);
+  const [invoiceKind, setInvoiceKind] = useState<"job" | "tip" | null>(null);
+  const [tipAmount, setTipAmount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
+  const [topUpBusy, setTopUpBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isWalletJob =
+    booking?.status === "completed" &&
+    booking.paymentMethod === "wallet" &&
+    !isBookingJobPaid(booking);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const pendingTip = sessionStorage.getItem("mto_pending_tip");
+    if (pendingTip) {
+      const amount = Number(pendingTip);
+      if (amount > 0) {
+        // Hydrate the one-time payment intent stored by the rating flow.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setInvoiceKind("tip");
+        setTipAmount(amount);
+      }
+      sessionStorage.removeItem("mto_pending_tip");
+      return;
+    }
+    if (isWalletJob) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInvoiceKind("job");
+    }
+  }, [isWalletJob, booking?.id]);
+
+  const refreshWalletData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [walletData, invoiceData] = await Promise.all([
+        customersApi.getWallet(),
+        booking?.id && invoiceKind === "tip" && tipAmount
+          ? customersApi.getInvoice(booking.id, "tip", tipAmount)
+          : booking?.id && invoiceKind === "job"
+            ? customersApi.getInvoice(booking.id, "job")
+            : Promise.resolve(null),
+      ]);
+      setWallet(walletData);
+      setInvoice(invoiceData);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load wallet");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Refresh when the selected booking or invoice kind changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void refreshWalletData();
+  }, [booking?.id, booking?.payments?.length, invoiceKind, tipAmount]);
+
+  const needsReview = booking?.status === "completed" && !booking.review;
+  const invoicePaid = invoice?.alreadyPaid ?? false;
+
+  const handleTopUp = async (amount: number) => {
+    setTopUpBusy(true);
+    setError(null);
+    try {
+      await flow.topUpWallet(amount);
+      await refreshWalletData();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not add funds");
+    } finally {
+      setTopUpBusy(false);
+    }
+  };
+
+  const handlePay = async () => {
+    if (!booking?.id || paying || !invoiceKind) return;
+    setPaying(true);
+    setError(null);
+    try {
+      const amount = invoiceKind === "tip" ? tipAmount ?? undefined : undefined;
+      const result = await flow.submitPayment(booking.id, amount ?? Number(booking.price), invoiceKind);
+      if (result?.invoice) setInvoice(result.invoice);
+      await flow.loadBooking(booking.id);
+      await refreshWalletData();
+      if (invoiceKind === "job" && needsReview) onRate();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Payment failed");
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const badgeLabel = invoicePaid
+    ? invoiceKind === "tip"
+      ? "TIP SENT"
+      : "PAID"
+    : invoiceKind === "job"
+      ? "WALLET PAY"
+      : invoiceKind === "tip"
+        ? "TIP"
+        : "WALLET";
+
+  return (
+    <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", justifyContent: "center", background: "#F5F4EF" }}>
+      <div className="customer-wallet-wrap" style={{ width: 560, maxWidth: "100%", padding: "40px 40px 48px" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: invoicePaid ? "#1f6b1f" : "var(--accent)", color: invoicePaid ? "#fff" : "#0E0E10", padding: "6px 12px", borderRadius: 999, font: "800 11px 'Hanken Grotesk'", letterSpacing: ".04em", marginBottom: 14 }}>
+          • {badgeLabel}
+        </div>
+        <h1 style={{ margin: "0 0 6px", font: "900 34px 'Archivo'", letterSpacing: "-.025em" }}>Payments &amp; tips</h1>
+        <p style={{ margin: "0 0 24px", font: "500 15px 'Hanken Grotesk'", color: "#6B6B70" }}>
+          Add funds, pay wallet bookings after delivery, and tip your mover. Cash-on-site jobs are confirmed by the mover when they receive cash.
+        </p>
+        {error && (
+          <div style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 12, background: "rgba(168,68,42,.08)", color: "#a8442a", font: "600 13px 'Hanken Grotesk'" }}>
+            {error}
+          </div>
+        )}
+        {(invoiceKind === "tip" && tipAmount) || invoiceKind === "job" ? (
+          <CustomerWalletCheckout
+            wallet={wallet}
+            invoice={invoice}
+            loading={loading}
+            paying={paying}
+            topUpBusy={topUpBusy}
+            onTopUp={handleTopUp}
+            onPay={invoice && !invoice.alreadyPaid ? handlePay : undefined}
+            onRefresh={() => void refreshWalletData()}
+            onContinue={invoiceKind === "job" && needsReview ? onRate : onHistory}
+            continueLabel={
+              invoicePaid
+                ? invoiceKind === "job" && needsReview
+                  ? "Rate your mover →"
+                  : "Back to history →"
+                : "Continue →"
+            }
+          />
+        ) : (
+          <CustomerWalletPanel
+            wallet={wallet}
+            loading={loading}
+            highlightBookingId={booking?.id}
+            onContinue={needsReview ? onRate : onHistory}
+            continueLabel={needsReview ? "Rate your mover →" : "Back to history →"}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============ RATING ============ */
+
+function RatingScreen({ onWallet, onHistory }: { onWallet: () => void; onHistory: () => void }) {
+  const f = useForm();
+  const flow = useMoveFlow();
+  const booking = flow.activeBooking;
+  const bookingId = booking?.id;
+  const moverLabel = booking?.mover?.moverProfile?.businessName ?? "your mover";
+  const pickupLabel = (booking?.pickupAddress as { street?: string } | undefined)?.street ?? booking?.request?.pickupAddress ?? "your pickup";
+  const dateLabel = booking?.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : "";
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!bookingId || submitting) {
+      onHistory();
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await flow.submitReview(bookingId, f.stars, f.reviewText);
+      const tipAmount = f.tip === "Custom" ? Number(f.customTip) : Number(f.tip.replace("$", ""));
+      if (tipAmount > 0) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("mto_pending_tip", String(tipAmount));
+        }
+        await flow.loadBooking(bookingId);
+        onWallet();
+        return;
+      }
+      await flow.loadBookings();
+      onHistory();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", justifyContent: "center", alignItems: "flex-start", background: "#F5F4EF" }}>
+      <div className="customer-rating-wrap" style={{ width: 560, maxWidth: "100%", padding: "44px 40px", textAlign: "center" }}>
+        <div style={{ width: 74, height: 74, borderRadius: "50%", background: "linear-gradient(135deg,#dfe0d6,#c9cabf)", margin: "0 auto 16px" }} />
+        <h1 style={{ margin: "0 0 4px", font: "900 30px 'Archivo'", letterSpacing: "-.025em" }}>How was {moverLabel}?</h1>
+        <p style={{ margin: "0 0 22px", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
+          Your move from {pickupLabel}{dateLabel ? ` · ${dateLabel}` : ""}
+        </p>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 26 }}>
+          <StarRating value={f.stars} onChange={f.setStars} size={40} gap={10} />
+        </div>
+        <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 10 }}>
+          What went well?
+        </div>
+        <div style={{ marginBottom: 26, display: "flex", justifyContent: "center" }}>
+          <ChipToggle options={["On time", "Careful with items", "Friendly", "Fast"]} selected={f.ratingTags} onSelect={f.toggleRatingTag} multi />
+        </div>
+        <TextArea value={f.reviewText} onChange={f.setReviewText} placeholder="Tell us about your move…" />
+        <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", margin: "24px 0 10px", textAlign: "left" }}>
+          Add a tip?
+        </div>
+        <div style={{ display: "flex", gap: 10, marginBottom: 26 }}>
+          {["$5", "$10", "$20", "Custom"].map((t) => (
+            <div
+              key={t}
+              onClick={() => f.setTip(t)}
+              style={{
+                flex: 1,
+                height: 52,
+                borderRadius: 12,
+                background: f.tip === t ? "var(--accent)" : undefined,
+                border: f.tip === t ? undefined : "1.5px solid rgba(0,0,0,.14)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                font: f.tip === t ? "800 15px 'Archivo'" : "700 15px 'Hanken Grotesk'",
+                color: f.tip === t ? "#0E0E10" : undefined,
+                cursor: "pointer",
+              }}
+            >
+              {t}
+            </div>
+          ))}
+        </div>
+        {f.tip === "Custom" && (
+          <input
+            value={f.customTip}
+            onChange={(e) => f.setCustomTip(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder="Enter amount"
+            style={{ width: "100%", height: 52, marginTop: -16, marginBottom: 26, border: "1.5px solid rgba(0,0,0,.14)", borderRadius: 12, padding: "0 15px", font: "600 15px 'Hanken Grotesk'", outline: "none" }}
+          />
+        )}
+        <div
+          onClick={() => void submit()}
+          style={{
+            height: 56,
+            borderRadius: 12,
+            background: "#0E0E10",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            font: "800 16px 'Archivo'",
+            cursor: submitting ? "wait" : "pointer",
+            opacity: submitting ? 0.7 : 1,
+          }}
+        >
+          {submitting ? "Submitting..." : "Submit review"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ HISTORY ============ */
+
+function humanizeKey(key: string): string {
+  const spaced = key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ");
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function HistoryBookingDetail({ booking }: { booking: Booking }) {
+  const flow = useMoveFlow();
+  const { user } = useAuth();
+  const [invoice, setInvoice] = useState<PaymentInvoice | null>(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionMsg, setActionMsg] = useState<string | null>(null);
+
+  const pickup =
+    (booking.pickupAddress as { street?: string } | undefined)?.street ??
+    booking.request?.pickupAddress ??
+    "Pickup";
+  const destination =
+    (booking.destinationAddress as { street?: string } | undefined)?.street ??
+    booking.request?.destinationAddress ??
+    "Destination";
+  const moverName = booking.mover?.moverProfile?.businessName ?? moverDisplayName(booking.mover) ?? "Mover";
+  const moveItems = (booking.items ?? []).filter((item) => item.name !== "Delivery proof");
+  const proofPhotos = (booking.items ?? []).filter((item) => item.photoUrl && item.name === "Delivery proof");
+  const breakdown =
+    booking.pricingBreakdown && Object.keys(booking.pricingBreakdown).length
+      ? Object.entries(booking.pricingBreakdown).filter(([, v]) => typeof v === "number" || typeof v === "string")
+      : [];
+  const paid = isBookingJobPaid(booking);
+  const canRebook = booking.status === "completed" || booking.status === "cancelled";
+
+  const handleRebook = async () => {
+    setActionBusy(true);
+    setActionMsg(null);
+    try {
+      await flow.rebook(booking.id);
+      setActionMsg("Move rebooked - check Track for the new booking.");
+    } catch (e) {
+      setActionMsg(e instanceof Error ? e.message : "Rebook failed");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const handleDuplicate = async () => {
+    setActionBusy(true);
+    setActionMsg(null);
+    try {
+      await flow.duplicateBooking(booking.id);
+      setActionMsg("Draft duplicate created - open Track to continue.");
+    } catch (e) {
+      setActionMsg(e instanceof Error ? e.message : "Duplicate failed");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!booking.id || !paid) return;
+    // Reflect the request state while loading the paid invoice.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInvoiceLoading(true);
+    customersApi
+      .getInvoice(booking.id, "job")
+      .then(setInvoice)
+      .catch(() => setInvoice(null))
+      .finally(() => setInvoiceLoading(false));
+  }, [booking.id, paid]);
+
+  return (
+    <div className="customer-history-detail" style={{ marginTop: 14, padding: "18px 20px 20px", borderTop: "1px solid rgba(0,0,0,.08)", background: "#fafaf8", borderRadius: "0 0 16px 16px" }}>
+      <div className="customer-history-route-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 }}>
+        <div>
+          <div style={{ font: "700 10px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 6 }}>Pickup</div>
+          <div style={{ font: "600 14px 'Hanken Grotesk'" }}>{pickup}</div>
+        </div>
+        <div>
+          <div style={{ font: "700 10px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 6 }}>Destination</div>
+          <div style={{ font: "600 14px 'Hanken Grotesk'" }}>{destination}</div>
+        </div>
+      </div>
+
+      <PartyProfileCard
+        name={moverName}
+        imageUrl={booking.mover?.moverProfile?.avatarUrl}
+        roleLabel="Mover"
+        phone={booking.mover?.moverProfile?.phone}
+        meta={[
+          { label: "Move date", value: new Date(booking.scheduledDate).toLocaleDateString() },
+          { label: "Total", value: `$${Number(booking.price).toFixed(2)}` },
+          { label: "Payment", value: booking.paymentMethod === "wallet" ? "Wallet" : "Cash on site" },
+        ]}
+      />
+
+      {moveItems.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 10 }}>Items moved</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {moveItems.map((item) => (
+              <div key={item.id} style={{ display: "flex", justifyContent: "space-between", font: "600 14px 'Hanken Grotesk'", padding: "10px 12px", background: "#fff", borderRadius: 10, border: "1px solid rgba(0,0,0,.08)" }}>
+                <span>{item.name}</span>
+                <span style={{ color: "#6B6B70" }}>x{item.quantity ?? 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {booking.notes && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 8 }}>Notes</div>
+          <p style={{ margin: 0, font: "500 14px/1.45 'Hanken Grotesk'", color: "#6B6B70" }}>{booking.notes}</p>
+        </div>
+      )}
+
+      {breakdown.length > 0 && (
+        <div style={{ marginTop: 16, padding: 16, background: "#fff", borderRadius: 12, border: "1px solid rgba(0,0,0,.08)" }}>
+          <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 10 }}>Cost breakdown</div>
+          {breakdown.map(([label, val]) => (
+            <div key={label} style={{ display: "flex", justifyContent: "space-between", font: "500 14px 'Hanken Grotesk'", marginBottom: 6 }}>
+              {humanizeKey(label)}
+              <span>{typeof val === "number" ? `$${val.toFixed(2)}` : String(val)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {proofPhotos.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <DeliveryProofGallery photos={proofPhotos} />
+        </div>
+      )}
+
+      {booking.review && (
+        <div style={{ marginTop: 16, padding: 16, background: "#fff", borderRadius: 12, border: "1px solid rgba(0,0,0,.08)" }}>
+          <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 8 }}>Your review</div>
+          <div style={{ marginBottom: 6 }}>
+            <StarRating value={booking.review.rating} size={22} gap={4} />
+          </div>
+          {booking.review.comment && <p style={{ margin: 0, font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>{booking.review.comment}</p>}
+        </div>
+      )}
+
+      {(booking.payments ?? []).length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".09em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 10 }}>Payments</div>
+          {(booking.payments ?? []).map((p) => (
+            <div key={p.id} style={{ display: "flex", justifyContent: "space-between", font: "600 14px 'Hanken Grotesk'", padding: "10px 12px", background: "#fff", borderRadius: 10, border: "1px solid rgba(0,0,0,.08)", marginBottom: 8 }}>
+              <span>
+                {p.kind === "tip" ? "Tip" : "Job payment"} · {p.method === "cash_on_site" || p.transactionRef?.startsWith("CASH") ? "cash on site" : p.status}
+              </span>
+              <b>${Number(p.amount).toFixed(2)}</b>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {paid && invoice && !invoiceLoading && (
+        <div style={{ marginTop: 16 }}>
+          <InvoicePreviewCard
+            invoice={invoice}
+            onDownload={() => downloadInvoicePdf(invoice)}
+            onShare={() => void shareInvoice(invoice)}
+          />
+        </div>
+      )}
+
+      {canRebook && (
+        <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+          <button
+            type="button"
+            disabled={actionBusy}
+            onClick={() => void handleRebook()}
+            style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "var(--accent)", font: "800 13px 'Archivo'", cursor: actionBusy ? "wait" : "pointer" }}
+          >
+            {actionBusy ? "Working..." : "Book again with same mover"}
+          </button>
+          <button
+            type="button"
+            disabled={actionBusy}
+            onClick={() => void handleDuplicate()}
+            style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", background: "#fff", font: "700 13px 'Hanken Grotesk'", cursor: actionBusy ? "wait" : "pointer" }}
+          >
+            Duplicate as draft
+          </button>
+          {actionMsg && (
+            <span style={{ font: "600 13px 'Hanken Grotesk'", color: actionMsg.includes("failed") ? "#a8442a" : "#1f6b1f" }}>{actionMsg}</span>
+          )}
+        </div>
+      )}
+
+      <BookingInsightsPanel booking={booking} myUserId={user?.id} />
+      {booking.id && <BookingTimelinePanel bookingId={booking.id} compact />}
+
+      <BookingManageActions
+        bookingId={booking.id}
+        status={booking.status}
+        canCancel={false}
+        canReschedule={false}
+        canShare={false}
+        canDispute
+        onCancel={() => Promise.resolve()}
+        onDispute={async (reason) => {
+          await flow.createDispute(booking.id, reason);
+        }}
+        onReschedule={() => Promise.resolve()}
+        onShare={() => Promise.resolve(null)}
+      />
+    </div>
+  );
+}
+
+function HistoryScreen({
+  onStartRequest,
+  focusBookingId,
+  onFocusConsumed,
+}: {
+  onStartRequest: () => void;
+  focusBookingId?: string | null;
+  onFocusConsumed?: () => void;
+}) {
+  const flow = useMoveFlow();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Booking | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  useEffect(() => {
+    flow.loadBookings();
+  }, []);
+
+  useEffect(() => {
+    if (!focusBookingId) return;
+    let cancelled = false;
+    (async () => {
+      setExpandedId(focusBookingId);
+      setDetailLoading(true);
+      try {
+        const full = await flow.loadBooking(focusBookingId);
+        if (!cancelled) setDetail(full);
+      } finally {
+        if (!cancelled) setDetailLoading(false);
+        onFocusConsumed?.();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [focusBookingId]);
+
+  const formatRoute = (b: Booking) => {
+    const pickup = (b.pickupAddress as { street?: string } | undefined)?.street ?? b.request?.pickupAddress ?? "Pickup";
+    const dest = (b.destinationAddress as { street?: string } | undefined)?.street ?? b.request?.destinationAddress ?? "Destination";
+    return `${pickup} → ${dest}`;
+  };
+
+  const historyBookings = flow.bookings.filter((b) => !isTrackableBooking(b));
+
+  const toggleDetail = async (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      setDetail(null);
+      return;
+    }
+    setExpandedId(id);
+    setDetailLoading(true);
+    try {
+      const full = await flow.loadBooking(id);
+      setDetail(full);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ flex: 1, overflow: "auto", minHeight: 0, background: "#F5F4EF" }}>
+      <div className="customer-history-inner" style={{ maxWidth: 920, margin: "0 auto", padding: "40px 40px 48px" }}>
+        <div className="customer-history-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
+          <h1 style={{ margin: 0, font: "900 34px 'Archivo'", letterSpacing: "-.025em" }}>Your moves</h1>
+          <div onClick={onStartRequest} style={{ height: 46, padding: "0 20px", borderRadius: 12, background: "var(--accent)", display: "inline-flex", alignItems: "center", font: "800 14px 'Archivo'", color: "#0E0E10", cursor: "pointer" }}>
+            + New move
+          </div>
+        </div>
+
+        {historyBookings.map((b) => {
+          const expanded = expandedId === b.id;
+          const paid = isBookingJobPaid(b);
+          return (
+            <div key={b.id} style={{ border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, background: "#fff", marginBottom: 14, overflow: "hidden" }}>
+              <div
+                className="customer-history-card-row"
+                onClick={() => void toggleDetail(b.id)}
+                style={{ padding: 20, display: "flex", alignItems: "center", gap: 18, cursor: "pointer" }}
+              >
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: "#eceae2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <AppIcon name="box" size={22} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
+                    <b style={{ font: "700 16px 'Hanken Grotesk'" }}>{formatRoute(b)}</b>
+                    <span style={{ font: "800 10px 'Hanken Grotesk'", background: paid ? "#1f6b1f" : "#eceae2", color: paid ? "#fff" : "#6B6B70", padding: "3px 8px", borderRadius: 6 }}>
+                      {paid ? "PAID" : b.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <div style={{ font: "600 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 3 }}>
+                    {new Date(b.scheduledDate).toLocaleDateString()} · {b.mover?.moverProfile?.businessName ?? "Mover"}
+                  </div>
+                </div>
+                <b style={{ font: "900 20px 'Archivo'" }}>${Number(b.price).toFixed(0)}</b>
+                <span style={{ display: "inline-flex", color: "#6B6B70" }}>
+                  <AppIcon
+                    name="chevronRight"
+                    size={16}
+                    color="#6B6B70"
+                    style={{ transform: expanded ? "rotate(-90deg)" : "rotate(90deg)" }}
+                  />
+                </span>
+              </div>
+              {expanded && (
+                detailLoading ? (
+                  <div style={{ padding: "16px 20px 24px", font: "600 14px 'Hanken Grotesk'", color: "#6B6B70" }}>Loading details...</div>
+                ) : detail?.id === b.id ? (
+                  <HistoryBookingDetail booking={detail} />
+                ) : null
+              )}
+              {expanded && detail?.id === b.id && (
+                <div style={{ padding: "0 20px 20px", display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <div onClick={() => flow.rebook(b.id)} style={{ height: 42, padding: "0 18px", borderRadius: 12, border: "1.5px solid rgba(0,0,0,.16)", display: "flex", alignItems: "center", font: "700 13px 'Hanken Grotesk'", cursor: "pointer" }}>
+                    Rebook
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {historyBookings.length === 0 && (
+          <p style={{ font: "600 15px 'Hanken Grotesk'", color: "#6B6B70" }}>No completed moves yet. Active moves appear in Track until delivery is verified and paid.</p>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,120 @@
+.tabs {
+  display: contents;
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 0 !important;
+    background: #f5f4ef !important;
+  }
+
+  .shell {
+    min-height: 100dvh;
+    height: auto !important;
+    border-radius: 0 !important;
+    flex-direction: column;
+    overflow: visible !important;
+  }
+
+  .sidebar {
+    width: 100% !important;
+    padding: 16px !important;
+  }
+
+  .sidebar > a {
+    margin-bottom: 16px !important;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin: 0 -16px;
+    padding: 0 16px 8px;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabs > button {
+    flex: 0 0 auto;
+    min-height: 48px;
+    margin-bottom: 0 !important;
+    white-space: nowrap;
+  }
+
+  .tabs > button > div:last-child {
+    display: none;
+  }
+
+  .account {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px !important;
+  }
+
+  .account > a {
+    margin: 0 !important;
+    padding: 10px 12px !important;
+  }
+
+  .account > div {
+    display: none;
+  }
+
+  .account > button {
+    width: auto !important;
+    margin-top: 0 !important;
+    padding: 0 12px;
+  }
+
+  .main {
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .header {
+    padding: 20px 16px 0 !important;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .header h1 {
+    font-size: 24px !important;
+  }
+
+  .header p {
+    display: none;
+  }
+
+  .headerActions {
+    gap: 8px !important;
+  }
+
+  .headerActions > button:first-child,
+  .headerActions > div:nth-child(2) {
+    display: none !important;
+  }
+
+  .error {
+    margin: 14px 16px 0 !important;
+  }
+
+  .content {
+    overflow: visible !important;
+    padding: 18px 16px 32px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    padding-bottom: 10px !important;
+  }
+
+  .content {
+    padding-inline: 12px !important;
+  }
+}

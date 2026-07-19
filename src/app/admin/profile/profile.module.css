@@ -1,0 +1,12 @@
+@media (max-width: 600px) {
+  .page {
+    padding: 0 !important;
+    background: #f5f4ef !important;
+  }
+
+  .shell {
+    min-height: 100dvh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
