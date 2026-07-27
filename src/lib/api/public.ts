@@ -26,6 +26,8 @@ export const vehiclesApi = {
 export const zonesApi = {
   list: () => apiPublic<ServiceZone[]>("/zones"),
 
+  listManaged: () => api<ServiceZone[]>("/zones/manage"),
+
   check: (latitude: number, longitude: number) =>
     apiPublic<{ covered: boolean; outsideCanada?: boolean; zones: ServiceZone[] }>(
       `/zones/check?latitude=${latitude}&longitude=${longitude}`,

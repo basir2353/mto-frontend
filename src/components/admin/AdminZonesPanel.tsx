@@ -3,10 +3,53 @@
 import { useEffect, useState } from "react";
 import { Map, Marker, useMap } from "@vis.gl/react-google-maps";
 import { TextInput } from "@/components/FormControls";
+import LocationField from "@/components/maps/LocationField";
 import { zonesApi, type ServiceZone } from "@/lib/api";
 import { hasGoogleMaps } from "@/lib/env";
-import { CANADA_BOUNDS, DEFAULT_MAP_CENTER } from "@/lib/maps";
+import { CANADA_BOUNDS, type MapPlace } from "@/lib/maps";
 import styles from "./AdminZonesPanel.module.css";
+
+type ZoneFormState = {
+  name: string;
+  description: string;
+  locationLabel: string;
+  lat: string;
+  lng: string;
+  radiusKm: string;
+  baseFee: string;
+  multiplier: string;
+};
+
+const DEFAULT_FORM: ZoneFormState = {
+  name: "",
+  description: "",
+  locationLabel: "Toronto, ON, Canada",
+  lat: "43.6532",
+  lng: "-79.3832",
+  radiusKm: "45",
+  baseFee: "25",
+  multiplier: "1.35",
+};
+
+function circleCoords(zone: ServiceZone) {
+  const boundary = zone.boundary?.coordinates;
+  if (!boundary || Array.isArray(boundary)) return null;
+  return boundary;
+}
+
+function formFromZone(zone: ServiceZone): ZoneFormState {
+  const coords = circleCoords(zone);
+  return {
+    name: zone.name,
+    description: zone.description ?? "",
+    locationLabel: zone.name,
+    lat: coords ? String(coords.lat) : DEFAULT_FORM.lat,
+    lng: coords ? String(coords.lng) : DEFAULT_FORM.lng,
+    radiusKm: coords ? String(coords.radiusKm) : DEFAULT_FORM.radiusKm,
+    baseFee: String(zone.baseFee),
+    multiplier: String(zone.basePriceMultiplier),
+  };
+}
 
 export function AdminZonesPanel({
   onError,
@@ -18,18 +61,22 @@ export function AdminZonesPanel({
   const [zones, setZones] = useState<ServiceZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [lat, setLat] = useState("43.6532");
-  const [lng, setLng] = useState("-79.3832");
-  const [radiusKm, setRadiusKm] = useState("45");
-  const [baseFee, setBaseFee] = useState("25");
-  const [multiplier, setMultiplier] = useState("1.35");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<ZoneFormState>(DEFAULT_FORM);
+
+  const setField = <K extends keyof ZoneFormState>(key: K, value: ZoneFormState[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setForm(DEFAULT_FORM);
+  };
 
   const load = async () => {
     setLoading(true);
     try {
-      setZones(await zonesApi.list());
+      setZones(await zonesApi.listManaged());
     } catch (e) {
       onError(e instanceof Error ? e.message : "Could not load zones");
     } finally {
@@ -41,32 +88,74 @@ export function AdminZonesPanel({
     void load();
   }, []);
 
-  const create = async (e: React.FormEvent) => {
+  const applyPlace = (place: MapPlace) => {
+    setForm((prev) => ({
+      ...prev,
+      locationLabel: place.address,
+      lat: place.lat != null ? place.lat.toFixed(6) : prev.lat,
+      lng: place.lng != null ? place.lng.toFixed(6) : prev.lng,
+      name: prev.name.trim() ? prev.name : place.address.split(",")[0]?.trim() || prev.name,
+    }));
+  };
+
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    const lat = Number(form.lat);
+    const lng = Number(form.lng);
+    const radiusKm = Number(form.radiusKm);
+    const baseFee = Number(form.baseFee);
+    const basePriceMultiplier = Number(form.multiplier);
+
+    if (!form.name.trim()) {
+      onError("Zone name is required");
+      return;
+    }
+    if (![lat, lng, radiusKm, baseFee, basePriceMultiplier].every(Number.isFinite)) {
+      onError("Enter a valid map location, radius, and rates");
+      return;
+    }
+
     setBusy(true);
     onError("");
     try {
-      await zonesApi.create({
-        name: name.trim(),
-        description: description.trim() || undefined,
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim() || undefined,
         boundary: {
-          type: "circle",
-          coordinates: { lat: Number(lat), lng: Number(lng), radiusKm: Number(radiusKm) },
+          type: "circle" as const,
+          coordinates: { lat, lng, radiusKm },
         },
-        baseFee: Number(baseFee),
-        basePriceMultiplier: Number(multiplier),
+        baseFee,
+        basePriceMultiplier,
         isActive: true,
         isAvailable: true,
-      });
-      setName("");
-      setDescription("");
+      };
+
+      if (editingId) {
+        const existing = zones.find((z) => z.id === editingId);
+        await zonesApi.update(editingId, {
+          ...payload,
+          isActive: existing?.isActive ?? true,
+          isAvailable: existing?.isAvailable ?? true,
+        });
+      } else {
+        await zonesApi.create(payload);
+      }
+
+      resetForm();
       await load();
       onUpdated?.();
     } catch (err) {
-      onError(err instanceof Error ? err.message : "Could not create zone");
+      onError(err instanceof Error ? err.message : editingId ? "Could not update zone" : "Could not create zone");
     } finally {
       setBusy(false);
     }
+  };
+
+  const startEdit = (zone: ServiceZone) => {
+    setEditingId(zone.id);
+    setForm(formFromZone(zone));
+    onError("");
   };
 
   const toggle = async (zone: ServiceZone, field: "isActive" | "isAvailable") => {
@@ -83,29 +172,13 @@ export function AdminZonesPanel({
     }
   };
 
-  const updateRate = async (zone: ServiceZone, nextFee: string, nextMult: string) => {
-    setBusy(true);
-    onError("");
-    try {
-      await zonesApi.update(zone.id, {
-        baseFee: Number(nextFee),
-        basePriceMultiplier: Number(nextMult),
-      });
-      await load();
-      onUpdated?.();
-    } catch (err) {
-      onError(err instanceof Error ? err.message : "Could not update rates");
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const remove = async (id: string) => {
     if (!confirm("Delete this zone?")) return;
     setBusy(true);
     onError("");
     try {
       await zonesApi.remove(id);
+      if (editingId === id) resetForm();
       await load();
       onUpdated?.();
     } catch (err) {
@@ -119,20 +192,53 @@ export function AdminZonesPanel({
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <ZonePricingPreview />
       <div className={styles.layout} style={{ display: "flex", gap: 32, flexWrap: "wrap", alignItems: "flex-start" }}>
-        <form className={styles.form} onSubmit={create} style={{ flex: "1 1 360px", maxWidth: 480, display: "flex", flexDirection: "column", gap: 14, background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "20px 22px" }}>
+        <form
+          className={styles.form}
+          onSubmit={save}
+          style={{
+            flex: "1 1 360px",
+            maxWidth: 480,
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+            background: "#fff",
+            border: "1.5px solid rgba(0,0,0,.1)",
+            borderRadius: 16,
+            padding: "20px 22px",
+          }}
+        >
           <div>
-            <h3 style={{ margin: 0, font: "800 18px 'Archivo'" }}>Create service zone</h3>
+            <h3 style={{ margin: 0, font: "800 18px 'Archivo'" }}>
+              {editingId ? "Update service zone" : "Create service zone"}
+            </h3>
             <p style={{ margin: "6px 0 0", font: "500 13px 'Hanken Grotesk'", color: "#6B6B70" }}>
-              Set the zone on the map, keep it inside Canada, then adjust fees for that service area.
+              Search a Canadian place or click the map. You can update name, location, radius, and rates anytime.
             </p>
           </div>
-          <TextInput label="Zone name" value={name} onChange={setName} placeholder="Greater Toronto Area" />
-          <TextInput label="Description" value={description} onChange={setDescription} placeholder="Primary launch zone" />
+
+          <TextInput label="Zone name" value={form.name} onChange={(v) => setField("name", v)} placeholder="Greater Toronto Area" />
+          <TextInput
+            label="Description"
+            value={form.description}
+            onChange={(v) => setField("description", v)}
+            placeholder="Primary launch zone"
+          />
+
+          <LocationField
+            label="Zone location (maps)"
+            value={form.locationLabel}
+            onChange={(value) => setField("locationLabel", value)}
+            onPlaceSelect={applyPlace}
+            placeholder="Search city or address in Canada"
+          />
+
           <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <TextInput label="Center lat" value={lat} onChange={setLat} />
-            <TextInput label="Center lng" value={lng} onChange={setLng} />
+            <TextInput label="Center lat" value={form.lat} onChange={(v) => setField("lat", v)} />
+            <TextInput label="Center lng" value={form.lng} onChange={(v) => setField("lng", v)} />
           </div>
-          <TextInput label="Radius (km)" value={radiusKm} onChange={setRadiusKm} />
+
+          <TextInput label="Radius (km)" value={form.radiusKm} onChange={(v) => setField("radiusKm", v)} />
+
           <div
             style={{
               padding: "12px 14px",
@@ -145,45 +251,84 @@ export function AdminZonesPanel({
             }}
           >
             <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8A90" }}>
-              Set zone on map
+              Map radius
             </div>
             <input
               type="range"
               min="5"
               max="250"
               step="1"
-              value={radiusKm}
-              onChange={(e) => setRadiusKm(e.target.value)}
+              value={form.radiusKm}
+              onChange={(e) => setField("radiusKm", e.target.value)}
             />
             <div style={{ font: "600 12px 'Hanken Grotesk'", color: "#6B6B70" }}>
-              Radius: {Number(radiusKm || 0).toFixed(0)} km. Click anywhere on the map to move the zone center.
+              Radius: {Number(form.radiusKm || 0).toFixed(0)} km. Search a place or click the map to move the center.
             </div>
           </div>
+
           <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <TextInput label="Base fee ($)" value={baseFee} onChange={setBaseFee} />
-            <TextInput label="Price multiplier" value={multiplier} onChange={setMultiplier} />
+            <TextInput label="Base fee ($)" value={form.baseFee} onChange={(v) => setField("baseFee", v)} />
+            <TextInput label="Price multiplier" value={form.multiplier} onChange={(v) => setField("multiplier", v)} />
           </div>
-          <button type="submit" disabled={busy} style={{ height: 46, borderRadius: 12, border: "none", background: "var(--accent)", font: "800 15px 'Archivo'", cursor: busy ? "wait" : "pointer" }}>
-            {busy ? "Saving…" : "Create zone"}
-          </button>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              type="submit"
+              disabled={busy}
+              style={{
+                flex: 1,
+                height: 46,
+                borderRadius: 12,
+                border: "none",
+                background: "var(--accent)",
+                font: "800 15px 'Archivo'",
+                cursor: busy ? "wait" : "pointer",
+              }}
+            >
+              {busy ? "Saving…" : editingId ? "Update zone" : "Create zone"}
+            </button>
+            {editingId && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={resetForm}
+                style={{
+                  height: 46,
+                  padding: "0 16px",
+                  borderRadius: 12,
+                  border: "1.5px solid rgba(0,0,0,.14)",
+                  background: "#fff",
+                  font: "700 13px 'Hanken Grotesk'",
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
 
         <div style={{ flex: "1 1 420px", minWidth: 320, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "20px 22px" }}>
-            <h3 style={{ margin: 0, font: "800 18px 'Archivo'" }}>Zone map section</h3>
+            <h3 style={{ margin: 0, font: "800 18px 'Archivo'" }}>Zone map</h3>
             <p style={{ margin: "6px 0 14px", font: "500 13px 'Hanken Grotesk'", color: "#6B6B70" }}>
-              Admin can set the active zone directly on the map. The service area stays locked to Canada.
+              Location field and map stay in sync. Service area is locked to Canada.
             </p>
             <ZoneDraftMap
-              lat={Number(lat)}
-              lng={Number(lng)}
-              radiusKm={Number(radiusKm)}
+              lat={Number(form.lat)}
+              lng={Number(form.lng)}
+              radiusKm={Number(form.radiusKm)}
               onChange={(nextLat, nextLng) => {
-                setLat(nextLat.toFixed(6));
-                setLng(nextLng.toFixed(6));
+                setForm((prev) => ({
+                  ...prev,
+                  lat: nextLat.toFixed(6),
+                  lng: nextLng.toFixed(6),
+                  locationLabel: `${nextLat.toFixed(4)}, ${nextLng.toFixed(4)}`,
+                }));
               }}
             />
           </div>
+
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {loading ? (
               <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>Loading zones…</div>
@@ -191,7 +336,15 @@ export function AdminZonesPanel({
               <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>No zones configured.</div>
             ) : (
               zones.map((z) => (
-                <ZoneCard key={z.id} zone={z} busy={busy} onToggle={toggle} onUpdateRate={updateRate} onRemove={remove} />
+                <ZoneCard
+                  key={z.id}
+                  zone={z}
+                  busy={busy}
+                  editing={editingId === z.id}
+                  onEdit={startEdit}
+                  onToggle={toggle}
+                  onRemove={remove}
+                />
               ))
             )}
           </div>
@@ -202,6 +355,7 @@ export function AdminZonesPanel({
 }
 
 function ZonePricingPreview() {
+  const [locationLabel, setLocationLabel] = useState("Toronto, ON, Canada");
   const [lat, setLat] = useState("43.6532");
   const [lng, setLng] = useState("-79.3832");
   const [distanceKm, setDistanceKm] = useState("12");
@@ -229,18 +383,50 @@ function ZonePricingPreview() {
     <div className={styles.preview} style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "20px 22px" }}>
       <h3 style={{ margin: "0 0 6px", font: "800 18px 'Archivo'" }}>Rate preview calculator</h3>
       <p style={{ margin: "0 0 16px", font: "500 13px 'Hanken Grotesk'", color: "#6B6B70" }}>
-        Test what a customer would pay at a location before changing zone settings.
+        Search a map location to preview what a customer would pay before changing zone settings.
       </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, alignItems: "end" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 2fr) repeat(auto-fit, minmax(120px, 1fr))", gap: 12, alignItems: "end" }}>
+        <LocationField
+          label="Preview location"
+          value={locationLabel}
+          onChange={setLocationLabel}
+          onPlaceSelect={(place) => {
+            setLocationLabel(place.address);
+            if (place.lat != null) setLat(place.lat.toFixed(6));
+            if (place.lng != null) setLng(place.lng.toFixed(6));
+          }}
+          placeholder="Search Canadian address"
+        />
         <TextInput label="Latitude" value={lat} onChange={setLat} />
         <TextInput label="Longitude" value={lng} onChange={setLng} />
         <TextInput label="Trip km" value={distanceKm} onChange={setDistanceKm} />
-        <button type="button" onClick={() => void preview()} disabled={busy} style={{ height: 42, borderRadius: 10, border: "none", background: "#0E0E10", color: "#fff", font: "700 13px 'Hanken Grotesk'", cursor: busy ? "wait" : "pointer" }}>
+        <button
+          type="button"
+          onClick={() => void preview()}
+          disabled={busy}
+          style={{
+            height: 42,
+            borderRadius: 10,
+            border: "none",
+            background: "#0E0E10",
+            color: "#fff",
+            font: "700 13px 'Hanken Grotesk'",
+            cursor: busy ? "wait" : "pointer",
+          }}
+        >
           {busy ? "Calculating…" : "Preview price"}
         </button>
       </div>
       {result && (
-        <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: result.covered ? "#e7f5ea" : "#fff4df", font: "600 14px 'Hanken Grotesk'" }}>
+        <div
+          style={{
+            marginTop: 14,
+            padding: 14,
+            borderRadius: 12,
+            background: result.covered ? "#e7f5ea" : "#fff4df",
+            font: "600 14px 'Hanken Grotesk'",
+          }}
+        >
           {result.covered
             ? `Covered zone · Estimated total $${result.total?.toFixed(2)}${result.subtotal != null ? ` (subtotal $${result.subtotal.toFixed(2)})` : ""}`
             : "Location is outside all active zones."}
@@ -278,7 +464,7 @@ function ZoneDraftMap({
           color: "#6B6B70",
         }}
       >
-        Google Maps preview is unavailable. Use the latitude and longitude fields to place the zone inside Canada.
+        Google Maps preview is unavailable. Use the location search field to place the zone inside Canada.
       </div>
     );
   }
@@ -343,58 +529,86 @@ function ZoneDraftCircle({
 function ZoneCard({
   zone,
   busy,
+  editing,
+  onEdit,
   onToggle,
-  onUpdateRate,
   onRemove,
 }: {
   zone: ServiceZone;
   busy: boolean;
+  editing: boolean;
+  onEdit: (zone: ServiceZone) => void;
   onToggle: (zone: ServiceZone, field: "isActive" | "isAvailable") => void;
-  onUpdateRate: (zone: ServiceZone, fee: string, mult: string) => void;
   onRemove: (id: string) => void;
 }) {
-  const [fee, setFee] = useState(String(zone.baseFee));
-  const [mult, setMult] = useState(String(zone.basePriceMultiplier));
-
-  useEffect(() => {
-    setFee(String(zone.baseFee));
-    setMult(String(zone.basePriceMultiplier));
-  }, [zone.baseFee, zone.basePriceMultiplier]);
-
-  const boundary = zone.boundary?.coordinates;
-  const center =
-    boundary && !Array.isArray(boundary)
-      ? `${boundary.lat}, ${boundary.lng} · ${boundary.radiusKm}km`
-      : "Custom boundary";
+  const coords = circleCoords(zone);
+  const center = coords ? `${coords.lat}, ${coords.lng} · ${coords.radiusKm}km` : "Custom boundary";
 
   return (
-    <div className={styles.zoneCard} style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 14, padding: "16px 18px" }}>
+    <div
+      className={styles.zoneCard}
+      style={{
+        background: "#fff",
+        border: editing ? "1.5px solid #0E0E10" : "1.5px solid rgba(0,0,0,.1)",
+        borderRadius: 14,
+        padding: "16px 18px",
+      }}
+    >
       <div className={styles.zoneHeading} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
         <div style={{ font: "800 16px 'Archivo'" }}>{zone.name}</div>
         <div style={{ display: "flex", gap: 6 }}>
           <Chip active={zone.isActive} label={zone.isActive ? "Active" : "Inactive"} onClick={() => onToggle(zone, "isActive")} />
-          <Chip active={zone.isAvailable} label={zone.isAvailable ? "Available" : "Unavailable"} onClick={() => onToggle(zone, "isAvailable")} />
+          <Chip
+            active={zone.isAvailable}
+            label={zone.isAvailable ? "Available" : "Unavailable"}
+            onClick={() => onToggle(zone, "isAvailable")}
+          />
         </div>
       </div>
-      {zone.description && <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 6 }}>{zone.description}</div>}
+      {zone.description && (
+        <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 6 }}>{zone.description}</div>
+      )}
       <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#8A8A90", marginTop: 8 }}>{center}</div>
+      <div style={{ font: "600 13px 'Hanken Grotesk'", color: "#3a3a40", marginTop: 8 }}>
+        Base fee ${Number(zone.baseFee).toFixed(2)} · Multiplier {Number(zone.basePriceMultiplier).toFixed(2)}
+      </div>
 
-      <div className={styles.rateGrid} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10, marginTop: 14, alignItems: "end" }}>
-        <TextInput label="Base fee" value={fee} onChange={setFee} />
-        <TextInput label="Multiplier" value={mult} onChange={setMult} />
+      <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
         <button
           type="button"
           disabled={busy}
-          onClick={() => onUpdateRate(zone, fee, mult)}
-          style={{ height: 42, padding: "0 14px", borderRadius: 10, border: "none", background: "#0E0E10", color: "#fff", font: "700 13px 'Hanken Grotesk'", cursor: busy ? "wait" : "pointer" }}
+          onClick={() => onEdit(zone)}
+          style={{
+            height: 40,
+            padding: "0 14px",
+            borderRadius: 10,
+            border: "none",
+            background: editing ? "var(--accent)" : "#0E0E10",
+            color: editing ? "#0E0E10" : "#fff",
+            font: "700 13px 'Hanken Grotesk'",
+            cursor: busy ? "wait" : "pointer",
+          }}
         >
-          Save rates
+          {editing ? "Editing…" : "Edit all fields"}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onRemove(zone.id)}
+          style={{
+            height: 40,
+            padding: "0 14px",
+            borderRadius: 10,
+            border: "none",
+            background: "transparent",
+            color: "#a8442a",
+            font: "700 13px 'Hanken Grotesk'",
+            cursor: "pointer",
+          }}
+        >
+          Delete zone
         </button>
       </div>
-
-      <button type="button" disabled={busy} onClick={() => onRemove(zone.id)} style={{ marginTop: 12, border: "none", background: "transparent", color: "#a8442a", font: "700 13px 'Hanken Grotesk'", cursor: "pointer" }}>
-        Delete zone
-      </button>
     </div>
   );
 }
