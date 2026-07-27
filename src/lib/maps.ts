@@ -4,9 +4,17 @@ export type MapPlace = {
   address: string;
   lat?: number;
   lng?: number;
+  country?: string;
+  countryCode?: string;
 };
 
 export const DEFAULT_MAP_CENTER: LatLng = { lat: 43.6532, lng: -79.3832 };
+export const CANADA_BOUNDS = {
+  north: 83.23324,
+  south: 41.6765559,
+  west: -141.00187,
+  east: -52.3231981,
+} as const;
 
 /** Coerce API/string coords into a finite LatLng, or null. */
 export function toFiniteCoord(value: unknown): number | null {
@@ -21,6 +29,19 @@ export function toLatLng(place?: MapPlace | null): LatLng | null {
   if (lat == null || lng == null) return null;
   if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
   return { lat, lng };
+}
+
+export function isWithinCanadaBounds(
+  place?: Pick<MapPlace, "lat" | "lng"> | null,
+): boolean {
+  const coords = toLatLng(place ? { address: "", ...place } : null);
+  if (!coords) return false;
+  return (
+    coords.lat >= CANADA_BOUNDS.south &&
+    coords.lat <= CANADA_BOUNDS.north &&
+    coords.lng >= CANADA_BOUNDS.west &&
+    coords.lng <= CANADA_BOUNDS.east
+  );
 }
 
 export function mapCenterFromPlaces(

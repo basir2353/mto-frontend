@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DatePicker from "@/components/DatePicker";
 import PlaceAutocompleteInput from "@/components/maps/PlaceAutocompleteInput";
 import RouteMap from "@/components/maps/RouteMap";
 import { useForm } from "@/contexts/MoveFormContext";
 import { useNearbyMovers } from "@/hooks/useNearbyMovers";
-import type { MapPlace } from "@/lib/maps";
-import type { NearbyMoversSortBy } from "@/lib/api/public";
+import { hasGoogleMaps } from "@/lib/env";
+import { zonesApi, type NearbyMoversSortBy } from "@/lib/api/public";
+import { isWithinCanadaBounds, type MapPlace } from "@/lib/maps";
 import { MapPill, WizardShell, ZoomControls } from "@/components/move/WizardChrome";
 import { AppIcon, type AppIconName } from "@/components/ui/Icons";
 
@@ -22,6 +23,11 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
   const f = useForm();
   const [sortBy] = useState<NearbyMoversSortBy>("distance");
   const [error, setError] = useState<string | null>(null);
+  const [coverageStatus, setCoverageStatus] = useState<{
+    key: string;
+    tone: "ok" | "warn";
+    text: string;
+  } | null>(null);
   const nearby = useNearbyMovers({
     pickup: f.pickupPlace,
     destination: f.destinationPlace,
@@ -30,11 +36,88 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
   });
 
   const onlineCount = nearby.summary.onlineCount;
-  const canContinue = Boolean(f.pickup.trim() && f.destination.trim());
+  const pickupHasCoords = f.pickupPlace.lat != null && f.pickupPlace.lng != null;
+  const destinationHasCoords = f.destinationPlace.lat != null && f.destinationPlace.lng != null;
+  const pickupInCanada = pickupHasCoords ? isWithinCanadaBounds(f.pickupPlace) : false;
+  const destinationInCanada = destinationHasCoords ? isWithinCanadaBounds(f.destinationPlace) : false;
+  const canadianPlacesReady = !hasGoogleMaps || (pickupHasCoords && pickupInCanada && destinationHasCoords && destinationInCanada);
+  const zoneLookupKey = pickupHasCoords ? `${f.pickupPlace.lat}:${f.pickupPlace.lng}` : "";
+  const localZoneStatus = useMemo(() => {
+    if (!hasGoogleMaps) return null;
+    if (pickupHasCoords && !pickupInCanada) {
+      return { tone: "warn" as const, text: "Pickup location must be inside Canada." };
+    }
+    if (destinationHasCoords && !destinationInCanada) {
+      return { tone: "warn" as const, text: "Drop-off location must be inside Canada." };
+    }
+    if (!pickupHasCoords) {
+      return {
+        tone: "warn" as const,
+        text: "Select a pickup address from the Canada suggestions to check zone coverage.",
+      };
+    }
+    return null;
+  }, [destinationHasCoords, destinationInCanada, pickupHasCoords, pickupInCanada]);
+  const zoneStatus =
+    localZoneStatus ??
+    (zoneLookupKey && coverageStatus?.key === zoneLookupKey
+      ? { tone: coverageStatus.tone, text: coverageStatus.text }
+      : { tone: "ok" as const, text: "Checking service zone coverage..." });
+  const zoneCheckReady = !hasGoogleMaps || Boolean(localZoneStatus) || coverageStatus?.key === zoneLookupKey;
+  const zoneAllowsContinue = zoneStatus.tone !== "warn";
+  const canContinue = Boolean(f.pickup.trim() && f.destination.trim() && canadianPlacesReady && zoneCheckReady && zoneAllowsContinue);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!hasGoogleMaps || localZoneStatus || !pickupHasCoords) {
+      return;
+    }
+
+    zonesApi
+      .check(Number(f.pickupPlace.lat), Number(f.pickupPlace.lng))
+      .then((result) => {
+        if (cancelled) return;
+        if (result.outsideCanada) {
+          setCoverageStatus({
+            key: zoneLookupKey,
+            tone: "warn",
+            text: "This location is outside Canada and cannot be booked.",
+          });
+          return;
+        }
+        if (!result.covered) {
+          setCoverageStatus({
+            key: zoneLookupKey,
+            tone: "warn",
+            text: "Out of zone: this pickup location is not covered by any active service zone.",
+          });
+          return;
+        }
+        const zoneName = result.zones[0]?.name;
+        setCoverageStatus({
+          key: zoneLookupKey,
+          tone: "ok",
+          text: zoneName ? `In zone: covered by ${zoneName}.` : "In zone: this pickup is covered.",
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCoverageStatus({
+          key: zoneLookupKey,
+          tone: "warn",
+          text: "Could not verify zone coverage right now. Please try again.",
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [f.pickupPlace.lat, f.pickupPlace.lng, localZoneStatus, pickupHasCoords, zoneLookupKey]);
 
   const handleContinue = () => {
     if (!canContinue) {
-      setError("Enter pickup and drop-off locations to continue.");
+      setError(zoneStatus.tone === "warn" ? zoneStatus.text : "Select valid Canadian pickup and drop-off locations to continue.");
       return;
     }
     setError(null);
@@ -85,7 +168,10 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
             <div className="plan-location-card plan-sheet-locations" style={{ border: "1.5px solid rgba(0,0,0,.14)", borderRadius: 12, position: "relative" }}>
               <PickupField
                 value={f.pickup}
-                onChange={f.setPickup}
+                onChange={(value) => {
+                  f.setPickup(value);
+                  f.setPickupPlace({ address: value });
+                }}
                 onPlaceSelect={(place) => {
                   f.setPickupPlace(place);
                   f.setPickup(place.address);
@@ -94,7 +180,10 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
               <div style={{ height: 1, background: "rgba(0,0,0,.08)" }} />
               <DestinationField
                 value={f.destination}
-                onChange={f.setDestination}
+                onChange={(value) => {
+                  f.setDestination(value);
+                  f.setDestinationPlace({ address: value });
+                }}
                 onPlaceSelect={(place) => {
                   f.setDestinationPlace(place);
                   f.setDestination(place.address);
@@ -174,6 +263,32 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
               >
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1f6b1f" }} />
                 {onlineCount} movers online nearby
+              </div>
+            )}
+            {zoneStatus && (
+              <div
+                style={{
+                  marginTop: 14,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: zoneStatus.tone === "ok" ? "#e7f5ea" : "#fff4df",
+                  border: zoneStatus.tone === "ok" ? "1.5px solid rgba(31,107,31,.18)" : "1.5px solid rgba(138,90,0,.2)",
+                  font: "700 13px 'Hanken Grotesk'",
+                  color: zoneStatus.tone === "ok" ? "#1f6b1f" : "#8a5a00",
+                }}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: zoneStatus.tone === "ok" ? "#1f6b1f" : "#8a5a00",
+                  }}
+                />
+                {zoneStatus.text}
               </div>
             )}
           </div>

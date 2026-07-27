@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Map, Marker, useMap } from "@vis.gl/react-google-maps";
 import { TextInput } from "@/components/FormControls";
 import { zonesApi, type ServiceZone } from "@/lib/api";
+import { hasGoogleMaps } from "@/lib/env";
+import { CANADA_BOUNDS, DEFAULT_MAP_CENTER } from "@/lib/maps";
 import styles from "./AdminZonesPanel.module.css";
 
 export function AdminZonesPanel({
@@ -116,40 +119,83 @@ export function AdminZonesPanel({
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <ZonePricingPreview />
       <div className={styles.layout} style={{ display: "flex", gap: 32, flexWrap: "wrap", alignItems: "flex-start" }}>
-      <form className={styles.form} onSubmit={create} style={{ flex: "1 1 360px", maxWidth: 480, display: "flex", flexDirection: "column", gap: 14, background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "20px 22px" }}>
-        <div>
-          <h3 style={{ margin: 0, font: "800 18px 'Archivo'" }}>Create service zone</h3>
-          <p style={{ margin: "6px 0 0", font: "500 13px 'Hanken Grotesk'", color: "#6B6B70" }}>
-            Set base fee and price multiplier to control commission and rates in each area.
-          </p>
-        </div>
-        <TextInput label="Zone name" value={name} onChange={setName} placeholder="Greater Toronto Area" />
-        <TextInput label="Description" value={description} onChange={setDescription} placeholder="Primary launch zone" />
-        <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <TextInput label="Center lat" value={lat} onChange={setLat} />
-          <TextInput label="Center lng" value={lng} onChange={setLng} />
-        </div>
-        <TextInput label="Radius (km)" value={radiusKm} onChange={setRadiusKm} />
-        <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <TextInput label="Base fee ($)" value={baseFee} onChange={setBaseFee} />
-          <TextInput label="Price multiplier" value={multiplier} onChange={setMultiplier} />
-        </div>
-        <button type="submit" disabled={busy} style={{ height: 46, borderRadius: 12, border: "none", background: "var(--accent)", font: "800 15px 'Archivo'", cursor: busy ? "wait" : "pointer" }}>
-          {busy ? "Saving…" : "Create zone"}
-        </button>
-      </form>
+        <form className={styles.form} onSubmit={create} style={{ flex: "1 1 360px", maxWidth: 480, display: "flex", flexDirection: "column", gap: 14, background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "20px 22px" }}>
+          <div>
+            <h3 style={{ margin: 0, font: "800 18px 'Archivo'" }}>Create service zone</h3>
+            <p style={{ margin: "6px 0 0", font: "500 13px 'Hanken Grotesk'", color: "#6B6B70" }}>
+              Set the zone on the map, keep it inside Canada, then adjust fees for that service area.
+            </p>
+          </div>
+          <TextInput label="Zone name" value={name} onChange={setName} placeholder="Greater Toronto Area" />
+          <TextInput label="Description" value={description} onChange={setDescription} placeholder="Primary launch zone" />
+          <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <TextInput label="Center lat" value={lat} onChange={setLat} />
+            <TextInput label="Center lng" value={lng} onChange={setLng} />
+          </div>
+          <TextInput label="Radius (km)" value={radiusKm} onChange={setRadiusKm} />
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "#f8f7f2",
+              border: "1px solid rgba(0,0,0,.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8A90" }}>
+              Set zone on map
+            </div>
+            <input
+              type="range"
+              min="5"
+              max="250"
+              step="1"
+              value={radiusKm}
+              onChange={(e) => setRadiusKm(e.target.value)}
+            />
+            <div style={{ font: "600 12px 'Hanken Grotesk'", color: "#6B6B70" }}>
+              Radius: {Number(radiusKm || 0).toFixed(0)} km. Click anywhere on the map to move the zone center.
+            </div>
+          </div>
+          <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <TextInput label="Base fee ($)" value={baseFee} onChange={setBaseFee} />
+            <TextInput label="Price multiplier" value={multiplier} onChange={setMultiplier} />
+          </div>
+          <button type="submit" disabled={busy} style={{ height: 46, borderRadius: 12, border: "none", background: "var(--accent)", font: "800 15px 'Archivo'", cursor: busy ? "wait" : "pointer" }}>
+            {busy ? "Saving…" : "Create zone"}
+          </button>
+        </form>
 
-      <div style={{ flex: "1 1 420px", display: "flex", flexDirection: "column", gap: 12 }}>
-        {loading ? (
-          <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>Loading zones…</div>
-        ) : zones.length === 0 ? (
-          <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>No zones configured.</div>
-        ) : (
-          zones.map((z) => (
-            <ZoneCard key={z.id} zone={z} busy={busy} onToggle={toggle} onUpdateRate={updateRate} onRemove={remove} />
-          ))
-        )}
-      </div>
+        <div style={{ flex: "1 1 420px", minWidth: 320, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "20px 22px" }}>
+            <h3 style={{ margin: 0, font: "800 18px 'Archivo'" }}>Zone map section</h3>
+            <p style={{ margin: "6px 0 14px", font: "500 13px 'Hanken Grotesk'", color: "#6B6B70" }}>
+              Admin can set the active zone directly on the map. The service area stays locked to Canada.
+            </p>
+            <ZoneDraftMap
+              lat={Number(lat)}
+              lng={Number(lng)}
+              radiusKm={Number(radiusKm)}
+              onChange={(nextLat, nextLng) => {
+                setLat(nextLat.toFixed(6));
+                setLng(nextLng.toFixed(6));
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {loading ? (
+              <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>Loading zones…</div>
+            ) : zones.length === 0 ? (
+              <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>No zones configured.</div>
+            ) : (
+              zones.map((z) => (
+                <ZoneCard key={z.id} zone={z} busy={busy} onToggle={toggle} onUpdateRate={updateRate} onRemove={remove} />
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -202,6 +248,96 @@ function ZonePricingPreview() {
       )}
     </div>
   );
+}
+
+function ZoneDraftMap({
+  lat,
+  lng,
+  radiusKm,
+  onChange,
+}: {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  onChange: (lat: number, lng: number) => void;
+}) {
+  if (!hasGoogleMaps || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return (
+      <div
+        style={{
+          height: 320,
+          borderRadius: 14,
+          border: "1.5px dashed rgba(0,0,0,.16)",
+          background: "#f8f7f2",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          padding: 20,
+          font: "600 13px 'Hanken Grotesk'",
+          color: "#6B6B70",
+        }}
+      >
+        Google Maps preview is unavailable. Use the latitude and longitude fields to place the zone inside Canada.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ height: 320, borderRadius: 14, overflow: "hidden", border: "1.5px solid rgba(0,0,0,.08)" }}>
+      <Map
+        defaultCenter={{ lat, lng }}
+        defaultZoom={9}
+        gestureHandling="greedy"
+        disableDefaultUI={false}
+        restriction={{ latLngBounds: CANADA_BOUNDS, strictBounds: true }}
+        onClick={(event) => {
+          const coords = event.detail.latLng;
+          if (!coords) return;
+          onChange(coords.lat, coords.lng);
+        }}
+        style={{ width: "100%", height: "100%" }}
+      >
+        <ZoneDraftCircle lat={lat} lng={lng} radiusKm={radiusKm} />
+        <Marker position={{ lat, lng }} title="Zone center" />
+      </Map>
+    </div>
+  );
+}
+
+function ZoneDraftCircle({
+  lat,
+  lng,
+  radiusKm,
+}: {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || typeof google === "undefined" || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    const circle = new google.maps.Circle({
+      map,
+      center: { lat, lng },
+      radius: Math.max(radiusKm, 1) * 1000,
+      fillColor: "#ffde2e",
+      fillOpacity: 0.22,
+      strokeColor: "#0E0E10",
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+    });
+
+    map.setCenter({ lat, lng });
+
+    return () => {
+      circle.setMap(null);
+    };
+  }, [lat, lng, map, radiusKm]);
+
+  return null;
 }
 
 function ZoneCard({

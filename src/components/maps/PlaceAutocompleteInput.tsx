@@ -47,6 +47,7 @@ export default function PlaceAutocompleteInput({
     const input = inputRef.current;
     const autocomplete = new places.Autocomplete(input, {
       fields: ["formatted_address", "geometry", "name", "address_components"],
+      componentRestrictions: { country: "ca" },
       ...(types?.length ? { types } : {}),
     });
 
@@ -55,12 +56,17 @@ export default function PlaceAutocompleteInput({
       const address = place.formatted_address ?? place.name ?? input.value ?? "";
       const lat = place.geometry?.location?.lat();
       const lng = place.geometry?.location?.lng();
+      const countryPart = place.address_components?.find((part) =>
+        part.types.includes("country"),
+      );
+      const country = countryPart?.long_name;
+      const countryCode = countryPart?.short_name;
 
       onChangeRef.current(address);
       if (lat != null && lng != null) {
-        onPlaceSelectRef.current?.({ address, lat, lng });
+        onPlaceSelectRef.current?.({ address, lat, lng, country, countryCode });
       } else {
-        onPlaceSelectRef.current?.({ address });
+        onPlaceSelectRef.current?.({ address, country, countryCode });
       }
     });
 

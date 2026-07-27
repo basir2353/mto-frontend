@@ -27,7 +27,7 @@ export const zonesApi = {
   list: () => apiPublic<ServiceZone[]>("/zones"),
 
   check: (latitude: number, longitude: number) =>
-    apiPublic<{ covered: boolean; zones: ServiceZone[] }>(
+    apiPublic<{ covered: boolean; outsideCanada?: boolean; zones: ServiceZone[] }>(
       `/zones/check?latitude=${latitude}&longitude=${longitude}`,
     ),
 
@@ -42,7 +42,7 @@ export const zonesApi = {
       longitude: String(longitude),
     });
     if (scheduledAt) params.set("scheduledAt", scheduledAt);
-    return apiPublic<{ available: boolean; zones: ServiceZone[] }>(`/zones/availability?${params}`);
+    return apiPublic<{ available: boolean; outsideCanada?: boolean; zones: ServiceZone[] }>(`/zones/availability?${params}`);
   },
 
   create: (body: {
