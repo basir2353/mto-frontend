@@ -47,3 +47,13 @@ env/**
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local JDK / Android build artifacts
+/.jdk/
+/dist/
+/android/app/build/
+/android/.gradle/
+/android/build/
+/android/captures/
+*.apk
+*.aab

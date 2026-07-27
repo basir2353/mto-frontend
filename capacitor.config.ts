@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const FRONTEND_URL =
   process.env.CAPACITOR_SERVER_URL?.trim() ||
-  "https://mto-frontend.vercel.app";
+  "https://mto-frontend-xi.vercel.app";
 
 const config: CapacitorConfig = {
   appId: "com.movethisout.app",

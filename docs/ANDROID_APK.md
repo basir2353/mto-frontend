@@ -1,13 +1,19 @@
 # MoveThisOut Android APK (Capacitor)
 
-One APK for **customers** and **drivers**. The native shell loads the live Next.js app at `/app` (role picker → signup/login → customer booking or driver dashboard).
+One APK for **customers** and **drivers**. The native shell loads the live Next.js app at `/app`.
+
+## Live URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend (APK WebView) | https://mto-frontend-xi.vercel.app/app |
+| Backend API | https://mto-backend-production.up.railway.app/api/v1 |
 
 ## Prerequisites
 
 - Node 20+
 - Android Studio (Hedgehog or newer) + Android SDK
 - JDK 17
-- A deployed frontend (default: `https://mto-frontend.vercel.app`)
 
 ## Install & sync
 
@@ -18,31 +24,48 @@ npx cap sync android
 npx cap open android
 ```
 
-Optional: point the WebView at another host before sync:
+Override host (optional):
 
-```bash
-# PowerShell
-$env:CAPACITOR_SERVER_URL="https://your-frontend.example.com"
+```powershell
+$env:CAPACITOR_SERVER_URL="https://mto-frontend-xi.vercel.app"
 npx cap sync android
 ```
 
+## Build APK (CLI)
+
+Requires JDK **21** and Android SDK (platform 35 + build-tools).
+
+```powershell
+cd mto-frontend
+$env:JAVA_HOME="D:\path\to\jdk-21"   # or any JDK 21
+$env:ANDROID_HOME="$env:LOCALAPPDATA\Android\Sdk"
+$env:CAPACITOR_SERVER_URL="https://mto-frontend-xi.vercel.app"
+npx cap sync android
+cd android
+.\gradlew.bat assembleDebug --no-daemon
+```
+
+Output:
+
+- `android/app/build/outputs/apk/debug/app-debug.apk`
+- Also copied to `dist/MoveThisOut-debug.apk` after a local build
+
 ## Build APK (Android Studio)
 
-1. Wait for Gradle sync to finish.
-2. **Build → Build Bundle(s) / APK(s) → Build APK(s)** for a debug APK.
-3. Install from the IDE notification, or find:
-   - `android/app/build/outputs/apk/debug/app-debug.apk`
-4. For Play Store: **Build → Generate Signed Bundle / APK** (release keystore).
+1. `npm run apk:open`
+2. Wait for Gradle sync.
+3. **Build → Build Bundle(s) / APK(s) → Build APK(s)**
+4. Install `app-debug.apk` on a device/emulator.
 
 ## Verify on device
 
-1. Open MoveThisOut → welcome screen (**Need a move** / **Want to drive** / **Sign in**).
-2. Customer: signup → `/customer-app` → plan → book.
-3. Driver: `/driver-signup` or login as mover → `/driver-app`.
-4. Force-close and reopen — session should persist (`localStorage`).
+1. Open MoveThisOut → **Need a move** / **Want to drive** / **Sign in**
+2. Customer: signup → book a move (API → Railway backend)
+3. Driver: signup/login → driver dashboard
+4. Force-close and reopen — session should persist
 
 ## Notes
 
-- Auth tokens use `localStorage` (migrated from older `sessionStorage`).
-- Backend CORS allows `capacitor://localhost`, `https://localhost`, and `http://localhost`.
-- Geolocation plugin is included for driver GPS; camera/push can be added later.
+- Capacitor `server.url` defaults to `https://mto-frontend-xi.vercel.app/app`
+- Frontend production env already points API at Railway
+- Backend CORS allows Capacitor WebView origins + the Vercel frontend
