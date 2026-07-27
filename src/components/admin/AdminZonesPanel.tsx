@@ -76,7 +76,11 @@ export function AdminZonesPanel({
   const load = async () => {
     setLoading(true);
     try {
-      setZones(await zonesApi.listManaged());
+      try {
+        setZones(await zonesApi.listManaged());
+      } catch {
+        setZones(await zonesApi.list());
+      }
     } catch (e) {
       onError(e instanceof Error ? e.message : "Could not load zones");
     } finally {
@@ -112,6 +116,14 @@ export function AdminZonesPanel({
     }
     if (![lat, lng, radiusKm, baseFee, basePriceMultiplier].every(Number.isFinite)) {
       onError("Enter a valid map location, radius, and rates");
+      return;
+    }
+
+    const duplicate = zones.find(
+      (z) => z.id !== editingId && z.name.trim().toLowerCase() === form.name.trim().toLowerCase(),
+    );
+    if (duplicate) {
+      onError(`A zone named "${duplicate.name}" already exists. Click Edit all fields on that zone to update it.`);
       return;
     }
 
