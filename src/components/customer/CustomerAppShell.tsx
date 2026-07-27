@@ -305,14 +305,14 @@ export function CustomerAppShell({
           .customer-app-shell{height:100dvh!important;overflow:hidden!important}
           .customer-desktop-sidebar{display:none!important}
           .customer-app-main{width:100%;min-width:0;position:relative}
-          .customer-mobile-header{height:58px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff;border-bottom:1px solid rgba(0,0,0,.08);z-index:20}
+          .customer-mobile-header{height:auto;min-height:58px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:calc(8px + env(safe-area-inset-top)) 16px 8px;background:#fff;border-bottom:1px solid rgba(0,0,0,.08);z-index:20}
           .customer-mobile-brand{display:flex;align-items:center;gap:9px;border:0;background:none;padding:0;font:800 16px 'Archivo';color:#0E0E10}
           .customer-mobile-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);display:grid;place-items:center;font:900 15px 'Archivo'}
           .customer-mobile-actions{display:flex;align-items:center;gap:10px}
           .customer-mobile-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:grid;place-items:center;text-decoration:none;color:#0E0E10;font:800 12px 'Archivo'}
           .customer-app-content{padding-bottom:0;overflow:hidden!important;box-sizing:border-box}
           .customer-app-main:has(.wizard-shell) .customer-mobile-header{
-            position:absolute;top:10px;left:10px;right:10px;height:44px;padding:0;
+            position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;right:10px;height:44px;padding:0;
             background:transparent;border:0;z-index:40;pointer-events:none
           }
           .customer-app-main:has(.wizard-shell) .customer-mobile-brand{

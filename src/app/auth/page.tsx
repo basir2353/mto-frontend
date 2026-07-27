@@ -66,12 +66,21 @@ function AuthPageInner() {
   }, []);
 
   useEffect(() => {
+    const intent = searchParams.get("intent");
+    if (intent === "drive") {
+      router.replace("/driver-signup");
+      return;
+    }
+    if (intent === "move") {
+      setAccountType("move");
+      setScreen("signup");
+    }
     const token = searchParams.get("resetToken") ?? searchParams.get("token");
     if (token) {
       setResetToken(token);
       setScreen("reset");
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -266,7 +275,7 @@ function AuthPageInner() {
         .mto-auth-fields-row>div{flex:1;min-width:0}
         .mto-auth-account-types{display:flex;gap:10px;margin-bottom:20px}
         @media(max-width:900px){
-          .mto-auth-page{display:block;background:#F5F4EF}
+          .mto-auth-page{display:block;background:#F5F4EF;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
           .mto-auth-brand{width:100%;height:auto;min-height:0;padding:20px 24px;background:#0E0E10}
           .mto-auth-brand-copy,.mto-auth-brand-glow{display:none}
           .mto-auth-form-side{display:block;padding:40px 24px 56px;overflow:visible}
@@ -278,11 +287,12 @@ function AuthPageInner() {
           .mto-auth-fields-row{flex-direction:column;gap:13px}
           .mto-auth-account-types{flex-direction:column}
           .mto-auth-page h1{font-size:28px!important}
+          .mto-auth-role-card{min-height:76px}
         }
       `}</style>
         {/* BRAND PANEL */}
         <div className="mto-auth-brand">
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", color: "#fff", position: "relative", zIndex: 2 }}>
+          <Link href="/app" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", color: "#fff", position: "relative", zIndex: 2 }}>
             <div style={{ width: 34, height: 34, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", font: "900 19px 'Archivo'", color: "#0E0E10" }}>
               M
             </div>
@@ -365,29 +375,76 @@ function AuthPageInner() {
             {screen === "signup" && (
               <div style={{ animation: "rise .3s ease" }}>
                 <h1 style={heading}>Create your account</h1>
-                <p style={sub2}>Free to join. Get quotes in minutes.</p>
+                <p style={sub2}>Choose how you want to use MoveThisOut, then finish signup.</p>
                 <div className="mto-auth-account-types">
-                  <div
+                  <button
+                    type="button"
+                    className="mto-auth-role-card"
                     onClick={() => setAccountType("move")}
                     style={{
                       flex: 1,
                       border: accountType === "move" ? "1.5px solid #0E0E10" : "1.5px solid rgba(0,0,0,.14)",
-                      borderRadius: 12,
-                      padding: 14,
+                      borderRadius: 14,
+                      padding: "14px 16px",
                       cursor: "pointer",
+                      background: accountType === "move" ? "rgba(255,222,46,.22)" : "#fff",
+                      textAlign: "left",
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "center",
                     }}
                   >
-                    <div style={{ font: "800 15px 'Archivo'" }}>I need a move</div>
-                    <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>Book local drivers</div>
-                  </div>
+                    <span style={{ width: 40, height: 40, borderRadius: 11, background: "#0E0E10", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+                      <AppIcon name="package" size={20} color="var(--accent)" />
+                    </span>
+                    <span>
+                      <div style={{ font: "800 15px 'Archivo'" }}>I need a move</div>
+                      <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>Book &amp; track local drivers</div>
+                    </span>
+                  </button>
                   <Link
                     href="/driver-signup"
-                    style={{ flex: 1, border: "1.5px solid rgba(0,0,0,.14)", borderRadius: 12, padding: 14, cursor: "pointer", textDecoration: "none", color: "#0E0E10" }}
+                    className="mto-auth-role-card"
+                    style={{
+                      flex: 1,
+                      border: accountType === "drive" ? "1.5px solid #0E0E10" : "1.5px solid rgba(0,0,0,.14)",
+                      borderRadius: 14,
+                      padding: "14px 16px",
+                      cursor: "pointer",
+                      textDecoration: "none",
+                      color: "#0E0E10",
+                      background: accountType === "drive" ? "rgba(255,222,46,.22)" : "#fff",
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "center",
+                    }}
+                    onClick={() => setAccountType("drive")}
                   >
-                    <div style={{ font: "800 15px 'Archivo'" }}>I want to drive</div>
-                    <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>Earn with your vehicle</div>
+                    <span style={{ width: 40, height: 40, borderRadius: 11, background: "#0E0E10", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+                      <AppIcon name="truck" size={20} color="var(--accent)" />
+                    </span>
+                    <span>
+                      <div style={{ font: "800 15px 'Archivo'" }}>I want to drive</div>
+                      <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>Earn with your vehicle</div>
+                    </span>
                   </Link>
                 </div>
+                {accountType === "drive" ? (
+                  <div style={{ marginTop: 8 }}>
+                    <Link
+                      href="/driver-signup"
+                      style={{ ...primaryBtn, textDecoration: "none", boxSizing: "border-box" }}
+                    >
+                      Continue driver signup →
+                    </Link>
+                    <p style={{ margin: "16px 0 0", textAlign: "center", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
+                      Prefer to book a move?{" "}
+                      <span onClick={() => setAccountType("move")} style={linkText}>
+                        Switch to customer
+                      </span>
+                    </p>
+                  </div>
+                ) : (
                 <form onSubmit={handleSignup}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
                     <TextInput label="Full name" value={fullName} onChange={setFullName} placeholder="Ava Morgan" />
@@ -405,6 +462,9 @@ function AuthPageInner() {
                     {busy ? "Creating account…" : "Create account →"}
                   </button>
                 </form>
+                )}
+                {accountType === "move" && (
+                  <>
                 <p style={{ margin: "16px 0 0", textAlign: "center", font: "400 12px/1.5 'Hanken Grotesk'", color: "#9a9aa0" }}>
                   By continuing you agree to our{" "}
                   <a href="/terms" style={{ color: "inherit", fontWeight: 600 }}>
@@ -422,6 +482,8 @@ function AuthPageInner() {
                     Log in
                   </span>
                 </p>
+                  </>
+                )}
               </div>
             )}
 

@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     clearTokens();
     setUser(null);
-    router.push("/auth");
+    router.push("/app");
   }, [router]);
 
   const hasRole = useCallback((role: UserRole) => !!user?.roles.includes(role), [user]);

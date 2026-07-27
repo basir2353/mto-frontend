@@ -9,7 +9,7 @@ import { PageLoader } from "@/components/ui/MtoLoader";
 export default function AuthGuard({
   children,
   roles,
-  redirectTo = "/auth",
+  redirectTo = "/app",
 }: {
   children: React.ReactNode;
   roles?: UserRole[];

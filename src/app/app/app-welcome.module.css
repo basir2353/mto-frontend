@@ -1,0 +1,201 @@
+.page {
+  min-height: 100dvh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding:
+    max(28px, env(safe-area-inset-top))
+    max(22px, env(safe-area-inset-right))
+    max(28px, env(safe-area-inset-bottom))
+    max(22px, env(safe-area-inset-left));
+  background: #0e0e10;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(255, 222, 46, 0.34), transparent 55%),
+    radial-gradient(ellipse 70% 45% at 100% 80%, rgba(255, 222, 46, 0.08), transparent 50%),
+    linear-gradient(180deg, #16161a 0%, #0e0e10 48%, #0a0a0c 100%);
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  width: min(440px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: welcomeRise 420ms var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #0e0e10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 900 28px/1 "Archivo", sans-serif;
+}
+
+.title {
+  margin: 0;
+  font: 900 clamp(40px, 11vw, 56px)/0.95 "Archivo", sans-serif;
+  letter-spacing: -0.04em;
+}
+
+.tagline {
+  margin: 0;
+  font: 600 18px/1.35 "Hanken Grotesk", sans-serif;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.support {
+  margin: 0;
+  max-width: 34ch;
+  font: 500 15px/1.5 "Hanken Grotesk", sans-serif;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.primary,
+.secondary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.primary:active,
+.secondary:active,
+.signin:active {
+  transform: scale(0.985);
+}
+
+.primary {
+  background: var(--accent);
+  color: #0e0e10;
+}
+
+.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.actionIcon,
+.actionIconDark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.actionIcon {
+  background: rgba(14, 14, 16, 0.1);
+}
+
+.actionIconDark {
+  background: rgba(255, 222, 46, 0.12);
+}
+
+.primary strong,
+.secondary strong {
+  display: block;
+  font: 800 17px/1.2 "Archivo", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.primary em,
+.secondary em {
+  display: block;
+  margin-top: 3px;
+  font: 500 13px/1.35 "Hanken Grotesk", sans-serif;
+  font-style: normal;
+  opacity: 0.72;
+}
+
+.signin {
+  margin-top: 6px;
+  text-align: center;
+  font: 700 14px/1.4 "Hanken Grotesk", sans-serif;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.boot {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: #0e0e10;
+  color: rgba(255, 255, 255, 0.7);
+  font: 600 14px "Hanken Grotesk", sans-serif;
+}
+
+.bootMark {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #0e0e10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 900 26px/1 "Archivo", sans-serif;
+}
+
+@keyframes welcomeRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 720px) {
+  .page {
+    justify-content: center;
+    padding: 48px;
+  }
+
+  .inner {
+    gap: 28px;
+  }
+}
