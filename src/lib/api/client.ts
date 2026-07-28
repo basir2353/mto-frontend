@@ -58,7 +58,9 @@ export async function api<T>(
   try {
     res = await fetch(`${apiBaseUrl}${path}`, { ...options, headers });
   } catch {
-    throw new ApiError(0, ["Cannot reach the API server. Check NEXT_PUBLIC_API_URL in .env.local."]);
+    throw new ApiError(0, [
+      `Cannot reach the API server (${apiBaseUrl}). Check your connection and try again.`,
+    ]);
   }
 
   let body: ApiEnvelope<T>;
@@ -103,7 +105,9 @@ export async function apiPublic<T>(path: string, options: RequestInit = {}): Pro
       },
     });
   } catch {
-    throw new ApiError(0, ["Cannot reach the API server. Check NEXT_PUBLIC_API_URL in .env.local."]);
+    throw new ApiError(0, [
+      `Cannot reach the API server (${apiBaseUrl}). Check your connection and try again.`,
+    ]);
   }
 
   let body: ApiEnvelope<T>;

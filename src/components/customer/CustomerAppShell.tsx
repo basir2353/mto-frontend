@@ -311,6 +311,10 @@ export function CustomerAppShell({
           .customer-mobile-actions{display:flex;align-items:center;gap:10px}
           .customer-mobile-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:grid;place-items:center;text-decoration:none;color:#0E0E10;font:800 12px 'Archivo'}
           .customer-app-content{padding-bottom:0;overflow:hidden!important;box-sizing:border-box}
+          .customer-app-main:not(:has(.wizard-shell)) .customer-app-content{
+            padding-bottom:calc(68px + env(safe-area-inset-bottom))!important;
+            overflow:auto!important;
+          }
           .customer-app-main:has(.wizard-shell) .customer-mobile-header{
             position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;right:10px;height:44px;padding:0;
             background:transparent;border:0;z-index:40;pointer-events:none
@@ -322,7 +326,20 @@ export function CustomerAppShell({
           .customer-app-main:has(.wizard-shell) .customer-mobile-mark{width:30px;height:30px}
           .customer-app-main:has(.wizard-shell) .customer-mobile-actions{pointer-events:auto;gap:7px;background:rgba(255,255,255,.94);padding:5px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
           .customer-app-main:has(.wizard-shell) .customer-mobile-avatar{width:32px;height:32px}
-          .customer-mobile-nav{display:none!important}
+          .customer-mobile-nav{
+            display:grid!important;
+            grid-template-columns:repeat(5,minmax(0,1fr));
+            gap:2px;
+            position:fixed;
+            left:0;right:0;bottom:0;
+            z-index:60;
+            height:calc(62px + env(safe-area-inset-bottom));
+            padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+            background:#fff;
+            border-top:1px solid rgba(0,0,0,.1);
+            box-shadow:0 -8px 24px rgba(0,0,0,.06);
+          }
+          .customer-app-main:has(.wizard-shell) .customer-mobile-nav{display:none!important}
           .customer-mobile-nav button{min-width:0;border:0;background:transparent;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#6B6B70;font:600 10px 'Hanken Grotesk';padding:3px 1px}
           .customer-mobile-nav button.active{background:rgba(255,222,46,.35);color:#0E0E10;font-weight:800}
           .customer-mobile-nav button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

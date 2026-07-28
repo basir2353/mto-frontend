@@ -34,8 +34,10 @@ function NativeShellBootstrap() {
       try {
         const { StatusBar, Style } = await import("@capacitor/status-bar");
         if (cancelled) return;
+        // Light app chrome: dark status icons + cream bar (avoid empty black strip on Android).
+        await StatusBar.setOverlaysWebView({ overlay: false });
         await StatusBar.setStyle({ style: Style.Dark });
-        await StatusBar.setBackgroundColor({ color: "#0E0E10" });
+        await StatusBar.setBackgroundColor({ color: "#F5F4EF" });
       } catch {
         /* plugin unavailable on web */
       }

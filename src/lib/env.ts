@@ -1,6 +1,12 @@
 export const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
 export const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
-export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+
+const PROD_API_FALLBACK = "https://mto-backend-production.up.railway.app/api/v1";
+const DEV_API_FALLBACK = "http://localhost:4000/api/v1";
+
+export const apiBaseUrl =
+  process.env.NEXT_PUBLIC_API_URL?.trim() ||
+  (process.env.NODE_ENV === "production" ? PROD_API_FALLBACK : DEV_API_FALLBACK);
 
 function resolveApiOrigin(base: string): string {
   try {
