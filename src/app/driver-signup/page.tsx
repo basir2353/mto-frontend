@@ -7,6 +7,7 @@ import { TextInput, ChipToggle, Checkbox, Slider, FieldLabel } from "@/component
 import LocationField from "@/components/maps/LocationField";
 import RouteMap from "@/components/maps/RouteMap";
 import { authApi, moversApi, uploadsApi, verificationApi, ApiError } from "@/lib/api";
+import { compressImageFile } from "@/lib/compressImage";
 import type { MapPlace } from "@/lib/maps";
 import { toLatLng } from "@/lib/maps";
 import { setTokens } from "@/lib/session";
@@ -184,38 +185,49 @@ export default function DriverSignupPage() {
       }
 
       if (step === 3) {
-        for (const [type, doc] of Object.entries(docs) as Array<[keyof Docs, PendingDoc | null]>) {
-          if (!doc) continue;
-          if (type === "insurance" && doc.file.type === "application/pdf") {
-            // PDF insurance: basic size check already done; skip vision
-            continue;
+        try {
+          for (const [type, doc] of Object.entries(docs) as Array<[keyof Docs, PendingDoc | null]>) {
+            if (!doc) continue;
+            if (type === "insurance" && doc.file.type === "application/pdf") {
+              // PDF insurance: basic size check already done; skip vision
+              continue;
+            }
+            const result = await verificationApi.analyzeDocument(
+              type === "licence" ? "licence" : type === "insurance" ? "insurance" : "vehiclePhoto",
+              doc.file,
+            );
+            if (!result.ok) {
+              const msg = result.issues[0] || result.summary || "Could not verify this document.";
+              setFieldErrors({ [type]: msg });
+              setApiError(result.summary || "Document verification failed. Fix the highlighted file and try again.");
+              return;
+            }
           }
-          const result = await verificationApi.analyzeDocument(
-            type === "licence" ? "licence" : type === "insurance" ? "insurance" : "vehiclePhoto",
-            doc.file,
-          );
-          if (!result.ok) {
-            const msg = result.issues[0] || result.summary || "Could not verify this document.";
-            setFieldErrors({ [type]: msg });
-            setApiError(result.summary || "Document verification failed. Fix the highlighted file and try again.");
-            return;
-          }
-        }
 
-        if (docs.vehiclePhoto) {
-          const match = await verificationApi.matchVehicle({
-            file: docs.vehiclePhoto.file,
-            vehicleType,
-            make: make.trim(),
-            model: model.trim(),
-            year: year.trim() || undefined,
-          });
-          if (!match.ok) {
-            const msg = match.issues[0] || match.summary || "Vehicle photo does not match your details.";
-            setFieldErrors({ vehiclePhoto: msg });
-            setApiError(match.summary || "Vehicle photo must match the make/model you entered.");
+          if (docs.vehiclePhoto) {
+            const match = await verificationApi.matchVehicle({
+              file: docs.vehiclePhoto.file,
+              vehicleType,
+              make: make.trim(),
+              model: model.trim(),
+              year: year.trim() || undefined,
+            });
+            if (!match.ok) {
+              const msg = match.issues[0] || match.summary || "Vehicle photo does not match your details.";
+              setFieldErrors({ vehiclePhoto: msg });
+              setApiError(match.summary || "Vehicle photo must match the make/model you entered.");
+              return;
+            }
+          }
+        } catch (e) {
+          // Phone/WebView often drops large multipart requests — don't block signup.
+          // Admin still reviews documents after submit.
+          if (e instanceof ApiError && e.statusCode === 0) {
+            setApiError(null);
+            setStep((s) => (s < 5 ? s + 1 : 6));
             return;
           }
+          throw e;
         }
       }
 
@@ -236,7 +248,7 @@ export default function DriverSignupPage() {
     setStep((s) => s - 1);
   };
 
-  const setSelfieFile = (file: File) => {
+  const setSelfieFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       setFieldErrors((e) => ({ ...e, selfie: "Selfie must be an image (JPG or PNG)." }));
       return;
@@ -245,9 +257,10 @@ export default function DriverSignupPage() {
       setFieldErrors((e) => ({ ...e, selfie: "Selfie must be 10MB or smaller." }));
       return;
     }
+    const compressed = await compressImageFile(file, { maxEdge: 1280, maxBytes: 900_000 });
     if (selfiePreview) URL.revokeObjectURL(selfiePreview);
-    setSelfie({ name: file.name || "driver-selfie.jpg", file });
-    setSelfiePreview(URL.createObjectURL(file));
+    setSelfie({ name: compressed.name || "driver-selfie.jpg", file: compressed });
+    setSelfiePreview(URL.createObjectURL(compressed));
     clearError("selfie");
   };
 
@@ -258,12 +271,17 @@ export default function DriverSignupPage() {
     setApiError(null);
     try {
       if (selfie && docs.licence) {
-        const face = await verificationApi.faceMatch(selfie.file, docs.licence.file);
-        if (!face.ok) {
-          const msg = face.issues[0] || face.summary || "Selfie does not match your licence photo.";
-          setFieldErrors({ selfie: msg });
-          setApiError(face.summary || "Face check failed — retake a clearer selfie that matches your licence.");
-          return;
+        try {
+          const face = await verificationApi.faceMatch(selfie.file, docs.licence.file);
+          if (!face.ok) {
+            const msg = face.issues[0] || face.summary || "Selfie does not match your licence photo.";
+            setFieldErrors({ selfie: msg });
+            setApiError(face.summary || "Face check failed — retake a clearer selfie that matches your licence.");
+            return;
+          }
+        } catch (e) {
+          if (!(e instanceof ApiError && e.statusCode === 0)) throw e;
+          // Network failure: continue — admin will review selfie vs licence.
         }
       }
 
@@ -1093,7 +1111,17 @@ function DocRow({
       setLocalError("Please upload an image file");
       return;
     }
-    onSelected({ name: file.name, file });
+    void (async () => {
+      try {
+        const prepared =
+          file.type.startsWith("image/")
+            ? await compressImageFile(file)
+            : file;
+        onSelected({ name: prepared.name, file: prepared });
+      } catch {
+        setLocalError("Could not process this file. Try another photo.");
+      }
+    })();
   };
 
   return (

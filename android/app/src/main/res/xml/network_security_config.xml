@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Trust system CAs for all HTTPS hosts (Vercel + Railway). -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">mto-backend-production.up.railway.app</domain>
-        <domain includeSubdomains="true">mto-frontend-xi.vercel.app</domain>
-        <domain includeSubdomains="true">mto-frontend.vercel.app</domain>
-    </domain-config>
 </network-security-config>

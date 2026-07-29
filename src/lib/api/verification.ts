@@ -1,4 +1,4 @@
-﻿import { api, apiPublic } from "./client";
+﻿import { apiPublic } from "./client";
 
 export type AvailabilityResult = {
   emailAvailable: boolean;
@@ -29,7 +29,7 @@ export const verificationApi = {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("documentType", documentType);
-    return api<VerificationResult>("/verification/document", {
+    return apiPublic<VerificationResult>("/verification/document", {
       method: "POST",
       body: formData,
     });
@@ -48,7 +48,7 @@ export const verificationApi = {
     formData.append("make", input.make);
     formData.append("model", input.model);
     if (input.year) formData.append("year", input.year);
-    return api<VerificationResult>("/verification/vehicle-match", {
+    return apiPublic<VerificationResult>("/verification/vehicle-match", {
       method: "POST",
       body: formData,
     });
@@ -58,7 +58,7 @@ export const verificationApi = {
     const formData = new FormData();
     formData.append("selfie", selfie);
     formData.append("licence", licence);
-    return api<VerificationResult>("/verification/face-match", {
+    return apiPublic<VerificationResult>("/verification/face-match", {
       method: "POST",
       body: formData,
     });

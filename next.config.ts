@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
+const apiUrl =
+  process.env.NEXT_PUBLIC_API_URL?.trim() ||
+  "https://mto-backend-production.up.railway.app/api/v1";
 let apiHostname: string | undefined;
 try {
-  apiHostname = apiUrl ? new URL(apiUrl).hostname : undefined;
+  apiHostname = new URL(apiUrl).hostname;
 } catch {
   apiHostname = undefined;
 }
@@ -30,6 +32,16 @@ const nextConfig: NextConfig = {
         hostname: "**.up.railway.app",
       },
     ],
+  },
+  async rewrites() {
+    const dest = apiUrl.replace(/\/$/, "");
+    return [
+      {
+        // Same-origin proxy so Capacitor WebView avoids flaky cross-origin multipart uploads.
+        source: "/mto-api/:path*",
+        destination: `${dest}/:path*`,
+      },
+    ];
   },
   async headers() {
     return [

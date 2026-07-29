@@ -12,6 +12,13 @@ const config: CapacitorConfig = {
     // Hosted Next.js app — booking + driver flows stay on Vercel.
     url: `${FRONTEND_URL.replace(/\/$/, "")}/app`,
     cleartext: false,
+    allowNavigation: [
+      "mto-frontend-xi.vercel.app",
+      "mto-frontend.vercel.app",
+      "mto-backend-production.up.railway.app",
+      "*.vercel.app",
+      "*.up.railway.app",
+    ],
   },
   plugins: {
     SplashScreen: {
@@ -21,12 +28,12 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: "DARK",
-      backgroundColor: "#0E0E10",
+      backgroundColor: "#F5F4EF",
     },
   },
   android: {
     allowMixedContent: false,
-    backgroundColor: "#0E0E10",
+    backgroundColor: "#F5F4EF",
   },
 };
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { apiBaseUrl } from "@/lib/env";
+import { directApiBaseUrl } from "@/lib/env";
 import { messagesApi } from "@/lib/api";
 import { useMocks } from "@/lib/api/mock/config";
 import { getAccessToken } from "@/lib/session";
@@ -10,7 +10,7 @@ import type { Message } from "@/lib/api/types";
 
 function wsOrigin() {
   try {
-    const url = new URL(apiBaseUrl);
+    const url = new URL(directApiBaseUrl);
     return `${url.protocol}//${url.host}`;
   } catch {
     return "http://localhost:4000";

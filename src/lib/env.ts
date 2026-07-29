@@ -4,9 +4,31 @@ export const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 const PROD_API_FALLBACK = "https://mto-backend-production.up.railway.app/api/v1";
 const DEV_API_FALLBACK = "http://localhost:4000/api/v1";
 
-export const apiBaseUrl =
+/** Absolute Railway (or local) API — used for sockets, uploads CDN origin, and SSR. */
+export const directApiBaseUrl =
   process.env.NEXT_PUBLIC_API_URL?.trim() ||
   (process.env.NODE_ENV === "production" ? PROD_API_FALLBACK : DEV_API_FALLBACK);
+
+/**
+ * Browser/Capacitor fetch base. On Vercel (and local Next) use same-origin `/mto-api`
+ * rewrite so Android WebView does not fail cross-origin multipart uploads.
+ */
+export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (
+      host.endsWith("vercel.app") ||
+      host === "localhost" ||
+      host === "127.0.0.1"
+    ) {
+      return `${window.location.origin}/mto-api`;
+    }
+  }
+  return directApiBaseUrl;
+}
+
+/** @deprecated Prefer getApiBaseUrl() in client code — kept for modules evaluated at import time. */
+export const apiBaseUrl = directApiBaseUrl;
 
 function resolveApiOrigin(base: string): string {
   try {
@@ -16,7 +38,7 @@ function resolveApiOrigin(base: string): string {
   }
 }
 
-export const apiOrigin = resolveApiOrigin(apiBaseUrl);
+export const apiOrigin = resolveApiOrigin(directApiBaseUrl);
 
 export const hasGoogleMaps = googleMapsApiKey.length > 0;
 export const hasWebPush = vapidPublicKey.length > 0;
