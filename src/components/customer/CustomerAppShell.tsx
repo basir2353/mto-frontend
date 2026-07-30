@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { NotificationsBell } from "@/components/notifications/NotificationsBell";
 import { AppIcon, type AppIconName } from "@/components/ui/Icons";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Notification } from "@/lib/api/types";
 
 export type CustomerNavId = "new" | "move" | "messages" | "history" | "wallet";
@@ -33,7 +34,9 @@ export function CustomerAppShell({
   alerts?: ReactNode;
   children: ReactNode;
 }) {
+  const { logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
@@ -42,6 +45,16 @@ export function CustomerAppShell({
       return false;
     }
   });
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   const toggleCollapsed = () => {
     setCollapsed((c) => {
@@ -211,6 +224,25 @@ export function CustomerAppShell({
               <Link href="/customer-app/support" style={sideLink}>
                 Support
               </Link>
+              <Link href="/customer-app/profile" style={sideLink}>
+                Profile
+              </Link>
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                disabled={loggingOut}
+                style={{
+                  ...sideLink,
+                  border: 0,
+                  background: "transparent",
+                  cursor: loggingOut ? "wait" : "pointer",
+                  color: "rgba(255,222,46,.95)",
+                  textAlign: "left",
+                  width: "100%",
+                }}
+              >
+                {loggingOut ? "Logging out…" : "Log out"}
+              </button>
             </>
           )}
 
@@ -295,6 +327,17 @@ export function CustomerAppShell({
               <Link href="/customer-app/profile" onClick={() => setMobileMenuOpen(false)}>Profile</Link>
               <Link href="/customer-app/support" onClick={() => setMobileMenuOpen(false)}>Support</Link>
               <Link href="/help" onClick={() => setMobileMenuOpen(false)}>Help</Link>
+              <button
+                type="button"
+                className="customer-mobile-logout"
+                disabled={loggingOut}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  void handleLogout();
+                }}
+              >
+                {loggingOut ? "Logging out…" : "Log out"}
+              </button>
             </div>
           </aside>
         </div>
@@ -356,6 +399,8 @@ export function CustomerAppShell({
           .customer-mobile-drawer>nav button.active{background:var(--accent);color:#0E0E10}
           .customer-mobile-drawer-links{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column}
           .customer-mobile-drawer-links a{padding:11px 8px;color:rgba(255,255,255,.65);font:600 14px 'Hanken Grotesk';text-decoration:none}
+          .customer-mobile-logout{margin-top:8px;height:48px;border:0;border-radius:12px;background:var(--accent);color:#0E0E10;font:800 15px 'Hanken Grotesk';cursor:pointer}
+          .customer-mobile-logout:disabled{opacity:.7;cursor:wait}
           @keyframes customerDrawerIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
         }
         @media(max-width:370px){

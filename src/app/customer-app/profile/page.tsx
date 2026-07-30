@@ -1,14 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { AccountProfileForm } from "@/components/profile/AccountProfileForm";
 import { SavedAddressesPanel } from "@/components/profile/SavedAddressesPanel";
 import { UserStatsPanel } from "@/components/profile/UserStatsPanel";
 import { CustomerDisputesPanel } from "@/components/profile/CustomerDisputesPanel";
 import { AppIcon } from "@/components/ui/Icons";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function CustomerProfilePage() {
+  const { logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   return (
     <AuthGuard roles={["customer"]}>
       <div
@@ -27,7 +42,14 @@ export default function CustomerProfilePage() {
             <div className="customer-profile-mark">M</div>
             <span>MoveThisOut</span>
           </Link>
-          <span className="customer-profile-title">Profile</span>
+          <button
+            type="button"
+            className="customer-profile-logout-top"
+            disabled={loggingOut}
+            onClick={() => void handleLogout()}
+          >
+            {loggingOut ? "…" : "Log out"}
+          </button>
         </div>
         <div className="customer-profile-content">
           <AccountProfileForm
@@ -39,6 +61,14 @@ export default function CustomerProfilePage() {
           <UserStatsPanel />
           <CustomerDisputesPanel />
           <SavedAddressesPanel />
+          <button
+            type="button"
+            className="customer-profile-logout"
+            disabled={loggingOut}
+            onClick={() => void handleLogout()}
+          >
+            {loggingOut ? "Logging out…" : "Log out"}
+          </button>
         </div>
         <nav className="customer-profile-footer" aria-label="Customer shortcuts">
           <Link href="/customer-app">
@@ -80,11 +110,19 @@ export default function CustomerProfilePage() {
             font:900 17px 'Archivo';color:#0E0E10;flex:none;
           }
           .customer-profile-brand>span{font:800 18px 'Archivo';letter-spacing:-.02em}
-          .customer-profile-title{
+          .customer-profile-logout-top{
             margin-left:auto;
-            font:700 13px 'Hanken Grotesk';
-            color:rgba(255,255,255,.65);
+            height:34px;
+            padding:0 12px;
+            border:0;
+            border-radius:10px;
+            background:var(--accent);
+            color:#0E0E10;
+            font:800 12px 'Hanken Grotesk';
+            cursor:pointer;
+            flex:none;
           }
+          .customer-profile-logout-top:disabled{opacity:.7;cursor:wait}
           .customer-profile-content{
             flex:1;
             overflow:auto;
@@ -94,6 +132,17 @@ export default function CustomerProfilePage() {
             flex-direction:column;
             gap:20px;
           }
+          .customer-profile-logout{
+            width:100%;
+            height:52px;
+            border:0;
+            border-radius:14px;
+            background:#0E0E10;
+            color:#fff;
+            font:800 15px 'Hanken Grotesk';
+            cursor:pointer;
+          }
+          .customer-profile-logout:disabled{opacity:.7;cursor:wait}
           .customer-profile-footer{
             position:fixed;
             left:0;right:0;bottom:0;
