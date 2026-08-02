@@ -1,7 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">MoveThisOut</string>
-    <string name="title_activity_main">MoveThisOut</string>
-    <string name="package_name">com.movethisout.app</string>
-    <string name="custom_url_scheme">com.movethisout.app</string>
+    <!-- app_name, title_activity_main, package_name, custom_url_scheme
+         are supplied by productFlavors (customer / driver) via resValue. -->
 </resources>

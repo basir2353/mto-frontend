@@ -8,6 +8,7 @@ import { PhoneInput, isValidNationalPhone, parsePhoneValue } from "@/components/
 import { AppIcon } from "@/components/ui/Icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi, verificationApi, ApiError } from "@/lib/api";
+import { setAppRole, type AppRole } from "@/lib/appRole";
 
 type Screen = "login" | "signup" | "verify" | "forgot" | "reset" | "done";
 
@@ -57,8 +58,18 @@ function AuthPageInner() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const appParam = searchParams.get("app");
+  const appRole: AppRole | null =
+    appParam === "driver" ? "driver" : appParam === "customer" ? "customer" : null;
+  const customerOnly = appRole === "customer";
+  const driverOnly = appRole === "driver";
+
   const verifiedName = fullName.trim().split(" ")[0] || "there";
   const verifiedEmail = signupEmail || loginEmail || forgotEmail || "your email";
+
+  useEffect(() => {
+    if (appRole) setAppRole(appRole);
+  }, [appRole]);
 
   useEffect(() => {
     const h = (window.location.hash || "").replace("#", "");
@@ -71,16 +82,16 @@ function AuthPageInner() {
       router.replace("/driver-signup");
       return;
     }
-    if (intent === "move") {
+    if (intent === "move" || customerOnly) {
       setAccountType("move");
-      setScreen("signup");
+      if (intent === "move") setScreen("signup");
     }
     const token = searchParams.get("resetToken") ?? searchParams.get("token");
     if (token) {
       setResetToken(token);
       setScreen("reset");
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, customerOnly]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -334,10 +345,11 @@ function AuthPageInner() {
             {screen === "login" && (
               <div style={{ animation: "rise .3s ease" }}>
                 <h1 style={heading}>Welcome back</h1>
-                <p style={sub}>Log in to book, track and manage your moves.</p>
-                <div style={{ marginBottom: 14, padding: "10px 12px", borderRadius: 10, background: "#f5f4ef", font: "500 12px/1.45 'Hanken Grotesk'", color: "#5a5a60" }}>
-                  Demo: Admin <b>admin@movethisout.com</b> / <b>Admin123!</b> · Customer <b>customer@movethisout.com</b> / <b>Customer123!</b>
-                </div>
+                <p style={sub}>
+                  {driverOnly
+                    ? "Log in to find jobs, send quotes, and manage your moves."
+                    : "Log in to book, track and manage your moves."}
+                </p>
                 <form onSubmit={handleLogin}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     <TextInput label="Email" type="email" value={loginEmail} onChange={setLoginEmail} placeholder="ava@email.com" />
@@ -355,19 +367,17 @@ function AuthPageInner() {
                     {busy ? "Logging in…" : "Log in →"}
                   </button>
                 </form>
-                <Divider />
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <SocialBtn>
-                    <span style={{ width: 18, height: 18, borderRadius: "50%", background: "conic-gradient(#EA4335,#FBBC05,#34A853,#4285F4)" }} />
-                    Continue with Google
-                  </SocialBtn>
-                  <SocialBtn>Continue with Apple</SocialBtn>
-                </div>
                 <p style={{ margin: "24px 0 0", textAlign: "center", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
                   New here?{" "}
-                  <span onClick={() => setScreen("signup")} style={linkText}>
-                    Create an account
-                  </span>
+                  {driverOnly ? (
+                    <Link href="/driver-signup" style={linkText}>
+                      Apply to drive
+                    </Link>
+                  ) : (
+                    <span onClick={() => setScreen("signup")} style={linkText}>
+                      Create an account
+                    </span>
+                  )}
                 </p>
               </div>
             )}
@@ -375,7 +385,12 @@ function AuthPageInner() {
             {screen === "signup" && (
               <div style={{ animation: "rise .3s ease" }}>
                 <h1 style={heading}>Create your account</h1>
-                <p style={sub2}>Choose how you want to use MoveThisOut, then finish signup.</p>
+                <p style={sub2}>
+                  {customerOnly
+                    ? "Create a customer account to book and track moves."
+                    : "Choose how you want to use MoveThisOut, then finish signup."}
+                </p>
+                {!customerOnly && (
                 <div className="mto-auth-account-types">
                   <button
                     type="button"
@@ -429,7 +444,8 @@ function AuthPageInner() {
                     </span>
                   </Link>
                 </div>
-                {accountType === "drive" ? (
+                )}
+                {!customerOnly && accountType === "drive" ? (
                   <div style={{ marginTop: 8 }}>
                     <Link
                       href="/driver-signup"
@@ -494,7 +510,7 @@ function AuthPageInner() {
                 </div>
                 <h1 style={heading}>Verify your email</h1>
                 <p style={{ margin: "0 0 28px", font: "400 15px/1.5 'Hanken Grotesk'", color: "#6B6B70" }}>
-                  Paste the verification token from your email (dev mode shows this in API response).
+                  Paste the verification token from your email to finish setting up your account.
                 </p>
                 <TextInput label="Verification token" value={verificationToken} onChange={setVerificationToken} placeholder="Paste token here" />
                 <div onClick={handleVerify} style={{ ...primaryBtn, marginTop: 20, opacity: busy ? 0.7 : 1 }}>
@@ -600,33 +616,3 @@ const linkText: React.CSSProperties = {
   cursor: "pointer",
   textDecoration: "underline",
 };
-
-function Divider() {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "22px 0" }}>
-      <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,.1)" }} />
-      <span style={{ font: "600 12px 'Hanken Grotesk'", color: "#9a9aa0" }}>or</span>
-      <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,.1)" }} />
-    </div>
-  );
-}
-
-function SocialBtn({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        height: 50,
-        border: "1.5px solid rgba(0,0,0,.14)",
-        borderRadius: 12,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        font: "700 14px 'Hanken Grotesk'",
-        cursor: "pointer",
-      }}
-    >
-      {children}
-    </div>
-  );
-}

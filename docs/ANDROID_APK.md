@@ -1,71 +1,46 @@
-# MoveThisOut Android APK (Capacitor)
+# MoveThisOut Android APKs (Capacitor)
 
-One APK for **customers** and **drivers**. The native shell loads the live Next.js app at `/app`.
+Two separate apps:
+
+| APK | Package ID | Starts at |
+|-----|------------|-----------|
+| **Customer** | `com.movethisout.customer` | `/app/customer` |
+| **Driver** | `com.movethisout.driver` | `/app/driver` |
+
+Both load the live Next.js site (default `https://mto-frontend-xi.vercel.app`).
 
 ## Live URLs
 
 | Service | URL |
 |---------|-----|
-| Frontend (APK WebView) | https://mto-frontend-xi.vercel.app/app |
+| Frontend | https://mto-frontend-xi.vercel.app |
 | Backend API | https://mto-backend-production.up.railway.app/api/v1 |
 
-## Prerequisites
+## Build both debug APKs
 
-- Node 20+
-- Android Studio (Hedgehog or newer) + Android SDK
-- JDK 17
-
-## Install & sync
-
-```bash
-cd mto-frontend
-npm install
-npx cap sync android
-npx cap open android
-```
-
-Override host (optional):
-
-```powershell
-$env:CAPACITOR_SERVER_URL="https://mto-frontend-xi.vercel.app"
-npx cap sync android
-```
-
-## Build APK (CLI)
-
-Requires JDK **21** and Android SDK (platform 35 + build-tools).
+Requires JDK **21** and Android SDK.
 
 ```powershell
 cd mto-frontend
-$env:JAVA_HOME="D:\path\to\jdk-21"   # or any JDK 21
+$env:JAVA_HOME="D:\path\to\jdk-21"
 $env:ANDROID_HOME="$env:LOCALAPPDATA\Android\Sdk"
-$env:CAPACITOR_SERVER_URL="https://mto-frontend-xi.vercel.app"
-npx cap sync android
-cd android
-.\gradlew.bat assembleDebug --no-daemon
+npm run apk:debug
 ```
 
-Output:
+Outputs:
 
-- `android/app/build/outputs/apk/debug/app-debug.apk`
-- Also copied to `dist/MoveThisOut-debug.apk` after a local build
+- `dist/MoveThisOut-Customer-debug.apk`
+- `dist/MoveThisOut-Driver-debug.apk`
 
-## Build APK (Android Studio)
+Build one flavor:
 
-1. `npm run apk:open`
-2. Wait for Gradle sync.
-3. **Build → Build Bundle(s) / APK(s) → Build APK(s)**
-4. Install `app-debug.apk` on a device/emulator.
-
-## Verify on device
-
-1. Open MoveThisOut → **Need a move** / **Want to drive** / **Sign in**
-2. Customer: signup → book a move (API → Railway backend)
-3. Driver: signup/login → driver dashboard
-4. Force-close and reopen — session should persist
+```powershell
+npm run apk:debug:customer
+npm run apk:debug:driver
+```
 
 ## Notes
 
-- Capacitor `server.url` defaults to `https://mto-frontend-xi.vercel.app/app`
-- Frontend production env already points API at Railway
-- Backend CORS allows Capacitor WebView origins + the Vercel frontend
+- Demo login credentials and fake Google/Apple buttons are removed from auth.
+- Customer APK has no “Want to drive” entry; Driver APK has no customer booking entry.
+- Logout returns to the matching `/app/customer` or `/app/driver` welcome screen.

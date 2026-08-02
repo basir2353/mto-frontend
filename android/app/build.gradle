@@ -16,6 +16,25 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    flavorDimensions "role"
+    productFlavors {
+        customer {
+            dimension "role"
+            applicationId "com.movethisout.customer"
+            resValue "string", "app_name", "MoveThisOut"
+            resValue "string", "title_activity_main", "MoveThisOut"
+            resValue "string", "package_name", "com.movethisout.customer"
+            resValue "string", "custom_url_scheme", "com.movethisout.customer"
+        }
+        driver {
+            dimension "role"
+            applicationId "com.movethisout.driver"
+            resValue "string", "app_name", "MoveThisOut Driver"
+            resValue "string", "title_activity_main", "MoveThisOut Driver"
+            resValue "string", "package_name", "com.movethisout.driver"
+            resValue "string", "custom_url_scheme", "com.movethisout.driver"
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false

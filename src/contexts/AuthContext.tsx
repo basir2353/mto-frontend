@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authApi, type User, type UserRole } from "@/lib/api";
+import { appHomePath } from "@/lib/appRole";
 import { clearTokens, hasSession, setTokens } from "@/lib/session";
 
 type AuthContextValue = {
@@ -72,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     clearTokens();
     setUser(null);
-    router.push("/app");
+    router.push(appHomePath());
   }, [router]);
 
   const hasRole = useCallback((role: UserRole) => !!user?.roles.includes(role), [user]);

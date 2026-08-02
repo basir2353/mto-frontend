@@ -15,10 +15,13 @@
     "start:prod": "node scripts/use-env.mjs production && next start -p 3000",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "cap:sync": "npx cap sync android",
+    "apk:prepare": "node scripts/prepare-apk-variants.mjs",
+    "cap:sync": "node scripts/prepare-apk-variants.mjs && npx cap sync android && node scripts/prepare-apk-variants.mjs",
     "cap:open:android": "npx cap open android",
     "apk:open": "npx cap open android",
-    "apk:debug": "npx cap sync android && cd android && gradlew.bat assembleDebug --no-daemon"
+    "apk:debug": "npm run apk:debug:customer && npm run apk:debug:driver",
+    "apk:debug:customer": "npm run cap:sync && cd android && gradlew.bat assembleCustomerDebug --no-daemon && cd .. && node scripts/copy-apk.mjs customer",
+    "apk:debug:driver": "npm run cap:sync && cd android && gradlew.bat assembleDriverDebug --no-daemon && cd .. && node scripts/copy-apk.mjs driver"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",

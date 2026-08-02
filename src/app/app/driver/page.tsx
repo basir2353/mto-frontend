@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppIcon } from "@/components/ui/Icons";
-import styles from "./app-welcome.module.css";
+import { setAppRole } from "@/lib/appRole";
+import styles from "../app-welcome.module.css";
 
-/** Combined web entry — native APKs open /app/customer or /app/driver instead. */
-export default function MobileAppWelcomePage() {
+export default function DriverAppWelcomePage() {
   const router = useRouter();
   const { isAuthenticated, user, loading } = useAuth();
+
+  useEffect(() => {
+    setAppRole("driver");
+  }, []);
 
   useEffect(() => {
     if (loading || !isAuthenticated || !user) return;
@@ -23,7 +27,7 @@ export default function MobileAppWelcomePage() {
     return (
       <div className={styles.boot}>
         <div className={styles.bootMark}>M</div>
-        <p>Opening MoveThisOut…</p>
+        <p>Opening MoveThisOut Driver…</p>
       </div>
     );
   }
@@ -34,33 +38,27 @@ export default function MobileAppWelcomePage() {
       <div className={styles.inner}>
         <header className={styles.brand}>
           <div className={styles.mark}>M</div>
-          <h1 className={styles.title}>MoveThisOut</h1>
-          <p className={styles.tagline}>Move anything. Right now.</p>
+          <h1 className={styles.title}>MoveThisOut Driver</h1>
+          <p className={styles.tagline}>Earn with your vehicle.</p>
         </header>
 
         <p className={styles.support}>
-          Choose your app. Customers book moves; drivers earn with their vehicles.
+          Get nearby job requests, send quotes, and complete paid moves on your schedule.
         </p>
 
         <div className={styles.actions}>
-          <Link href="/app/customer" className={styles.primary}>
+          <Link href="/driver-signup" className={styles.primary}>
             <span className={styles.actionIcon}>
-              <AppIcon name="package" size={22} color="#0E0E10" />
+              <AppIcon name="truck" size={22} color="#0E0E10" />
             </span>
             <span>
-              <strong>Customer</strong>
-              <em>Book and track a move</em>
+              <strong>Apply to drive</strong>
+              <em>Create your driver account</em>
             </span>
           </Link>
 
-          <Link href="/app/driver" className={styles.secondary}>
-            <span className={styles.actionIconDark}>
-              <AppIcon name="truck" size={22} color="var(--accent)" />
-            </span>
-            <span>
-              <strong>Driver</strong>
-              <em>Earn with your vehicle</em>
-            </span>
+          <Link href="/auth?app=driver#login" className={styles.signin}>
+            Already a driver? Sign in
           </Link>
         </div>
       </div>
