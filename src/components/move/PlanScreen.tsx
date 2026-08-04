@@ -8,8 +8,9 @@ import { useForm } from "@/contexts/MoveFormContext";
 import { useNearbyMovers } from "@/hooks/useNearbyMovers";
 import { hasGoogleMaps } from "@/lib/env";
 import { zonesApi, type NearbyMoversSortBy } from "@/lib/api/public";
+import type { VehicleType } from "@/lib/api";
 import { isWithinCanadaBounds, type MapPlace } from "@/lib/maps";
-import { MapPill, WizardShell, ZoomControls } from "@/components/move/WizardChrome";
+import { MapPill, WizardShell } from "@/components/move/WizardChrome";
 import { AppIcon, type AppIconName } from "@/components/ui/Icons";
 
 function localIsoDate(d: Date) {
@@ -23,6 +24,7 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
   const f = useForm();
   const [sortBy] = useState<NearbyMoversSortBy>("distance");
   const [error, setError] = useState<string | null>(null);
+  const [pickupBias, setPickupBias] = useState<{ lat: number; lng: number } | null>(null);
   const [coverageStatus, setCoverageStatus] = useState<{
     key: string;
     tone: "ok" | "warn";
@@ -41,7 +43,10 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
   const pickupInCanada = pickupHasCoords ? isWithinCanadaBounds(f.pickupPlace) : false;
   const destinationInCanada = destinationHasCoords ? isWithinCanadaBounds(f.destinationPlace) : false;
   const canadianPlacesReady = !hasGoogleMaps || (pickupHasCoords && pickupInCanada && destinationHasCoords && destinationInCanada);
-  const zoneLookupKey = pickupHasCoords ? `${f.pickupPlace.lat}:${f.pickupPlace.lng}` : "";
+  const zoneLookupKey =
+    pickupHasCoords && destinationHasCoords
+      ? `${f.pickupPlace.lat}:${f.pickupPlace.lng}:${f.destinationPlace.lat}:${f.destinationPlace.lng}`
+      : "";
   const localZoneStatus = useMemo(() => {
     if (!hasGoogleMaps) return null;
     if (pickupHasCoords && !pickupInCanada) {
@@ -54,6 +59,12 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
       return {
         tone: "warn" as const,
         text: "Select a pickup address from the Canada suggestions to check zone coverage.",
+      };
+    }
+    if (!destinationHasCoords) {
+      return {
+        tone: "warn" as const,
+        text: "Select a destination from the Canada suggestions to check coverage for the full route.",
       };
     }
     return null;
@@ -70,35 +81,50 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
   useEffect(() => {
     let cancelled = false;
 
-    if (!hasGoogleMaps || localZoneStatus || !pickupHasCoords) {
+    if (!hasGoogleMaps || localZoneStatus || !pickupHasCoords || !destinationHasCoords) {
       return;
     }
 
-    zonesApi
-      .check(Number(f.pickupPlace.lat), Number(f.pickupPlace.lng))
-      .then((result) => {
+    Promise.all([
+      zonesApi.check(Number(f.pickupPlace.lat), Number(f.pickupPlace.lng)),
+      zonesApi.check(Number(f.destinationPlace.lat), Number(f.destinationPlace.lng)),
+    ])
+      .then(([pickupResult, destinationResult]) => {
         if (cancelled) return;
-        if (result.outsideCanada) {
+        if (pickupResult.outsideCanada || destinationResult.outsideCanada) {
           setCoverageStatus({
             key: zoneLookupKey,
             tone: "warn",
-            text: "This location is outside Canada and cannot be booked.",
+            text: "Both pickup and destination must be inside Canada.",
           });
           return;
         }
-        if (!result.covered) {
+        if (!pickupResult.covered || !destinationResult.covered) {
+          const missing =
+            !pickupResult.covered && !destinationResult.covered
+              ? "Pickup and destination are"
+              : !pickupResult.covered
+                ? "Pickup is"
+                : "Destination is";
           setCoverageStatus({
             key: zoneLookupKey,
             tone: "warn",
-            text: "Out of zone: this pickup location is not covered by any active service zone.",
+            text: `Outside service area: ${missing} not within an active zone. Choose covered locations or contact support.`,
           });
           return;
         }
-        const zoneName = result.zones[0]?.name;
+        const pickupZone = pickupResult.zones[0]?.name;
+        const destinationZone = destinationResult.zones[0]?.name;
+        const zoneLabel =
+          pickupZone && destinationZone
+            ? pickupZone === destinationZone
+              ? pickupZone
+              : `${pickupZone} to ${destinationZone}`
+            : null;
         setCoverageStatus({
           key: zoneLookupKey,
           tone: "ok",
-          text: zoneName ? `In zone: covered by ${zoneName}.` : "In zone: this pickup is covered.",
+          text: zoneLabel ? `Route covered: ${zoneLabel}.` : "Route covered: both locations are in active service zones.",
         });
       })
       .catch(() => {
@@ -113,7 +139,31 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, [f.pickupPlace.lat, f.pickupPlace.lng, localZoneStatus, pickupHasCoords, zoneLookupKey]);
+  }, [
+    destinationHasCoords,
+    f.destinationPlace.lat,
+    f.destinationPlace.lng,
+    f.pickupPlace.lat,
+    f.pickupPlace.lng,
+    localZoneStatus,
+    pickupHasCoords,
+    zoneLookupKey,
+  ]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setPickupBias({ lat: coords.latitude, lng: coords.longitude }),
+      () => {},
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 },
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!f.vehicleFilter && nearby.vehicleTypes[0]) {
+      f.setVehicleFilter(nearby.vehicleTypes[0].name);
+    }
+  }, [f.vehicleFilter, nearby.vehicleTypes]);
 
   const handleContinue = () => {
     if (!canContinue) {
@@ -168,6 +218,7 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
             <div className="plan-location-card plan-sheet-locations" style={{ border: "1.5px solid rgba(0,0,0,.14)", borderRadius: 12, position: "relative" }}>
               <PickupField
                 value={f.pickup}
+                biasLocation={pickupBias}
                 onChange={(value) => {
                   f.setPickup(value);
                   f.setPickupPlace({ address: value });
@@ -180,6 +231,11 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
               <div style={{ height: 1, background: "rgba(0,0,0,.08)" }} />
               <DestinationField
                 value={f.destination}
+                biasLocation={
+                  f.pickupPlace.lat != null && f.pickupPlace.lng != null
+                    ? { lat: Number(f.pickupPlace.lat), lng: Number(f.pickupPlace.lng) }
+                    : pickupBias
+                }
                 onChange={(value) => {
                   f.setDestination(value);
                   f.setDestinationPlace({ address: value });
@@ -232,13 +288,13 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
                 Vehicle preference
               </div>
               <div className="plan-chip-scroller plan-vehicle-scroller" style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-                {(nearby.vehicleOptions.length > 1 ? nearby.vehicleOptions : ["All vehicles", "Cargo Van", "Cube Van", "Moving Truck"]).map(
-                  (option) => (
+                {nearby.vehicleTypes.map(
+                  (vehicle) => (
                     <VehicleChip
-                      key={option}
-                      label={option}
-                      active={f.vehicleFilter === option}
-                      onClick={() => f.setVehicleFilter(option)}
+                      key={vehicle.id}
+                      vehicle={vehicle}
+                      active={f.vehicleFilter === vehicle.name}
+                      onClick={() => f.setVehicleFilter(vehicle.name)}
                     />
                   ),
                 )}
@@ -319,9 +375,6 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
         <>
           <RouteMap pickup={f.pickupPlace} destination={f.destinationPlace} nearbyMovers={nearby.mapMovers} />
           {onlineCount > 0 && <MapPill position="top-left">{onlineCount} movers online nearby</MapPill>}
-          <div style={{ position: "absolute", bottom: 24, right: 24, zIndex: 2 }}>
-            <ZoomControls />
-          </div>
         </>
       }
     >
@@ -384,11 +437,10 @@ function WhenChip({ label, active, onClick }: { label: string; active: boolean; 
   );
 }
 
-function VehicleChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function VehicleChip({ vehicle, active, onClick }: { vehicle: VehicleType; active: boolean; onClick: () => void }) {
+  const label = vehicle.name;
   const normalized = label.toLowerCase();
-  const icon: AppIconName = normalized.includes("all")
-    ? "package"
-    : normalized.includes("cargo") || normalized.includes("van")
+  const icon: AppIconName = normalized.includes("cargo") || normalized.includes("van")
       ? "car"
       : normalized.includes("truck") || normalized.includes("box")
         ? "truck"
@@ -399,7 +451,7 @@ function VehicleChip({ label, active, onClick }: { label: string; active: boolea
       type="button"
       className="plan-vehicle-chip"
       onClick={onClick}
-      title={label}
+      title={[label, vehicle.description, vehicle.maxVolumeM3 ? `${vehicle.maxVolumeM3} m³` : "", vehicle.maxWeightKg ? `${vehicle.maxWeightKg} kg` : ""].filter(Boolean).join(" · ")}
       style={{
         height: 54,
         padding: "0 15px",
@@ -416,17 +468,26 @@ function VehicleChip({ label, active, onClick }: { label: string; active: boolea
       <span className="plan-vehicle-chip-icon">
         <AppIcon name={icon} size={25} color={active ? "var(--accent)" : "#0E0E10"} strokeWidth={1.8} />
       </span>
-      <span className="plan-vehicle-chip-label" style={{ font: "700 13px 'Hanken Grotesk'" }}>{label}</span>
+      <span style={{ minWidth: 0, display: "flex", flexDirection: "column", textAlign: "left" }}>
+        <span className="plan-vehicle-chip-label" style={{ font: "700 13px 'Hanken Grotesk'" }}>{label}</span>
+        <span style={{ font: "500 10px 'Hanken Grotesk'", opacity: 0.72, whiteSpace: "nowrap" }}>
+          {vehicle.maxVolumeM3 ? `${vehicle.maxVolumeM3} m³` : ""}
+          {vehicle.maxVolumeM3 && vehicle.maxWeightKg ? " · " : ""}
+          {vehicle.maxWeightKg ? `${vehicle.maxWeightKg} kg` : vehicle.description ?? ""}
+        </span>
+      </span>
     </button>
   );
 }
 
 function PickupField({
   value,
+  biasLocation,
   onChange,
   onPlaceSelect,
 }: {
   value: string;
+  biasLocation?: { lat: number; lng: number } | null;
   onChange: (v: string) => void;
   onPlaceSelect: (place: MapPlace) => void;
 }) {
@@ -439,6 +500,7 @@ function PickupField({
           value={value}
           onChange={onChange}
           onPlaceSelect={onPlaceSelect}
+          biasLocation={biasLocation}
           placeholder="Enter pickup address"
           height={26}
           containerStyle={{ border: "none", height: 26, padding: 0 }}
@@ -451,10 +513,12 @@ function PickupField({
 
 function DestinationField({
   value,
+  biasLocation,
   onChange,
   onPlaceSelect,
 }: {
   value: string;
+  biasLocation?: { lat: number; lng: number } | null;
   onChange: (v: string) => void;
   onPlaceSelect: (place: MapPlace) => void;
 }) {
@@ -467,6 +531,7 @@ function DestinationField({
           value={value}
           onChange={onChange}
           onPlaceSelect={onPlaceSelect}
+          biasLocation={biasLocation}
           placeholder="Enter destination address"
           height={26}
           containerStyle={{ border: "none", height: 26, padding: 0 }}

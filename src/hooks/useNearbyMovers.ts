@@ -14,7 +14,7 @@ type UseNearbyMoversOptions = {
 };
 
 function moverMatchesVehicleFilter(mover: NearbyMover, vehicleFilter: string, vehicleTypes: VehicleType[]) {
-  if (vehicleFilter === "All vehicles") return true;
+  if (!vehicleFilter) return true;
   const typeId = vehicleTypes.find((type) => type.name === vehicleFilter)?.id;
   if (typeId) return mover.vehicleTypes.some((vehicle) => vehicle.id === typeId);
   const normalized = vehicleFilter.toLowerCase();
@@ -26,7 +26,7 @@ function sortMoversForDisplay(
   vehicleFilter: string,
   vehicleTypes: VehicleType[],
 ): NearbyMover[] {
-  if (vehicleFilter === "All vehicles") return movers;
+  if (!vehicleFilter) return movers;
   return [...movers].sort((a, b) => {
     const aMatch = moverMatchesVehicleFilter(a, vehicleFilter, vehicleTypes);
     const bMatch = moverMatchesVehicleFilter(b, vehicleFilter, vehicleTypes);
@@ -53,8 +53,6 @@ export function useNearbyMovers({
       .catch(() => setVehicleTypes([]));
   }, []);
 
-  const vehicleOptions = ["All vehicles", ...vehicleTypes.map((type) => type.name)];
-
   const refresh = useCallback(async () => {
     const pickupCoords = toLatLng(pickup);
     if (!pickupCoords) {
@@ -71,7 +69,7 @@ export function useNearbyMovers({
       const response = await discoveryApi.nearbyMovers({
         latitude: pickupCoords.lat,
         longitude: pickupCoords.lng,
-        radiusKm: 100,
+        radiusKm: 40,
         sortBy,
         destinationLatitude: destinationCoords?.lat,
         destinationLongitude: destinationCoords?.lng,
@@ -110,7 +108,7 @@ export function useNearbyMovers({
     }));
 
   return {
-    vehicleOptions,
+    vehicleTypes,
     movers,
     allMovers,
     matchingCount,

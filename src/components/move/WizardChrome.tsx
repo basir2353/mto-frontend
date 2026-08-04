@@ -276,15 +276,6 @@ export function RouteMetricsBadge({ pickup, destination }: { pickup: MapPlace; d
   );
 }
 
-export function ZoomControls() {
-  return (
-    <div style={{ position: "absolute", top: 24, right: 24, display: "flex", flexDirection: "column", background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 6px 18px rgba(0,0,0,.14)" }}>
-      <div style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", font: "600 22px 'Hanken Grotesk'", borderBottom: "1px solid rgba(0,0,0,.08)" }}>+</div>
-      <div style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", font: "600 22px 'Hanken Grotesk'" }}>-</div>
-    </div>
-  );
-}
-
 export const stepHeading: React.CSSProperties = { margin: "0 0 4px", font: "800 26px 'Archivo'", letterSpacing: "-.02em" };
 export const stepSub: React.CSSProperties = { margin: "0 0 26px", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" };
 

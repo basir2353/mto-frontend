@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { TextInput, ChipToggle, Checkbox, Slider, FieldLabel } from "@/components/FormControls";
+import { TextInput, Checkbox, Slider, FieldLabel } from "@/components/FormControls";
 import LocationField from "@/components/maps/LocationField";
 import RouteMap from "@/components/maps/RouteMap";
-import { authApi, moversApi, uploadsApi, verificationApi, ApiError } from "@/lib/api";
+import { authApi, moversApi, uploadsApi, verificationApi, vehiclesApi, ApiError, type VehicleType } from "@/lib/api";
 import { compressImageFile } from "@/lib/compressImage";
 import type { MapPlace } from "@/lib/maps";
 import { toLatLng } from "@/lib/maps";
-import { setTokens } from "@/lib/session";
+import { getAccessToken, hasSession, setTokens } from "@/lib/session";
 import { AppIcon } from "@/components/ui/Icons";
 import { PhoneInput, isValidNationalPhone, parsePhoneValue } from "@/components/PhoneInput";
 import { YearPicker } from "@/components/YearPicker";
@@ -23,8 +23,14 @@ const stepDefs = [
   { n: 5, label: "Verify", sub: "Selfie & submit" },
 ];
 
-const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const CURRENT_YEAR = new Date().getFullYear();
+
+function vehicleCapacityHint(v: VehicleType) {
+  const parts: string[] = [];
+  if (v.maxVolumeM3) parts.push(`${v.maxVolumeM3} m³`);
+  if (v.maxWeightKg) parts.push(`${Math.round(v.maxWeightKg)} kg`);
+  return parts.join(" · ");
+}
 
 type PendingDoc = { name: string; file: File };
 
@@ -53,10 +59,6 @@ function isStrongPassword(v: string) {
   return v.length >= 8 && /[A-Z]/.test(v) && /[a-z]/.test(v) && /[0-9]/.test(v);
 }
 
-function isPlate(v: string) {
-  return /^[A-Z0-9][A-Z0-9\s-]{2,11}$/i.test(v.trim());
-}
-
 function isYear(v: string) {
   const n = Number(v);
   return /^\d{4}$/.test(v) && n >= 1990 && n <= CURRENT_YEAR + 1;
@@ -68,6 +70,7 @@ export default function DriverSignupPage() {
   const [busy, setBusy] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [accountCreated, setAccountCreated] = useState(false);
 
   // step 1
   const [firstName, setFirstName] = useState("");
@@ -77,11 +80,11 @@ export default function DriverSignupPage() {
   const [password, setPassword] = useState("");
 
   // step 2
-  const [vehicleType, setVehicleType] = useState("Cargo van");
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
+  const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState("");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
-  const [plate, setPlate] = useState("");
 
   // step 3
   const [docs, setDocs] = useState<Docs>({ licence: null, insurance: null, vehiclePhoto: null });
@@ -91,7 +94,6 @@ export default function DriverSignupPage() {
   const [baseLocation, setBaseLocation] = useState("");
   const [baseLocationPlace, setBaseLocationPlace] = useState<MapPlace>({ address: "" });
   const [radius, setRadius] = useState(15);
-  const [days, setDays] = useState<string[]>(["Mon", "Tue", "Thu", "Fri", "Sat"]);
 
   // step 5 — selfie + review
   const [selfie, setSelfie] = useState<PendingDoc | null>(null);
@@ -104,7 +106,19 @@ export default function DriverSignupPage() {
     };
   }, [selfiePreview]);
 
-  const toggleDay = (d: string) => setDays((ds) => (ds.includes(d) ? ds.filter((x) => x !== d) : [...ds, d]));
+  useEffect(() => {
+    vehiclesApi
+      .listTypes()
+      .then((types) => {
+        const active = types.filter((t) => t.isActive);
+        setVehicleTypes(active);
+        setSelectedVehicleTypeId((current) => current || active[0]?.id || "");
+      })
+      .catch(() => setVehicleTypes([]));
+  }, []);
+
+  const selectedVehicleType = vehicleTypes.find((t) => t.id === selectedVehicleTypeId);
+  const selectedVehicleTypeName = selectedVehicleType?.name ?? "";
 
   const clearError = (key: string) =>
     setFieldErrors((prev) => {
@@ -121,18 +135,17 @@ export default function DriverSignupPage() {
       if (!isName(firstName)) errors.firstName = "Enter a valid first name (letters only, min 2).";
       if (!isName(lastName)) errors.lastName = "Enter a valid last name (letters only, min 2).";
       if (!isEmail(email)) errors.email = "Enter a valid email address.";
-      if (!isPhone(phone)) errors.phone = "Select your country and enter a valid mobile number.";
+      if (!isPhone(phone)) errors.phone = "Enter a valid Canadian mobile number.";
       if (!isStrongPassword(password)) {
         errors.password = "Min 8 chars with upper, lower, and a number.";
       }
     }
 
     if (n === 2) {
-      if (!vehicleType) errors.vehicleType = "Select a vehicle type.";
+      if (!selectedVehicleTypeId) errors.vehicleType = "Select a vehicle type.";
       if (make.trim().length < 2) errors.make = "Make is required (min 2 characters).";
       if (model.trim().length < 1) errors.model = "Model is required.";
       if (!isYear(year)) errors.year = `Enter a valid year (1990–${CURRENT_YEAR + 1}).`;
-      if (!isPlate(plate)) errors.plate = "Enter a valid licence plate (3–12 chars).";
     }
 
     if (n === 3) {
@@ -145,8 +158,7 @@ export default function DriverSignupPage() {
       if (!baseLocation.trim() || baseLocationPlace.lat == null || baseLocationPlace.lng == null) {
         errors.baseLocation = "Select an exact address from the Google Places suggestions.";
       }
-      if (radius < 1 || radius > 50) errors.radius = "Service radius must be 1–50 miles.";
-      if (days.length === 0) errors.days = "Select at least one available day.";
+      if (radius < 1 || radius > 25) errors.radius = "Service radius must be 1–25 miles.";
     }
 
     if (n === 5) {
@@ -162,25 +174,49 @@ export default function DriverSignupPage() {
   const next = async () => {
     if (!validateStep(step)) return;
 
+    if (step >= 2 && !hasSession()) {
+      setApiError("Your account session expired. Go back to step 1 and create your account again.");
+      setStep(1);
+      return;
+    }
+
     setBusy(true);
     setApiError(null);
     try {
       if (step === 1) {
-        const avail = await verificationApi.checkAvailability({
-          email: email.trim(),
-          phone: phone.trim(),
-        });
-        const errors: FieldErrors = {};
-        if (!avail.emailAvailable) {
-          errors.email = "Email already in use — use another email or log in.";
-        }
-        if (!avail.phoneAvailable) {
-          errors.phone = "Phone number already in use — use another number or log in.";
-        }
-        if (Object.keys(errors).length) {
-          setFieldErrors(errors);
-          setApiError("Email or phone is already registered.");
-          return;
+        if (!accountCreated) {
+          const avail = await verificationApi.checkAvailability({
+            email: email.trim(),
+            phone: phone.trim(),
+          });
+          const errors: FieldErrors = {};
+          if (!avail.emailAvailable) errors.email = "Email already in use — use another email or log in.";
+          if (!avail.phoneAvailable) errors.phone = "Phone number already in use — use another number or log in.";
+          if (Object.keys(errors).length) {
+            setFieldErrors(errors);
+            setApiError("Email or phone is already registered.");
+            return;
+          }
+
+          const reg = await authApi.register({
+            email: email.trim(),
+            password,
+            role: "mover",
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            phone: phone.trim(),
+            businessName: `${firstName} ${lastName}`.trim(),
+          });
+          setTokens(reg.tokens.accessToken, reg.tokens.refreshToken);
+          setAccountCreated(true);
+
+          if (reg.verificationToken) {
+            try {
+              await authApi.verifyEmail(reg.verificationToken);
+            } catch {
+              // admin/mover verify may still be required
+            }
+          }
         }
       }
 
@@ -207,7 +243,7 @@ export default function DriverSignupPage() {
           if (docs.vehiclePhoto) {
             const match = await verificationApi.matchVehicle({
               file: docs.vehiclePhoto.file,
-              vehicleType,
+              vehicleType: selectedVehicleTypeName,
               make: make.trim(),
               model: model.trim(),
               year: year.trim() || undefined,
@@ -233,7 +269,25 @@ export default function DriverSignupPage() {
 
       setStep((s) => (s < 5 ? s + 1 : 6));
     } catch (e) {
-      setApiError(e instanceof Error ? e.message : "Verification failed. Check your connection and try again.");
+      if (
+        step === 1 &&
+        e instanceof ApiError &&
+        (e.statusCode === 409 || e.messages.some((m) => /already registered|already exists/i.test(m)))
+      ) {
+        const phoneConflict = e.messages.some((m) => /phone/i.test(m));
+        setApiError(
+          phoneConflict
+            ? "This phone number is already registered. Use a different number or log in."
+            : "This email is already registered. Log in instead, or use a different email.",
+        );
+        setFieldErrors(
+          phoneConflict
+            ? { phone: "Phone already in use — use another number or log in." }
+            : { email: "Email already in use — use another email or log in." },
+        );
+      } else {
+        setApiError(e instanceof Error ? e.message : "Verification failed. Check your connection and try again.");
+      }
     } finally {
       setBusy(false);
     }
@@ -267,6 +321,12 @@ export default function DriverSignupPage() {
   const submitApplication = async () => {
     if (!validateStep(5)) return;
 
+    if (!hasSession() || !getAccessToken()) {
+      setApiError("You must complete the Account step first — create your driver account before submitting.");
+      setStep(1);
+      return;
+    }
+
     setBusy(true);
     setApiError(null);
     try {
@@ -286,17 +346,6 @@ export default function DriverSignupPage() {
       }
 
       const businessName = `${firstName} ${lastName}`.trim();
-      const reg = await authApi.register({
-        email: email.trim(),
-        password,
-        role: "mover",
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        phone: phone.trim(),
-        businessName,
-      });
-      setTokens(reg.tokens.accessToken, reg.tokens.refreshToken);
-
       const docList: Array<{ type: string; url: string }> = [];
       const pending = Object.entries(docs).filter(
         (entry): entry is [string, PendingDoc] => entry[1] != null,
@@ -315,19 +364,11 @@ export default function DriverSignupPage() {
         avatarUrl: selfieUpload.url,
         serviceAreas: [baseLocation.trim()],
         documents: docList,
-        availability: { days, hours: "8:00-20:00" },
-        bio: `${vehicleType} · ${make} ${model} ${year} · ${plate}`,
+        vehicleTypeIds: [selectedVehicleTypeId],
+        bio: `${selectedVehicleTypeName} · ${make} ${model} ${year}`,
         latitude: baseLocationPlace.lat,
         longitude: baseLocationPlace.lng,
       });
-
-      if (reg.verificationToken) {
-        try {
-          await authApi.verifyEmail(reg.verificationToken);
-        } catch {
-          // admin/mover verify may still be required
-        }
-      }
 
       setStep(6);
     } catch (e) {
@@ -343,7 +384,7 @@ export default function DriverSignupPage() {
             ? { phone: "Phone already in use — use another number or log in." }
             : { email: "Email already in use — use another email or log in." },
         );
-        setStep(1);
+        if (!accountCreated) setStep(1);
       } else {
         setApiError(e instanceof Error ? e.message : "Could not submit application");
       }
@@ -358,7 +399,6 @@ export default function DriverSignupPage() {
   const displayMake = make || "—";
   const displayModel = model || "";
   const displayYear = year || "—";
-  const displayPlate = plate || "—";
   const docCount = Object.values(docs).filter(Boolean).length + (selfie ? 1 : 0);
   const canSubmit = step !== 5 || (agreed && !!selfie);
 
@@ -494,7 +534,9 @@ export default function DriverSignupPage() {
               {step === 1 && (
                 <div style={{ animation: "rise .3s ease" }}>
                   <h1 style={heading}>Create your driver account</h1>
-                  <p style={sub}>Start earning with the vehicle you already have.</p>
+                  <p style={sub}>
+                    We&apos;ll create your account first. You&apos;ll add your vehicle, documents, and service area in the next steps.
+                  </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     <Row>
                       <TextInput
@@ -565,7 +607,44 @@ export default function DriverSignupPage() {
                   <h1 style={heading}>Your vehicle</h1>
                   <p style={sub}>Tell us what you&apos;ll be driving. You can add more later.</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                    <ChipToggle label="Vehicle type" options={["SUV", "Cargo van", "Pickup", "Box truck"]} selected={vehicleType} onSelect={setVehicleType} />
+                    <div>
+                      <FieldLabel>Vehicle type</FieldLabel>
+                      <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
+                        {vehicleTypes.map((type) => {
+                          const active = selectedVehicleTypeId === type.id;
+                          const hint = vehicleCapacityHint(type);
+                          return (
+                            <button
+                              key={type.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedVehicleTypeId(type.id);
+                                clearError("vehicleType");
+                              }}
+                              style={{
+                                minHeight: 42,
+                                padding: hint ? "8px 16px" : "0 18px",
+                                borderRadius: 999,
+                                background: active ? "var(--accent)" : "#fff",
+                                border: active ? "1.5px solid var(--accent)" : "1.5px solid rgba(0,0,0,.14)",
+                                display: "inline-flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                justifyContent: "center",
+                                font: active ? "700 14px 'Hanken Grotesk'" : "600 14px 'Hanken Grotesk'",
+                                color: active ? "#0E0E10" : "#3a3a40",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <span>{type.name}</span>
+                              {hint ? (
+                                <span style={{ font: "500 10px 'Hanken Grotesk'", opacity: 0.75, marginTop: 2 }}>{hint}</span>
+                              ) : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                     {fieldErrors.vehicleType && <FieldHint error>{fieldErrors.vehicleType}</FieldHint>}
                     <Row>
                       <TextInput
@@ -597,16 +676,6 @@ export default function DriverSignupPage() {
                         clearError("year");
                       }}
                       error={fieldErrors.year}
-                    />
-                    <TextInput
-                      label="Licence plate"
-                      value={plate}
-                      onChange={(v) => {
-                        setPlate(v.toUpperCase());
-                        clearError("plate");
-                      }}
-                      placeholder="ABC 1234"
-                      error={fieldErrors.plate}
                     />
                   </div>
                 </div>
@@ -662,7 +731,7 @@ export default function DriverSignupPage() {
 
               {step === 4 && (
                 <div style={{ animation: "rise .3s ease" }}>
-                  <h1 style={heading}>Where &amp; when you&apos;ll drive</h1>
+                  <h1 style={heading}>Where you&apos;ll drive</h1>
                   <p style={sub}>Pick your exact base from Google Places — typed city names alone won&apos;t work.</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
                     <LocationField
@@ -707,42 +776,8 @@ export default function DriverSignupPage() {
                         <FieldLabel>Service radius</FieldLabel>
                         <div style={{ font: "800 14px 'Archivo'" }}>{radius} mi</div>
                       </div>
-                      <Slider value={radius} onChange={setRadius} min={1} max={30} />
+                      <Slider value={radius} onChange={setRadius} min={1} max={25} />
                       {fieldErrors.radius && <FieldHint error>{fieldErrors.radius}</FieldHint>}
-                    </div>
-                    <div>
-                      <FieldLabel>Days you&apos;re available</FieldLabel>
-                      <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-                        {ALL_DAYS.map((d) => {
-                          const active = days.includes(d);
-                          return (
-                            <button
-                              key={d}
-                              type="button"
-                              onClick={() => {
-                                toggleDay(d);
-                                clearError("days");
-                              }}
-                              style={{
-                                height: 42,
-                                width: 52,
-                                borderRadius: 12,
-                                background: active ? "var(--accent)" : "#fff",
-                                border: active ? "1.5px solid var(--accent)" : "1.5px solid rgba(0,0,0,.14)",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                font: active ? "700 14px 'Hanken Grotesk'" : "600 14px 'Hanken Grotesk'",
-                                color: active ? "#0E0E10" : "#3a3a40",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {d}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {fieldErrors.days && <FieldHint error>{fieldErrors.days}</FieldHint>}
                     </div>
                   </div>
                 </div>
@@ -773,8 +808,8 @@ export default function DriverSignupPage() {
                     />
                     <ReviewRow
                       label="Vehicle"
-                      value={`${vehicleType} · ${displayMake} ${displayModel} (${displayYear})`}
-                      sub={displayPlate}
+                      value={`${selectedVehicleTypeName || "—"} · ${displayMake} ${displayModel} (${displayYear})`}
+                      sub="Vehicle type saved to your mover profile"
                       onEdit={() => setStep(2)}
                     />
                     <ReviewRow
@@ -788,8 +823,8 @@ export default function DriverSignupPage() {
                       value={`${baseLocation || "Select location"} · ${radius} mi radius`}
                       sub={
                         baseLocationPlace.lat != null
-                          ? `${days.join(", ")} · ${baseLocationPlace.lat.toFixed(4)}, ${baseLocationPlace.lng?.toFixed(4)}`
-                          : days.join(", ") || "No days selected"
+                          ? `${baseLocationPlace.lat.toFixed(4)}, ${baseLocationPlace.lng?.toFixed(4)}`
+                          : "Exact location required"
                       }
                       onEdit={() => setStep(4)}
                     />
@@ -873,15 +908,19 @@ export default function DriverSignupPage() {
               >
                 {busy
                   ? step === 1
-                    ? "Checking…"
+                    ? accountCreated
+                      ? "Please wait…"
+                      : "Creating account…"
                     : step === 3
                       ? "Verifying photos…"
                       : step === 5
                         ? "Submitting…"
                         : "Please wait…"
-                  : step < 5
-                    ? "Continue →"
-                    : "Submit application"}
+                  : step === 1 && !accountCreated
+                    ? "Create account & continue"
+                    : step < 5
+                      ? "Continue →"
+                      : "Submit application"}
               </button>
             </div>
           )}

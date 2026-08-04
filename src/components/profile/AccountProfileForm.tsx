@@ -289,7 +289,7 @@ export function AccountProfileForm({
                 <TextInput label="Last name" value={lastName} onChange={setLastName} placeholder="Customer" />
               </div>
               <div style={{ marginTop: 12 }}>
-                <PhoneInput label="Phone" value={phone} onChange={setPhone} defaultIso="US" />
+                <PhoneInput label="Phone" value={phone} onChange={setPhone} defaultIso="CA" />
               </div>
               <div style={{ marginTop: 12 }}>
                 <FieldLabel>Email</FieldLabel>

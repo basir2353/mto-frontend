@@ -14,9 +14,9 @@ import { BookScreen } from "@/components/move/BookScreen";
 import { TrackScreen } from "@/components/move/TrackScreen";
 import { WizardHeader, type WizardStepId } from "@/components/move/WizardChrome";
 import { FormCtx, useForm, type FormState, type Photo, type WhenChoice } from "@/contexts/MoveFormContext";
-import { CustomerWalletCheckout, CustomerWalletPanel, InvoicePreviewCard } from "@/components/move/WalletPanels";
+import { InvoicePreviewCard } from "@/components/move/WalletPanels";
 import { customerDisplayName } from "@/lib/displayNames";
-import type { CustomerWallet, PaymentInvoice, Booking } from "@/lib/api";
+import type { PaymentInvoice, Booking } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { MoveFlowProvider, useMoveFlow } from "@/contexts/MoveFlowContext";
 import { customersApi, savedAddressesApi } from "@/lib/api";
@@ -38,9 +38,9 @@ import type { MoveType } from "@/components/booking/MoveTimingTabs";
 import { defaultTimeZone } from "@/components/booking/TimeZoneSelect";
 import { formatMoveRoute } from "@/components/move/MovesSwitcher";
 
-type Screen = "plan" | "details" | "quotes" | "book" | "track" | "messages" | "rate" | "history" | "wallet";
+type Screen = "plan" | "details" | "quotes" | "book" | "track" | "messages" | "rate" | "history";
 const WIZARD_SCREENS: Screen[] = ["plan", "details", "quotes", "book", "track"];
-const RESUMABLE_SCREENS: Screen[] = ["plan", "details", "quotes", "track", "messages", "rate", "history", "wallet"];
+const RESUMABLE_SCREENS: Screen[] = ["plan", "details", "quotes", "track", "messages", "rate", "history"];
 const LEGACY_SCREEN_MAP: Record<string, Screen> = {
   home: "plan",
   request: "details",
@@ -106,7 +106,7 @@ function normalizeMoveDraft(raw: Record<string, unknown> | null): MoveFormDraft 
     timeWindow: String(raw.timeWindow ?? "Morning"),
     timeZone: String(raw.timeZone ?? defaultTimeZone()),
     flexibleTime: Boolean(raw.flexibleTime),
-    vehicleFilter: String(raw.vehicleFilter ?? "All vehicles"),
+    vehicleFilter: String(raw.vehicleFilter ?? ""),
     selectedVehicleId: typeof raw.selectedVehicleId === "string" ? raw.selectedVehicleId : null,
     selectedVehicleName: String(raw.selectedVehicleName ?? raw.vehicleFit ?? ""),
     estimatedLoad: String(raw.estimatedLoad ?? ""),
@@ -250,7 +250,7 @@ function CustomerAppContent() {
   const [timeWindow, setTimeWindow] = useState(() => draft?.timeWindow ?? "Morning");
   const [timeZone, setTimeZone] = useState(() => draft?.timeZone ?? defaultTimeZone());
   const [flexibleTime, setFlexibleTime] = useState(() => draft?.flexibleTime ?? false);
-  const [vehicleFilter, setVehicleFilter] = useState(() => draft?.vehicleFilter ?? "All vehicles");
+  const [vehicleFilter, setVehicleFilter] = useState(() => draft?.vehicleFilter ?? "");
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(() => draft?.selectedVehicleId ?? null);
   const [selectedVehicleName, setSelectedVehicleName] = useState(() => draft?.selectedVehicleName ?? "");
   const [estimatedLoad, setEstimatedLoad] = useState(() => draft?.estimatedLoad ?? "");
@@ -502,7 +502,7 @@ function CustomerAppContent() {
     setTimeWindow("Morning");
     setTimeZone(defaultTimeZone());
     setFlexibleTime(false);
-    setVehicleFilter("All vehicles");
+    setVehicleFilter("");
     setSelectedVehicleId(null);
     setSelectedVehicleName("");
     setEstimatedLoad("");
@@ -514,6 +514,17 @@ function CustomerAppContent() {
   const startNewMove = () => {
     resetMoveForm();
     setScreen("plan");
+  };
+
+  const cancelAndStartNewMove = async () => {
+    const requestId = flow.activeRequest?.id;
+    if (requestId) {
+      const cancelled = await flow.cancelRequest(requestId);
+      if (!cancelled) return;
+    }
+    setSelectedRequestId(null);
+    setSelectedQuoteId(null);
+    startNewMove();
   };
 
   const handlePublish = async () => {
@@ -597,7 +608,7 @@ function CustomerAppContent() {
         goMessages(action.bookingId);
         break;
       case "wallet":
-        setScreen("wallet");
+        setScreen("history");
         if (action.bookingId) void flow.loadBooking(action.bookingId);
         break;
       case "history":
@@ -692,9 +703,7 @@ function CustomerAppContent() {
       ? "messages"
       : screen === "history"
         ? "history"
-        : screen === "wallet"
-          ? "wallet"
-          : "move";
+        : "move";
 
   const handleSidebarNav = (nav: CustomerNavId) => {
     if (nav === "new") {
@@ -711,10 +720,6 @@ function CustomerAppContent() {
     }
     if (nav === "history") {
       setScreen("history");
-      return;
-    }
-    if (nav === "wallet") {
-      setScreen("wallet");
     }
   };
 
@@ -882,6 +887,8 @@ function CustomerAppContent() {
                 onSendCounter={sendCounter}
                 counterBusy={counterBusy}
                 myUserId={user?.id ?? ""}
+                onCancelRequest={cancelAndStartNewMove}
+                onStartNew={() => void cancelAndStartNewMove()}
               />
             )}
             {screen === "book" && (
@@ -900,9 +907,8 @@ function CustomerAppContent() {
                 onSelectBooking={setSelectedMessagesBookingId}
               />
             )}
-            {screen === "track" && <TrackScreen onRate={go("rate")} onHistory={go("history")} onWallet={go("wallet")} />}
-            {screen === "wallet" && <WalletScreen onRate={go("rate")} onHistory={go("history")} />}
-            {screen === "rate" && <RatingScreen onWallet={go("wallet")} onHistory={go("history")} />}
+            {screen === "track" && <TrackScreen onRate={go("rate")} onHistory={go("history")} onWallet={go("history")} />}
+            {screen === "rate" && <RatingScreen onWallet={go("history")} onHistory={go("history")} />}
             {screen === "history" && (
               <HistoryScreen
                 onStartRequest={startNewMove}
@@ -915,164 +921,6 @@ function CustomerAppContent() {
         </div>
       </CustomerAppShell>
     </FormCtx.Provider>
-  );
-}
-
-/* ============ WALLET ============ */
-
-function WalletScreen({ onRate, onHistory }: { onRate: () => void; onHistory: () => void }) {
-  const flow = useMoveFlow();
-  const booking = flow.activeBooking;
-  const [wallet, setWallet] = useState<CustomerWallet | null>(null);
-  const [invoice, setInvoice] = useState<PaymentInvoice | null>(null);
-  const [invoiceKind, setInvoiceKind] = useState<"job" | "tip" | null>(null);
-  const [tipAmount, setTipAmount] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(false);
-  const [topUpBusy, setTopUpBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const isWalletJob =
-    booking?.status === "completed" &&
-    booking.paymentMethod === "wallet" &&
-    !isBookingJobPaid(booking);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const pendingTip = sessionStorage.getItem("mto_pending_tip");
-    if (pendingTip) {
-      const amount = Number(pendingTip);
-      if (amount > 0) {
-        // Hydrate the one-time payment intent stored by the rating flow.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setInvoiceKind("tip");
-        setTipAmount(amount);
-      }
-      sessionStorage.removeItem("mto_pending_tip");
-      return;
-    }
-    if (isWalletJob) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setInvoiceKind("job");
-    }
-  }, [isWalletJob, booking?.id]);
-
-  const refreshWalletData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [walletData, invoiceData] = await Promise.all([
-        customersApi.getWallet(),
-        booking?.id && invoiceKind === "tip" && tipAmount
-          ? customersApi.getInvoice(booking.id, "tip", tipAmount)
-          : booking?.id && invoiceKind === "job"
-            ? customersApi.getInvoice(booking.id, "job")
-            : Promise.resolve(null),
-      ]);
-      setWallet(walletData);
-      setInvoice(invoiceData);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load wallet");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // Refresh when the selected booking or invoice kind changes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void refreshWalletData();
-  }, [booking?.id, booking?.payments?.length, invoiceKind, tipAmount]);
-
-  const needsReview = booking?.status === "completed" && !booking.review;
-  const invoicePaid = invoice?.alreadyPaid ?? false;
-
-  const handleTopUp = async (amount: number) => {
-    setTopUpBusy(true);
-    setError(null);
-    try {
-      await flow.topUpWallet(amount);
-      await refreshWalletData();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not add funds");
-    } finally {
-      setTopUpBusy(false);
-    }
-  };
-
-  const handlePay = async () => {
-    if (!booking?.id || paying || !invoiceKind) return;
-    setPaying(true);
-    setError(null);
-    try {
-      const amount = invoiceKind === "tip" ? tipAmount ?? undefined : undefined;
-      const result = await flow.submitPayment(booking.id, amount ?? Number(booking.price), invoiceKind);
-      if (result?.invoice) setInvoice(result.invoice);
-      await flow.loadBooking(booking.id);
-      await refreshWalletData();
-      if (invoiceKind === "job" && needsReview) onRate();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Payment failed");
-    } finally {
-      setPaying(false);
-    }
-  };
-
-  const badgeLabel = invoicePaid
-    ? invoiceKind === "tip"
-      ? "TIP SENT"
-      : "PAID"
-    : invoiceKind === "job"
-      ? "WALLET PAY"
-      : invoiceKind === "tip"
-        ? "TIP"
-        : "WALLET";
-
-  return (
-    <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", justifyContent: "center", background: "#F5F4EF" }}>
-      <div className="customer-wallet-wrap" style={{ width: 560, maxWidth: "100%", padding: "40px 40px 48px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: invoicePaid ? "#1f6b1f" : "var(--accent)", color: invoicePaid ? "#fff" : "#0E0E10", padding: "6px 12px", borderRadius: 999, font: "800 11px 'Hanken Grotesk'", letterSpacing: ".04em", marginBottom: 14 }}>
-          • {badgeLabel}
-        </div>
-        <h1 style={{ margin: "0 0 6px", font: "900 34px 'Archivo'", letterSpacing: "-.025em" }}>Payments &amp; tips</h1>
-        <p style={{ margin: "0 0 24px", font: "500 15px 'Hanken Grotesk'", color: "#6B6B70" }}>
-          Add funds, pay wallet bookings after delivery, and tip your mover. Cash-on-site jobs are confirmed by the mover when they receive cash.
-        </p>
-        {error && (
-          <div style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 12, background: "rgba(168,68,42,.08)", color: "#a8442a", font: "600 13px 'Hanken Grotesk'" }}>
-            {error}
-          </div>
-        )}
-        {(invoiceKind === "tip" && tipAmount) || invoiceKind === "job" ? (
-          <CustomerWalletCheckout
-            wallet={wallet}
-            invoice={invoice}
-            loading={loading}
-            paying={paying}
-            topUpBusy={topUpBusy}
-            onTopUp={handleTopUp}
-            onPay={invoice && !invoice.alreadyPaid ? handlePay : undefined}
-            onRefresh={() => void refreshWalletData()}
-            onContinue={invoiceKind === "job" && needsReview ? onRate : onHistory}
-            continueLabel={
-              invoicePaid
-                ? invoiceKind === "job" && needsReview
-                  ? "Rate your mover →"
-                  : "Back to history →"
-                : "Continue →"
-            }
-          />
-        ) : (
-          <CustomerWalletPanel
-            wallet={wallet}
-            loading={loading}
-            highlightBookingId={booking?.id}
-            onContinue={needsReview ? onRate : onHistory}
-            continueLabel={needsReview ? "Rate your mover →" : "Back to history →"}
-          />
-        )}
-      </div>
-    </div>
   );
 }
 

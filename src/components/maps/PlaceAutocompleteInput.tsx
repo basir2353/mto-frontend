@@ -15,6 +15,7 @@ type PlaceAutocompleteInputProps = {
   height?: number;
   inputStyle?: React.CSSProperties;
   containerStyle?: React.CSSProperties;
+  biasLocation?: { lat: number; lng: number } | null;
 };
 
 export default function PlaceAutocompleteInput({
@@ -27,6 +28,7 @@ export default function PlaceAutocompleteInput({
   height = 42,
   inputStyle,
   containerStyle,
+  biasLocation,
 }: PlaceAutocompleteInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const onChangeRef = useRef(onChange);
@@ -50,6 +52,10 @@ export default function PlaceAutocompleteInput({
       componentRestrictions: { country: "ca" },
       ...(types?.length ? { types } : {}),
     });
+    if (biasLocation && typeof google !== "undefined") {
+      const center = new google.maps.LatLng(biasLocation.lat, biasLocation.lng);
+      autocomplete.setBounds(new google.maps.Circle({ center, radius: 40000 }).getBounds()!);
+    }
 
     const listener = autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
@@ -75,7 +81,7 @@ export default function PlaceAutocompleteInput({
         google.maps.event.removeListener(listener);
       }
     };
-  }, [places, types]);
+  }, [biasLocation?.lat, biasLocation?.lng, places, types]);
 
   const input = (
     <input

@@ -7,14 +7,13 @@ import { AppIcon, type AppIconName } from "@/components/ui/Icons";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Notification } from "@/lib/api/types";
 
-export type CustomerNavId = "new" | "move" | "messages" | "history" | "wallet";
+export type CustomerNavId = "new" | "move" | "messages" | "history";
 
 const NAV: { id: CustomerNavId; label: string; icon: AppIconName }[] = [
   { id: "new", label: "New move", icon: "plus" },
   { id: "move", label: "My move", icon: "myJobs" },
   { id: "messages", label: "Messages", icon: "messages" },
   { id: "history", label: "History", icon: "clock" },
-  { id: "wallet", label: "Wallet", icon: "wallet" },
 ];
 
 const COLLAPSED_KEY = "mto_customer_sidebar_collapsed";
@@ -371,7 +370,7 @@ export function CustomerAppShell({
           .customer-app-main:has(.wizard-shell) .customer-mobile-avatar{width:32px;height:32px}
           .customer-mobile-nav{
             display:grid!important;
-            grid-template-columns:repeat(5,minmax(0,1fr));
+            grid-template-columns:repeat(4,minmax(0,1fr));
             gap:2px;
             position:fixed;
             left:0;right:0;bottom:0;

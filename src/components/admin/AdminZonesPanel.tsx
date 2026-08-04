@@ -26,7 +26,7 @@ const DEFAULT_FORM: ZoneFormState = {
   locationLabel: "Toronto, ON, Canada",
   lat: "43.6532",
   lng: "-79.3832",
-  radiusKm: "45",
+  radiusKm: "40",
   baseFee: "25",
   multiplier: "1.35",
 };
@@ -116,6 +116,10 @@ export function AdminZonesPanel({
     }
     if (![lat, lng, radiusKm, baseFee, basePriceMultiplier].every(Number.isFinite)) {
       onError("Enter a valid map location, radius, and rates");
+      return;
+    }
+    if (radiusKm < 1 || radiusKm > 40) {
+      onError("Zone radius must be between 1 and 40 km");
       return;
     }
 
@@ -267,14 +271,14 @@ export function AdminZonesPanel({
             </div>
             <input
               type="range"
-              min="5"
-              max="250"
+              min="1"
+              max="40"
               step="1"
               value={form.radiusKm}
               onChange={(e) => setField("radiusKm", e.target.value)}
             />
             <div style={{ font: "600 12px 'Hanken Grotesk'", color: "#6B6B70" }}>
-              Radius: {Number(form.radiusKm || 0).toFixed(0)} km. Search a place or click the map to move the center.
+              Radius: {Number(form.radiusKm || 0).toFixed(0)} km (max 40). Search a place or click the map to move the center.
             </div>
           </div>
 

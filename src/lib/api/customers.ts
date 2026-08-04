@@ -27,6 +27,9 @@ export const customersApi = {
 
   getRequest: (id: string) => api<MovingRequest>(`/customers/requests/${id}`),
 
+  cancelRequest: (id: string) =>
+    api<MovingRequest>(`/customers/requests/${id}/cancel`, { method: "POST" }),
+
   acceptQuote: (requestId: string, quoteId: string, paymentMethod: PaymentMethod = "cash_on_site") =>
     api<Booking>(`/customers/requests/${requestId}/quotes/${quoteId}/accept`, {
       method: "POST",

@@ -10,14 +10,12 @@ import RouteMap from "@/components/maps/RouteMap";
 import { BlockLoader } from "@/components/ui/MtoLoader";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { moversApi, uploadsApi, verificationApi } from "@/lib/api";
-import type { DocumentType } from "@/lib/api";
+import { moversApi, uploadsApi, verificationApi, vehiclesApi } from "@/lib/api";
+import type { DocumentType, VehicleType } from "@/lib/api";
 import type { MoverProfile } from "@/lib/api/types";
 import type { MapPlace } from "@/lib/maps";
 import { toFiniteCoord, toLatLng } from "@/lib/maps";
 import styles from "./DriverSettings.module.css";
-
-const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const DOC_DEFS = [
   { type: "licence", label: "Driver's licence" },
@@ -34,7 +32,6 @@ function parseVehicleBio(bio?: string | null) {
     make: "",
     model: "",
     year: "",
-    plate: "",
     helpers: "Just me",
   };
   if (!bio?.trim()) return defaults;
@@ -42,8 +39,7 @@ function parseVehicleBio(bio?: string | null) {
   const parts = bio.split(" · ").map((s) => s.trim());
   const vehicleType = parts[0] || defaults.vehicleType;
   const makeModelYear = parts[1] || "";
-  const plate = parts[2] || "";
-  const helpers = parts[3] || defaults.helpers;
+  const helpers = parts.length >= 4 ? parts[3] || defaults.helpers : parts[2] || defaults.helpers;
 
   const match = makeModelYear.match(/^(.+?)\s+(\d{4})$/);
   if (match) {
@@ -53,12 +49,11 @@ function parseVehicleBio(bio?: string | null) {
       make: words[0] || "",
       model: words.slice(1).join(" "),
       year: match[2],
-      plate,
       helpers,
     };
   }
 
-  return { vehicleType, make: makeModelYear, model: "", year: "", plate, helpers };
+  return { vehicleType, make: makeModelYear, model: "", year: "", helpers };
 }
 
 function buildVehicleBio(input: {
@@ -66,16 +61,17 @@ function buildVehicleBio(input: {
   make: string;
   model: string;
   year: string;
-  plate: string;
   helpers: string;
 }) {
   const vehicle = [input.make, input.model, input.year].filter(Boolean).join(" ");
-  return `${input.vehicleType} · ${vehicle} · ${input.plate} · ${input.helpers}`;
+  return `${input.vehicleType} · ${vehicle} · ${input.helpers}`;
 }
 
-function parseHours(hours?: string) {
-  const [start = "8:00", end = "20:00"] = (hours || "8:00-20:00").split("-");
-  return { start: start.trim(), end: end.trim() };
+function vehicleCapacityHint(v: VehicleType) {
+  const parts: string[] = [];
+  if (v.maxVolumeM3) parts.push(`${v.maxVolumeM3} m³`);
+  if (v.maxWeightKg) parts.push(`${Math.round(v.maxWeightKg)} kg`);
+  return parts.join(" · ");
 }
 
 export default function DriverSettingsPage() {
@@ -99,18 +95,15 @@ function DriverSettingsContent() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
-  const [vehicleType, setVehicleType] = useState("Cargo van");
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
+  const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState("");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
-  const [plate, setPlate] = useState("");
   const [helpers, setHelpers] = useState("Just me");
 
   const [baseLocation, setBaseLocation] = useState("");
   const [baseLocationPlace, setBaseLocationPlace] = useState<MapPlace>({ address: "" });
-  const [days, setDays] = useState<string[]>([]);
-  const [hoursStart, setHoursStart] = useState("8:00");
-  const [hoursEnd, setHoursEnd] = useState("20:00");
 
   const [existingDocs, setExistingDocs] = useState<Array<{ type: string; url: string; status?: string }>>([]);
   const [pendingDocs, setPendingDocs] = useState<Partial<Record<DocType, PendingDoc>>>({});
@@ -124,9 +117,14 @@ function DriverSettingsContent() {
       setLoading(true);
       setError(null);
       try {
-        const profile = await moversApi.getProfile();
+        const [profile, types] = await Promise.all([
+          moversApi.getProfile(),
+          vehiclesApi.listTypes().catch(() => [] as VehicleType[]),
+        ]);
         if (cancelled) return;
-        applyProfile(profile);
+        const active = types.filter((t) => t.isActive);
+        setVehicleTypes(active);
+        applyProfile(profile, active);
       } catch {
         const fallback = user?.moverProfile;
         if (fallback) applyProfile(fallback);
@@ -141,18 +139,19 @@ function DriverSettingsContent() {
     };
   }, [user?.moverProfile]);
 
-  const applyProfile = (profile: MoverProfile) => {
+  const applyProfile = (profile: MoverProfile, types: VehicleType[] = vehicleTypes) => {
     setBusinessName(profile.businessName || "");
     setPhone(profile.phone || "");
     setAvatarUrl(profile.avatarUrl || "");
 
     const vehicle = parseVehicleBio(profile.bio);
-    setVehicleType(vehicle.vehicleType);
     setMake(vehicle.make);
     setModel(vehicle.model);
     setYear(vehicle.year);
-    setPlate(vehicle.plate);
     setHelpers(vehicle.helpers);
+
+    const byName = types.find((t) => t.name === vehicle.vehicleType);
+    setSelectedVehicleTypeId(byName?.id || types[0]?.id || "");
 
     const area = profile.serviceAreas?.[0] || "";
     setBaseLocation(area);
@@ -162,15 +161,11 @@ function DriverSettingsContent() {
       lng: toFiniteCoord(profile.longitude) ?? undefined,
     });
 
-    setDays(profile.availability?.days || []);
-    const { start, end } = parseHours(profile.availability?.hours);
-    setHoursStart(start);
-    setHoursEnd(end);
-
     setExistingDocs(profile.documents || []);
   };
 
-  const toggleDay = (d: string) => setDays((ds) => (ds.includes(d) ? ds.filter((x) => x !== d) : [...ds, d]));
+  const selectedVehicleType = vehicleTypes.find((t) => t.id === selectedVehicleTypeId);
+  const selectedVehicleTypeName = selectedVehicleType?.name ?? "";
 
   const save = async () => {
     if (!businessName.trim()) {
@@ -183,6 +178,11 @@ function DriverSettingsContent() {
         setError("Enter a valid phone number with country code.");
         return;
       }
+    }
+
+    if (!selectedVehicleTypeId) {
+      setError("Select a vehicle type");
+      return;
     }
 
     setBusy(true);
@@ -217,7 +217,7 @@ function DriverSettingsContent() {
           if (def.type === "vehiclePhoto") {
             const match = await verificationApi.matchVehicle({
               file: pending.file,
-              vehicleType,
+              vehicleType: selectedVehicleTypeName,
               make: make.trim() || "Unknown",
               model: model.trim() || "Unknown",
               year: year.trim() || undefined,
@@ -238,13 +238,10 @@ function DriverSettingsContent() {
         businessName: businessName.trim(),
         phone: phone.trim() || undefined,
         avatarUrl: nextAvatarUrl,
-        bio: buildVehicleBio({ vehicleType, make, model, year, plate, helpers }),
+        bio: buildVehicleBio({ vehicleType: selectedVehicleTypeName, make, model, year, helpers }),
         serviceAreas: baseLocation.trim() ? [baseLocation.trim()] : ["Local area"],
         documents,
-        availability: {
-          days,
-          hours: `${hoursStart}-${hoursEnd}`,
-        },
+        vehicleTypeIds: [selectedVehicleTypeId],
         latitude: baseLocationPlace.lat,
         longitude: baseLocationPlace.lng,
       });
@@ -387,7 +384,41 @@ function DriverSettingsContent() {
             </Section>
 
             <Section title="Vehicle">
-              <ChipToggle label="Vehicle type" options={["SUV", "Cargo van", "Pickup", "Box truck"]} selected={vehicleType} onSelect={setVehicleType} />
+              <div>
+                <FieldLabel>Vehicle type</FieldLabel>
+                <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
+                  {vehicleTypes.map((type) => {
+                    const active = selectedVehicleTypeId === type.id;
+                    const hint = vehicleCapacityHint(type);
+                    return (
+                      <button
+                        key={type.id}
+                        type="button"
+                        onClick={() => setSelectedVehicleTypeId(type.id)}
+                        style={{
+                          minHeight: 42,
+                          padding: hint ? "8px 16px" : "0 18px",
+                          borderRadius: 999,
+                          background: active ? "var(--accent)" : "rgba(255,255,255,.06)",
+                          border: active ? "1.5px solid var(--accent)" : "1.5px solid rgba(255,255,255,.18)",
+                          display: "inline-flex",
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                          justifyContent: "center",
+                          font: active ? "700 14px 'Hanken Grotesk'" : "600 14px 'Hanken Grotesk'",
+                          color: active ? "#0E0E10" : "rgba(255,255,255,.75)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>{type.name}</span>
+                        {hint ? (
+                          <span style={{ font: "500 10px 'Hanken Grotesk'", opacity: 0.75, marginTop: 2 }}>{hint}</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div className={styles.fieldsRow}>
                 <div style={{ flex: 1, minWidth: 140 }}>
                   <TextInput label="Make" value={make} onChange={setMake} placeholder="Ford" />
@@ -399,11 +430,10 @@ function DriverSettingsContent() {
                   <TextInput label="Year" value={year} onChange={setYear} placeholder="2022" />
                 </div>
               </div>
-              <TextInput label="Licence plate" value={plate} onChange={(v) => setPlate(v.toUpperCase())} placeholder="ABC 1234" />
               <ChipToggle label="Helpers you can bring" options={["Just me", "+ 1 helper", "+ 2"]} selected={helpers} onSelect={setHelpers} />
             </Section>
 
-            <Section title="Service area & availability">
+            <Section title="Service area">
               <LocationField
                 label="Base location"
                 value={baseLocation}
@@ -426,37 +456,6 @@ function DriverSettingsContent() {
                   <RouteMap pickup={baseLocationPlace} />
                 </div>
               )}
-              <div>
-                <FieldLabel>Days you&apos;re available</FieldLabel>
-                <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-                  {ALL_DAYS.map((d) => {
-                    const active = days.includes(d);
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => toggleDay(d)}
-                        style={{
-                          height: 42,
-                          width: 52,
-                          borderRadius: 12,
-                          background: active ? "var(--accent)" : "rgba(255,255,255,.06)",
-                          border: active ? "1.5px solid var(--accent)" : "1.5px solid rgba(255,255,255,.18)",
-                          font: active ? "700 14px 'Hanken Grotesk'" : "600 14px 'Hanken Grotesk'",
-                          color: active ? "#0E0E10" : "rgba(255,255,255,.75)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {d}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className={styles.hoursRow}>
-                <TextInput label="Available from" value={hoursStart} onChange={setHoursStart} placeholder="8:00" />
-                <TextInput label="Available until" value={hoursEnd} onChange={setHoursEnd} placeholder="20:00" />
-              </div>
             </Section>
 
             <Section title="Documents">

@@ -10,7 +10,7 @@ const faqs = [
   },
   {
     q: "When am I charged?",
-    a: "Add money to your wallet first. After delivery is verified, you release payment from the wallet. Tips are optional after rating.",
+    a: "Payment is arranged outside the app for now (cash or transfer with your mover). Tips can still be arranged after the move is complete.",
   },
   {
     q: "How do I raise a dispute?",
@@ -57,20 +57,49 @@ export default function CustomerSupportPage() {
         style={{
           background: "#F5F4EF",
           height: "100dvh",
+          maxHeight: "100dvh",
           width: "100%",
+          maxWidth: "100vw",
           overflow: "hidden",
+          overflowX: "hidden",
           display: "flex",
           flexDirection: "column",
+          boxSizing: "border-box",
         }}
       >
-        <div className="support-header" style={{ height: 66, flex: "none", background: "#0E0E10", color: "#fff", display: "flex", alignItems: "center", padding: "0 26px", gap: 16 }}>
+        <div
+          className="support-header"
+          style={{
+            height: 66,
+            flex: "none",
+            background: "#0E0E10",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            padding: "calc(10px + env(safe-area-inset-top)) 26px 12px",
+            gap: 16,
+          }}
+        >
           <Link href="/customer-app" style={{ color: "#fff", textDecoration: "none", font: "700 14px 'Hanken Grotesk'" }}>
             ← Back to app
           </Link>
           <span style={{ marginLeft: "auto", font: "800 18px 'Archivo'" }}>Help & support</span>
         </div>
 
-        <div className="support-content" style={{ flex: 1, overflow: "auto", minHeight: 0, padding: "36px 40px 48px" }}>
+        <div
+          className="support-content"
+          style={{
+            flex: 1,
+            overflow: "auto",
+            overflowX: "hidden",
+            minHeight: 0,
+            width: "100%",
+            maxWidth: 720,
+            margin: "0 auto",
+            boxSizing: "border-box",
+            padding: "36px 40px calc(48px + env(safe-area-inset-bottom))",
+          }}
+        >
           <h1 style={{ margin: "0 0 8px", font: "900 34px 'Archivo'", letterSpacing: "-.025em" }}>We&apos;re here to help</h1>
           <p style={{ margin: "0 0 28px", font: "500 16px 'Hanken Grotesk'", color: "#6B6B70", maxWidth: 640 }}>
             Guides for booking, payments, disputes, and cancellations. For urgent safety issues, email support@movethisout.com.
@@ -79,7 +108,7 @@ export default function CustomerSupportPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginBottom: 32 }}>
             {[
               { title: "Book a move", href: "/customer-app", desc: "Start a new request" },
-              { title: "Wallet & billing", href: "/customer-app", desc: "Top up and pay invoices" },
+              { title: "Track a move", href: "/customer-app", desc: "Live status and chat" },
               { title: "Your profile", href: "/customer-app/profile", desc: "Addresses & settings" },
               { title: "General help", href: "/help", desc: "Platform overview" },
             ].map((card) => (

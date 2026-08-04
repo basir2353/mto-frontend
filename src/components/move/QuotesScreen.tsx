@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RouteMap from "@/components/maps/RouteMap";
 import { NegotiationPanel } from "@/components/NegotiationPanel";
 import { MoverAvatar, StatusBadge } from "@/components/ui/AppUi";
@@ -14,6 +14,8 @@ import type { MovingRequest, Quote } from "@/lib/api";
 import { MapPill, RouteMetricsBadge, WizardShell, stepHeading, stepSub } from "@/components/move/WizardChrome";
 import styles from "./QuotesScreen.module.css";
 
+const SEARCH_TIMEOUT_MS = 2 * 60 * 1000;
+
 export function QuotesScreen({
   request,
   quotes,
@@ -23,6 +25,8 @@ export function QuotesScreen({
   onSendCounter,
   counterBusy,
   myUserId,
+  onCancelRequest,
+  onStartNew,
 }: {
   request: MovingRequest | null;
   quotes: Quote[];
@@ -32,18 +36,39 @@ export function QuotesScreen({
   onSendCounter: (price: number, notes?: string) => Promise<boolean>;
   counterBusy: boolean;
   myUserId: string;
+  onCancelRequest?: () => Promise<void> | void;
+  onStartNew?: () => void;
 }) {
   const f = useForm();
   const flow = useMoveFlow();
   const [sheet, setSheet] = useState<"chat" | "negotiate" | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  const [keepWaiting, setKeepWaiting] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const startedAt = useRef(Date.now());
+
+  useEffect(() => {
+    startedAt.current = Date.now();
+    setTimedOut(false);
+    setKeepWaiting(false);
+  }, [request?.id]);
 
   useEffect(() => {
     if (!request?.id) return;
+    if (quotes.length > 0) return;
+    if (timedOut && !keepWaiting) return;
     const poll = () => flow.refreshRequest(request.id);
     poll();
     const t = setInterval(poll, 8000);
     return () => clearInterval(t);
-  }, [request?.id]);
+  }, [request?.id, quotes.length, timedOut, keepWaiting, flow]);
+
+  useEffect(() => {
+    if (!request?.id || quotes.length > 0 || keepWaiting) return;
+    const remaining = SEARCH_TIMEOUT_MS - (Date.now() - startedAt.current);
+    const t = setTimeout(() => setTimedOut(true), Math.max(0, remaining));
+    return () => clearTimeout(t);
+  }, [request?.id, quotes.length, keepWaiting]);
 
   useEffect(() => {
     if (!quotes.length) return;
@@ -54,10 +79,20 @@ export function QuotesScreen({
         quotes[0];
       onSelectQuote(preferred.id);
     }
-  }, [quotes, selectedQuoteId]);
+  }, [quotes, selectedQuoteId, onSelectQuote]);
 
   const activeQuote = quotes.find((q) => q.id === selectedQuoteId) ?? quotes[0] ?? null;
   const moverLabel = activeQuote ? moverDisplayName(activeQuote.mover) : "Mover";
+
+  const handleCancel = async () => {
+    if (!onCancelRequest || cancelBusy) return;
+    setCancelBusy(true);
+    try {
+      await onCancelRequest();
+    } finally {
+      setCancelBusy(false);
+    }
+  };
 
   return (
     <WizardShell
@@ -65,11 +100,45 @@ export function QuotesScreen({
       left={
         <div style={{ flex: 1, overflow: "auto", padding: "26px 28px 22px", display: "flex", flexDirection: "column" }}>
           {quotes.length === 0 ? (
-            <FindingMovers />
+            <FindingMovers
+              timedOut={timedOut && !keepWaiting}
+              cancelBusy={cancelBusy}
+              canCancel={!!onCancelRequest}
+              onKeepWaiting={() => {
+                setKeepWaiting(true);
+                setTimedOut(false);
+                startedAt.current = Date.now();
+              }}
+              onCancel={() => void handleCancel()}
+              onStartNew={onStartNew}
+            />
           ) : (
             <>
-              <h2 style={stepHeading}>Compare quotes</h2>
-              <p style={stepSub}>{quotes.length} received</p>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                <div>
+                  <h2 style={stepHeading}>Compare quotes</h2>
+                  <p style={stepSub}>{quotes.length} received</p>
+                </div>
+                {onCancelRequest ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleCancel()}
+                    disabled={cancelBusy}
+                    style={{
+                      height: 40,
+                      padding: "0 14px",
+                      borderRadius: 10,
+                      border: "1.5px solid rgba(0,0,0,.14)",
+                      background: "#fff",
+                      font: "700 13px 'Hanken Grotesk'",
+                      cursor: cancelBusy ? "wait" : "pointer",
+                      flex: "none",
+                    }}
+                  >
+                    {cancelBusy ? "Cancelling…" : "Cancel move"}
+                  </button>
+                ) : null}
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
                 {quotes.map((q) => (
                   <QuoteCard key={q.id} quote={q} selected={q.id === activeQuote?.id} onSelect={() => onSelectQuote(q.id)} />
@@ -155,7 +224,75 @@ export function QuotesScreen({
   );
 }
 
-function FindingMovers() {
+function FindingMovers({
+  timedOut,
+  cancelBusy,
+  canCancel,
+  onKeepWaiting,
+  onCancel,
+  onStartNew,
+}: {
+  timedOut: boolean;
+  cancelBusy: boolean;
+  canCancel: boolean;
+  onKeepWaiting: () => void;
+  onCancel: () => void;
+  onStartNew?: () => void;
+}) {
+  if (timedOut) {
+    return (
+      <div className={styles.finding}>
+        <h2 style={{ ...stepHeading, marginBottom: 6 }}>No movers yet</h2>
+        <p style={{ ...stepSub, marginBottom: 20 }}>
+          Nearby movers were notified, but no quotes arrived in the last 2 minutes. Keep waiting or cancel this request.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button
+            type="button"
+            onClick={onKeepWaiting}
+            style={{ height: 50, borderRadius: 12, border: 0, background: "var(--accent)", font: "800 15px 'Archivo'", cursor: "pointer" }}
+          >
+            Keep waiting
+          </button>
+          {canCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={cancelBusy}
+              style={{
+                height: 50,
+                borderRadius: 12,
+                border: "1.5px solid rgba(0,0,0,.14)",
+                background: "#fff",
+                font: "700 14px 'Hanken Grotesk'",
+                cursor: cancelBusy ? "wait" : "pointer",
+              }}
+            >
+              {cancelBusy ? "Cancelling…" : "Cancel this move"}
+            </button>
+          ) : null}
+          {onStartNew ? (
+            <button
+              type="button"
+              onClick={onStartNew}
+              style={{
+                height: 44,
+                border: 0,
+                background: "transparent",
+                font: "700 13px 'Hanken Grotesk'",
+                color: "#6B6B70",
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
+            >
+              Start a new move instead
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.finding}>
       <div className={styles.radar} aria-hidden="true">
@@ -177,8 +314,26 @@ function FindingMovers() {
       <div className={styles.statusList}>
         <ChecklistRow label="Request published" sub="Your job is live" done />
         <ChecklistRow label="Movers reviewing your job" sub="Matching nearby verified movers" done />
-        <ChecklistRow label="Quotes arriving now" sub="We’ll notify you instantly" done={false} />
+        <ChecklistRow label="Quotes arriving now" sub="We'll notify you instantly" done={false} />
       </div>
+      {canCancel ? (
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={cancelBusy}
+          style={{
+            marginTop: 18,
+            height: 44,
+            borderRadius: 12,
+            border: "1.5px solid rgba(0,0,0,.14)",
+            background: "#fff",
+            font: "700 13px 'Hanken Grotesk'",
+            cursor: cancelBusy ? "wait" : "pointer",
+          }}
+        >
+          {cancelBusy ? "Cancelling…" : "Cancel this move"}
+        </button>
+      ) : null}
     </div>
   );
 }

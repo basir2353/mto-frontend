@@ -236,6 +236,18 @@ export function useCustomerFlow() {
     [run],
   );
 
+  const cancelRequest = useCallback(
+    async (requestId: string) => {
+      const result = await run(() => customersApi.cancelRequest(requestId));
+      if (result) {
+        setActiveRequest(null);
+        setRequests((prev) => prev.map((r) => (r.id === result.id ? result : r)));
+      }
+      return result;
+    },
+    [run],
+  );
+
   const createDispute = useCallback(
     async (bookingId: string, reason: string, evidenceUrls?: string[]) => {
       const result = await run(() => customersApi.createDispute(bookingId, reason, evidenceUrls));
@@ -358,6 +370,7 @@ export function useCustomerFlow() {
     rebook,
     duplicateBooking,
     cancelBooking,
+    cancelRequest,
     createDispute,
     rescheduleBooking,
     shareBooking,

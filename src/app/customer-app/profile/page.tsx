@@ -31,10 +31,14 @@ export default function CustomerProfilePage() {
         style={{
           background: "#F5F4EF",
           height: "100dvh",
+          maxHeight: "100dvh",
           width: "100%",
+          maxWidth: "100vw",
           overflow: "hidden",
+          overflowX: "hidden",
           display: "flex",
           flexDirection: "column",
+          boxSizing: "border-box",
         }}
       >
         <div className="customer-profile-header">
@@ -126,8 +130,13 @@ export default function CustomerProfilePage() {
           .customer-profile-content{
             flex:1;
             overflow:auto;
+            overflow-x:hidden;
             min-height:0;
-            padding:24px 20px calc(88px + env(safe-area-inset-bottom));
+            width:100%;
+            max-width:720px;
+            margin:0 auto;
+            box-sizing:border-box;
+            padding:24px 20px calc(96px + env(safe-area-inset-bottom));
             display:flex;
             flex-direction:column;
             gap:20px;

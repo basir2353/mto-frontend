@@ -10,6 +10,7 @@ export const moversApi = {
     serviceAreas?: string[];
     documents?: Array<{ type: string; url: string }>;
     availability?: { days: string[]; hours: string };
+    vehicleTypeIds?: string[];
     latitude?: number;
     longitude?: number;
   }) => api<MoverProfile>("/movers/profile", { method: "POST", body: JSON.stringify(body) }),
@@ -22,6 +23,7 @@ export const moversApi = {
     serviceAreas?: string[];
     documents?: Array<{ type: string; url: string }>;
     availability?: { days: string[]; hours: string };
+    vehicleTypeIds?: string[];
     latitude?: number;
     longitude?: number;
   }) => api<MoverProfile>("/movers/profile", { method: "PUT", body: JSON.stringify(body) }),

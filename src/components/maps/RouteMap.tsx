@@ -71,6 +71,16 @@ function FitBounds({
     const bounds = new google.maps.LatLngBounds();
     for (const point of points) bounds.extend(point);
     map.fitBounds(bounds, { top: 56, right: 48, bottom: 56, left: 48 });
+    const listener = google.maps.event.addListenerOnce(map, "idle", () => {
+      const z = map.getZoom();
+      if (z == null) return;
+      // Keep route annotations readable — avoid city-wide zoom-out and street-level noise.
+      if (z < 11) map.setZoom(11);
+      if (z > 15) map.setZoom(15);
+    });
+    return () => {
+      google.maps.event.removeListener(listener);
+    };
   }, [map, pickupLat, pickupLng, destinationLat, destinationLng, driverLat, driverLng]);
 
   return null;
@@ -177,16 +187,16 @@ export default function RouteMap({
         scaleControl
         streetViewControl={false}
         fullscreenControl={false}
-        clickableIcons
+        clickableIcons={false}
         style={{ width: "100%", height: "100%" }}
       >
         <FitBounds pickup={pickup} destination={destination} driver={driver} />
         {shouldShowRoute && <DrivingRoute pickup={pickup} destination={destination} />}
-        {pickupCoords && <Marker position={pickupCoords} title={pickup?.address ?? "Pickup"} />}
+        {pickupCoords && <Marker position={pickupCoords} title={pickup?.address ?? "Pickup"} label={{ text: "P", color: "#0E0E10", fontWeight: "800" }} />}
         {destinationCoords && (
-          <Marker position={destinationCoords} title={destination?.address ?? "Destination"} />
+          <Marker position={destinationCoords} title={destination?.address ?? "Destination"} label={{ text: "D", color: "#0E0E10", fontWeight: "800" }} />
         )}
-        {driverCoords && <Marker position={driverCoords} title={driver?.address ?? "Driver"} />}
+        {driverCoords && <Marker position={driverCoords} title={driver?.address ?? "Driver"} label={{ text: "M", color: "#0E0E10", fontWeight: "800" }} />}
         {(nearbyMovers ?? []).map((mover, index) => {
           const coords = toLatLng(mover);
           if (!coords) return null;
@@ -194,7 +204,7 @@ export default function RouteMap({
             <Marker
               key={mover.id ?? `${mover.address}-${index}`}
               position={coords}
-              title={mover.address}
+              title={mover.address || "Nearby mover"}
             />
           );
         })}
