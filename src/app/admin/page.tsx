@@ -13,6 +13,7 @@ import { AdminBookingCard, AdminDashboardPanel, AdminDisputeCard, AdminUserCard 
 import { NotificationsBell } from "@/components/notifications/NotificationsBell";
 import type { Notification } from "@/lib/api/types";
 import { resolveAdminNotificationAction } from "@/lib/notificationNav";
+import { userContactLabel } from "@/lib/userContact";
 import styles from "./admin.module.css";
 
 type Tab = "dashboard" | "users" | "bookings" | "disputes" | "transactions" | "promotions" | "zones";
@@ -105,6 +106,23 @@ function AdminPanel() {
       if (tab === "dashboard") setAnalytics(await adminApi.analytics());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not verify user");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const reviewDocument = async (
+    userId: string,
+    docType: string,
+    status: "verified" | "rejected",
+  ) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await adminApi.reviewMoverDocument(userId, docType, status);
+      setUsers(await adminApi.listUsers());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not review document");
     } finally {
       setBusy(false);
     }
@@ -298,7 +316,14 @@ function AdminPanel() {
             )}
             {tab === "dashboard" && !analytics && <EmptyState text="Loading dashboard…" />}
             {tab === "users" && (
-              <UsersView users={users} busy={busy} onVerify={verifyUser} roleFilter={roleFilter} onRoleFilter={setRoleFilter} />
+              <UsersView
+                users={users}
+                busy={busy}
+                onVerify={verifyUser}
+                onReviewDocument={reviewDocument}
+                roleFilter={roleFilter}
+                onRoleFilter={setRoleFilter}
+              />
             )}
             {tab === "bookings" && (
               <BookingsView bookings={bookings} busy={busy} onRefund={refundPayment} filter={bookingFilter} onFilter={setBookingFilter} />
@@ -327,12 +352,14 @@ function UsersView({
   users,
   busy,
   onVerify,
+  onReviewDocument,
   roleFilter,
   onRoleFilter,
 }: {
   users: User[];
   busy: boolean;
   onVerify: (id: string) => void;
+  onReviewDocument: (userId: string, docType: string, status: "verified" | "rejected") => void;
   roleFilter: "all" | "customer" | "mover" | "admin";
   onRoleFilter: (v: "all" | "customer" | "mover" | "admin") => void;
 }) {
@@ -352,7 +379,13 @@ function UsersView({
         onChange={(v) => onRoleFilter(v as typeof roleFilter)}
       />
       {filtered.map((u) => (
-        <AdminUserCard key={u.id} user={u} busy={busy} onVerify={onVerify} />
+        <AdminUserCard
+          key={u.id}
+          user={u}
+          busy={busy}
+          onVerify={onVerify}
+          onReviewDocument={onReviewDocument}
+        />
       ))}
     </div>
   );
@@ -587,9 +620,10 @@ function TransactionsView({
     if (!user) return userId.slice(0, 8);
     if (user.moverProfile?.businessName) return user.moverProfile.businessName;
     if (user.customerProfile) {
-      return `${user.customerProfile.firstName} ${user.customerProfile.lastName}`.trim() || user.email;
+      const name = `${user.customerProfile.firstName} ${user.customerProfile.lastName}`.trim();
+      if (name) return name;
     }
-    return user.email;
+    return userContactLabel(user);
   };
 
   const filtered = transactions.filter((tx) => accountFilter === "all" || tx.accountType === accountFilter);

@@ -19,6 +19,16 @@ export const adminApi = {
   verifyUser: (userId: string) =>
     api<User>(`/admin/users/${userId}/verify`, { method: "PUT" }),
 
+  reviewMoverDocument: (
+    userId: string,
+    docType: string,
+    status: "pending" | "verified" | "rejected",
+  ) =>
+    api<User>(`/admin/users/${userId}/documents/${encodeURIComponent(docType)}/review`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    }),
+
   listBookings: () => api<Booking[]>("/admin/bookings"),
 
   listDisputes: () => api<Dispute[]>("/admin/disputes"),

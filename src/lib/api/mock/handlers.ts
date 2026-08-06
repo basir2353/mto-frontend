@@ -1659,12 +1659,57 @@ const routes: Route[] = [
   { method: "GET", path: "/admin/users", handler: () => getDb().users },
   {
     method: "PUT",
+    path: "/admin/users/:userId/documents/:type/review",
+    handler: (p, body) => {
+      const user = getDb().users.find((u) => u.id === p.userId);
+      if (!user) throw new ApiError(404, ["User not found"]);
+      if (!user.moverProfile) throw new ApiError(400, ["User is not a mover"]);
+      const status = String(body.status ?? "");
+      if (!["pending", "verified", "rejected"].includes(status)) {
+        throw new ApiError(400, ["Invalid document status"]);
+      }
+      const docs = user.moverProfile.documents ?? [];
+      const idx = docs.findIndex((d) => d.type === p.type);
+      if (idx < 0 || !docs[idx]?.url) {
+        throw new ApiError(400, [`Document "${p.type}" has not been uploaded yet`]);
+      }
+      docs[idx] = { ...docs[idx], status };
+      user.moverProfile.documents = [...docs];
+      if (status !== "verified") user.moverProfile.isVerified = false;
+      user.updatedAt = nowIso();
+      persist();
+      return user;
+    },
+  },
+  {
+    method: "PUT",
     path: "/admin/users/:userId/verify",
     handler: (p) => {
       const user = getDb().users.find((u) => u.id === p.userId);
       if (!user) throw new ApiError(404, ["User not found"]);
+      const required = ["licence", "insurance", "vehiclePhoto"];
+      if (user.moverProfile) {
+        const docs = user.moverProfile.documents ?? [];
+        const missing = required.filter((t) => !docs.some((d) => d.type === t && d.url));
+        if (missing.length) {
+          throw new ApiError(400, [
+            `Cannot verify mover until all documents are uploaded. Missing: ${missing.join(", ")}`,
+          ]);
+        }
+        const pending = required.filter(
+          (t) => docs.find((d) => d.type === t)?.status !== "verified",
+        );
+        if (pending.length) {
+          throw new ApiError(400, [
+            `Cannot verify mover until each document is verified. Still pending: ${pending.join(", ")}`,
+          ]);
+        }
+        user.moverProfile.isVerified = true;
+        user.moverProfile.documents = docs.map((d) =>
+          required.includes(d.type) ? { ...d, status: "verified" } : d,
+        );
+      }
       user.isVerified = true;
-      if (user.moverProfile) user.moverProfile.isVerified = true;
       user.updatedAt = nowIso();
       persist();
       return user;

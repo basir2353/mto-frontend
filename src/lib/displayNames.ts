@@ -6,12 +6,21 @@ export function customerDisplayName(user?: User | null) {
     const full = `${user.customerProfile.firstName ?? ""} ${user.customerProfile.lastName ?? ""}`.trim();
     if (full) return full;
   }
+  if (user.email?.endsWith("@phone.mto.app")) {
+    const digits = user.email.split("@")[0] ?? "";
+    return digits ? `+${digits}` : "Customer";
+  }
   const local = user.email?.split("@")[0]?.replace(/[._-]+/g, " ").trim();
   return local ? local.replace(/\b\w/g, (c) => c.toUpperCase()) : "Customer";
 }
 
 export function moverDisplayName(user?: User | null) {
-  return user?.moverProfile?.businessName ?? user?.email?.split("@")[0] ?? "Mover";
+  if (user?.moverProfile?.businessName) return user.moverProfile.businessName;
+  if (user?.email?.endsWith("@phone.mto.app")) {
+    const digits = user.email.split("@")[0] ?? "";
+    return digits ? `+${digits}` : "Mover";
+  }
+  return user?.email?.split("@")[0] ?? "Mover";
 }
 
 export function partyDisplayName(user?: User | null) {
