@@ -6,6 +6,8 @@ import { AppIcon, notificationTypeIcon, TypeIcon } from "@/components/ui/Icons";
 import { enablePushNotifications } from "@/lib/push";
 import { hasWebPush } from "@/lib/env";
 import { BlockLoader } from "@/components/ui/MtoLoader";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasSession } from "@/lib/session";
 import styles from "./NotificationsBell.module.css";
 
 type Filter = "all" | "unread";
@@ -35,6 +37,7 @@ export function NotificationsBell({
   /** Navigate to the related detail page when a notification is clicked. */
   onOpenNotification?: (notification: Notification) => void | Promise<void>;
 }) {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,8 +48,13 @@ export function NotificationsBell({
   );
 
   const unread = items.filter((n) => !n.isRead).length;
+  const canFetch = !authLoading && isAuthenticated && hasSession();
 
   const load = useCallback(async () => {
+    if (!hasSession()) {
+      setItems([]);
+      return;
+    }
     setLoading(true);
     try {
       setItems(await notificationsApi.list());
@@ -64,13 +72,17 @@ export function NotificationsBell({
   }, []);
 
   useEffect(() => {
+    if (!canFetch) {
+      setItems([]);
+      return;
+    }
     const initial = setTimeout(() => void load(), 0);
     const t = setInterval(() => void load(), 30000);
     return () => {
       clearTimeout(initial);
       clearInterval(t);
     };
-  }, [load]);
+  }, [load, canFetch]);
 
   const enableAlerts = async () => {
     await enablePushNotifications();
@@ -131,7 +143,7 @@ export function NotificationsBell({
         type="button"
         onClick={() => {
           setOpen((v) => !v);
-          if (!open) {
+          if (!open && canFetch) {
             setPage(1);
             void load();
           }
