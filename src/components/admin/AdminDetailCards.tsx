@@ -245,15 +245,15 @@ export function AdminUserCard({
   user: User;
   busy: boolean;
   onVerify: (id: string) => void;
-  onReviewDocument?: (userId: string, docType: string, status: "verified" | "rejected") => void;
+  onReviewDocument: (userId: string, docType: string, status: "verified" | "rejected") => void;
 }) {
-  const [open, setOpen] = useState(false);
   const isMover = user.roles.includes("mover");
   const isCustomer = user.roles.includes("customer");
+  const needsVerify = isMover && (!user.isVerified || !user.moverProfile?.isVerified);
+  const [open, setOpen] = useState(needsVerify);
   const name = isMover
     ? user.moverProfile?.businessName ?? "Mover"
     : `${user.customerProfile?.firstName ?? ""} ${user.customerProfile?.lastName ?? ""}`.trim() || "Customer";
-  const needsVerify = isMover && (!user.isVerified || !user.moverProfile?.isVerified);
   const docs = user.moverProfile?.documents ?? [];
   const docByType = new Map(docs.map((d) => [d.type, d]));
   const requiredDocs = REQUIRED_MOVER_DOCS.map((type) => ({
@@ -261,6 +261,10 @@ export function AdminUserCard({
     label: DOC_LABELS[type] ?? type,
     doc: docByType.get(type),
   }));
+  // Also list any extra uploaded docs (e.g. selfie) so admin can open them
+  const extraDocs = docs.filter(
+    (d) => d.url && !REQUIRED_MOVER_DOCS.includes(d.type as (typeof REQUIRED_MOVER_DOCS)[number]),
+  );
   const missingDocs = requiredDocs.filter((d) => !d.doc?.url);
   const pendingDocs = requiredDocs.filter((d) => d.doc?.url && d.doc.status !== "verified");
   const canFullyVerify = needsVerify && missingDocs.length === 0 && pendingDocs.length === 0;
@@ -307,6 +311,24 @@ export function AdminUserCard({
         )}
       </div>
 
+      {/* Always show document checklist for movers awaiting verification */}
+      {isMover && needsVerify && (
+        <div style={{ padding: "0 18px 16px", background: "#fff" }}>
+          <DocumentReviewList
+            userId={user.id}
+            requiredDocs={requiredDocs}
+            extraDocs={extraDocs}
+            busy={busy}
+            onReviewDocument={onReviewDocument}
+            hint={
+              missingDocs.length
+                ? `Driver must upload: ${missingDocs.map((d) => d.label).join(", ")}.`
+                : "Verify each document below, then click “Verify driver”."
+            }
+          />
+        </div>
+      )}
+
       {open && (
         <div style={{ padding: "0 18px 18px", borderTop: "1px solid rgba(0,0,0,.08)", background: "#fafaf8" }}>
           <div className={styles.metaGrid} style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -337,96 +359,145 @@ export function AdminUserCard({
               <MetaRow label="Bio" value={user.moverProfile.bio ?? "—"} wide />
               <MetaRow label="Service areas" value={user.moverProfile.serviceAreas?.join(", ") || "—"} wide />
               <MetaRow label="Verified mover" value={user.moverProfile.isVerified ? "Yes" : "No"} />
-
-              <div style={{ marginTop: 14 }}>
-                <div style={{ font: "700 11px 'Hanken Grotesk'", color: "#8A8A90", marginBottom: 8 }}>
-                  DOCUMENTS — verify each item
+              {!needsVerify && (
+                <div style={{ marginTop: 14 }}>
+                  <DocumentReviewList
+                    userId={user.id}
+                    requiredDocs={requiredDocs}
+                    extraDocs={extraDocs}
+                    busy={busy}
+                    onReviewDocument={onReviewDocument}
+                  />
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {requiredDocs.map(({ type, label, doc }) => {
-                    const status = !doc?.url ? "missing" : doc.status || "pending";
-                    const tone =
-                      status === "verified" ? "ok" : status === "rejected" || status === "missing" ? "warn" : undefined;
-                    return (
-                      <div
-                        key={type}
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 10,
-                          alignItems: "center",
-                          padding: "12px 14px",
-                          background: "#fff",
-                          border: "1px solid rgba(0,0,0,.08)",
-                          borderRadius: 10,
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: 140 }}>
-                          <div style={{ font: "700 13px 'Hanken Grotesk'" }}>{label}</div>
-                          <div style={{ marginTop: 6, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                            <Badge text={status} tone={tone} />
-                            {doc?.url ? (
-                              <a
-                                href={doc.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ font: "600 12px 'Hanken Grotesk'", color: "#0E0E10" }}
-                              >
-                                Open file
-                              </a>
-                            ) : (
-                              <span style={{ font: "500 12px 'Hanken Grotesk'", color: "#8A8A90" }}>
-                                Not uploaded yet
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {doc?.url && onReviewDocument && status !== "verified" && (
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => onReviewDocument(user.id, type, "verified")}
-                              style={docOkBtn}
-                            >
-                              Verify
-                            </button>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => onReviewDocument(user.id, type, "rejected")}
-                              style={docRejectBtn}
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        )}
-                        {doc?.url && status === "verified" && onReviewDocument && (
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => onReviewDocument(user.id, type, "rejected")}
-                            style={docRejectBtn}
-                          >
-                            Revoke
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                {needsVerify && !canFullyVerify && (
-                  <p style={{ margin: "10px 0 0", font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>
-                    {missingDocs.length
-                      ? `Driver must upload: ${missingDocs.map((d) => d.label).join(", ")}. Then verify each document before “Verify driver”.`
-                      : `Verify every document above, then click “Verify driver”.`}
-                  </p>
-                )}
-              </div>
+              )}
             </ProfileBlock>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function DocumentReviewList({
+  userId,
+  requiredDocs,
+  extraDocs,
+  busy,
+  onReviewDocument,
+  hint,
+}: {
+  userId: string;
+  requiredDocs: Array<{ type: string; label: string; doc?: { type: string; url: string; status?: string } }>;
+  extraDocs: Array<{ type: string; url: string; status?: string }>;
+  busy: boolean;
+  onReviewDocument: (userId: string, docType: string, status: "verified" | "rejected") => void;
+  hint?: string;
+}) {
+  return (
+    <div>
+      <div style={{ font: "700 11px 'Hanken Grotesk'", color: "#8A8A90", marginBottom: 8, letterSpacing: ".06em" }}>
+        DOCUMENTS — VERIFY EACH ITEM
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {requiredDocs.map(({ type, label, doc }) => {
+          const status = !doc?.url ? "missing" : doc.status || "pending";
+          const tone =
+            status === "verified" ? "ok" : status === "rejected" || status === "missing" ? "warn" : undefined;
+          return (
+            <div
+              key={type}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 10,
+                alignItems: "center",
+                padding: "12px 14px",
+                background: "#fafaf8",
+                border: "1.5px solid rgba(0,0,0,.1)",
+                borderRadius: 10,
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ font: "700 14px 'Hanken Grotesk'" }}>{label}</div>
+                <div style={{ marginTop: 6, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <Badge text={status} tone={tone} />
+                  {doc?.url ? (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ font: "600 12px 'Hanken Grotesk'", color: "#0E0E10", textDecoration: "underline" }}
+                    >
+                      Open file
+                    </a>
+                  ) : (
+                    <span style={{ font: "500 12px 'Hanken Grotesk'", color: "#8A8A90" }}>Not uploaded yet</span>
+                  )}
+                </div>
+              </div>
+              {doc?.url && status !== "verified" ? (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onReviewDocument(userId, type, "verified")}
+                    style={docOkBtn}
+                  >
+                    Verify
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onReviewDocument(userId, type, "rejected")}
+                    style={docRejectBtn}
+                  >
+                    Reject
+                  </button>
+                </div>
+              ) : null}
+              {doc?.url && status === "verified" ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onReviewDocument(userId, type, "rejected")}
+                  style={docRejectBtn}
+                >
+                  Revoke
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
+        {extraDocs.map((doc) => (
+          <div
+            key={`${doc.type}-${doc.url}`}
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              padding: "10px 14px",
+              background: "#fff",
+              border: "1px dashed rgba(0,0,0,.12)",
+              borderRadius: 10,
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={{ font: "600 13px 'Hanken Grotesk'" }}>{DOC_LABELS[doc.type] ?? doc.type}</div>
+              <a
+                href={doc.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{ font: "600 12px 'Hanken Grotesk'", color: "#0E0E10", textDecoration: "underline" }}
+              >
+                Open file
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+      {hint ? (
+        <p style={{ margin: "10px 0 0", font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>{hint}</p>
+      ) : null}
     </div>
   );
 }
@@ -436,6 +507,7 @@ const DOC_LABELS: Record<string, string> = {
   licence: "Driver licence",
   insurance: "Insurance",
   vehiclePhoto: "Vehicle photo",
+  selfie: "Selfie",
 };
 
 export function AdminDashboardPanel({
