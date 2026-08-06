@@ -191,25 +191,14 @@ function CustomerAppContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const flow = useMoveFlow();
-  const [screen, setScreenState] = useState<Screen>(() => {
-    if (typeof window === "undefined") return "plan";
-    const saved = sessionStorage.getItem(SCREEN_KEY);
-    if (saved) {
-      if ((RESUMABLE_SCREENS as string[]).includes(saved)) return saved as Screen;
-      if (saved in LEGACY_SCREEN_MAP) return LEGACY_SCREEN_MAP[saved];
-    }
-    return "plan";
-  });
+  const [screen, setScreenState] = useState<Screen>("plan");
   const setScreen = (s: Screen) => {
     setScreenState(s);
     if (typeof window !== "undefined") sessionStorage.setItem(SCREEN_KEY, s);
   };
   const [selectedMessagesBookingId, setSelectedMessagesBookingId] = useState<string | null>(null);
   const [historyFocusId, setHistoryFocusId] = useState<string | null>(null);
-  const [selectedQuoteId, setSelectedQuoteIdState] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return sessionStorage.getItem(SELECTED_QUOTE_KEY);
-  });
+  const [selectedQuoteId, setSelectedQuoteIdState] = useState<string | null>(null);
 
   const setSelectedQuoteId = (id: string | null) => {
     setSelectedQuoteIdState(id);
@@ -218,10 +207,7 @@ function CustomerAppContent() {
     else sessionStorage.removeItem(SELECTED_QUOTE_KEY);
   };
 
-  const [selectedRequestId, setSelectedRequestIdState] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return sessionStorage.getItem(SELECTED_REQUEST_KEY);
-  });
+  const [selectedRequestId, setSelectedRequestIdState] = useState<string | null>(null);
 
   const setSelectedRequestId = (id: string | null) => {
     setSelectedRequestIdState(id);
@@ -230,32 +216,32 @@ function CustomerAppContent() {
     else sessionStorage.removeItem(SELECTED_REQUEST_KEY);
   };
 
-  const draft = typeof window !== "undefined" ? loadMoveDraft() : null;
+  // Form fields: URL params only on first paint. sessionStorage draft restored in useEffect.
 
-  const [pickup, setPickup] = useState(() => searchParams.get("pickup") ?? draft?.pickup ?? "");
+  const [pickup, setPickup] = useState(() => searchParams.get("pickup") ?? "");
   const [pickupPlace, setPickupPlace] = useState<MapPlace>(() => ({
-    address: searchParams.get("pickup") ?? draft?.pickupPlace?.address ?? "",
-    lat: parseCoord(searchParams.get("pickupLat")) ?? draft?.pickupPlace?.lat,
-    lng: parseCoord(searchParams.get("pickupLng")) ?? draft?.pickupPlace?.lng,
+    address: searchParams.get("pickup") ?? "",
+    lat: parseCoord(searchParams.get("pickupLat")),
+    lng: parseCoord(searchParams.get("pickupLng")),
   }));
-  const [destination, setDestination] = useState(() => searchParams.get("destination") ?? draft?.destination ?? "");
+  const [destination, setDestination] = useState(() => searchParams.get("destination") ?? "");
   const [destinationPlace, setDestinationPlace] = useState<MapPlace>(() => ({
-    address: searchParams.get("destination") ?? draft?.destinationPlace?.address ?? "",
-    lat: parseCoord(searchParams.get("destinationLat")) ?? draft?.destinationPlace?.lat,
-    lng: parseCoord(searchParams.get("destinationLng")) ?? draft?.destinationPlace?.lng,
+    address: searchParams.get("destination") ?? "",
+    lat: parseCoord(searchParams.get("destinationLat")),
+    lng: parseCoord(searchParams.get("destinationLng")),
   }));
-  const [moveDate, setMoveDate] = useState(() => draft?.moveDate ?? "");
-  const [moveType, setMoveType] = useState<MoveType>(() => draft?.moveType ?? "now");
-  const [whenChoice, setWhenChoice] = useState<WhenChoice>(() => draft?.whenChoice ?? "today");
-  const [timeWindow, setTimeWindow] = useState(() => draft?.timeWindow ?? "Morning");
-  const [timeZone, setTimeZone] = useState(() => draft?.timeZone ?? defaultTimeZone());
-  const [flexibleTime, setFlexibleTime] = useState(() => draft?.flexibleTime ?? false);
-  const [vehicleFilter, setVehicleFilter] = useState(() => draft?.vehicleFilter ?? "");
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(() => draft?.selectedVehicleId ?? null);
-  const [selectedVehicleName, setSelectedVehicleName] = useState(() => draft?.selectedVehicleName ?? "");
-  const [estimatedLoad, setEstimatedLoad] = useState(() => draft?.estimatedLoad ?? "");
-  const [moveDescription, setMoveDescription] = useState(() => draft?.moveDescription ?? "");
-  const [photos, setPhotos] = useState<Photo[]>(() => draft?.photos ?? []);
+  const [moveDate, setMoveDate] = useState("");
+  const [moveType, setMoveType] = useState<MoveType>("now");
+  const [whenChoice, setWhenChoice] = useState<WhenChoice>("today");
+  const [timeWindow, setTimeWindow] = useState("Morning");
+  const [timeZone, setTimeZone] = useState("America/Toronto");
+  const [flexibleTime, setFlexibleTime] = useState(false);
+  const [vehicleFilter, setVehicleFilter] = useState("");
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [selectedVehicleName, setSelectedVehicleName] = useState("");
+  const [estimatedLoad, setEstimatedLoad] = useState("");
+  const [moveDescription, setMoveDescription] = useState("");
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [stars, setStars] = useState(0);
   const [ratingTags, setRatingTags] = useState<string[]>([]);
   const [reviewText, setReviewText] = useState("");
@@ -263,6 +249,7 @@ function CustomerAppContent() {
   const [customTip, setCustomTip] = useState("");
   const [bootReady, setBootReady] = useState(false);
   const bootedRef = useRef(false);
+  const draftRestoredRef = useRef(false);
 
   const [counterBusy, setCounterBusy] = useState(false);
   const [bookBusy, setBookBusy] = useState(false);
@@ -271,6 +258,45 @@ function CustomerAppContent() {
   const toggleRatingTag = (v: string) =>
     setRatingTags((n) => (n.includes(v) ? n.filter((x) => x !== v) : [...n, v]));
   const addPhoto = (photo: Photo) => setPhotos((p) => [...p, photo]);
+
+  useEffect(() => {
+    if (draftRestoredRef.current) return;
+    draftRestoredRef.current = true;
+
+    const savedScreen = sessionStorage.getItem(SCREEN_KEY);
+    if (savedScreen) {
+      if ((RESUMABLE_SCREENS as string[]).includes(savedScreen)) setScreenState(savedScreen as Screen);
+      else if (savedScreen in LEGACY_SCREEN_MAP) setScreenState(LEGACY_SCREEN_MAP[savedScreen]);
+    }
+    const q = sessionStorage.getItem(SELECTED_QUOTE_KEY);
+    if (q) setSelectedQuoteIdState(q);
+    const r = sessionStorage.getItem(SELECTED_REQUEST_KEY);
+    if (r) setSelectedRequestIdState(r);
+
+    const stored = loadMoveDraft();
+    if (!stored) {
+      setTimeZone(defaultTimeZone());
+      return;
+    }
+    if (!searchParams.get("pickup") && stored.pickup) setPickup(stored.pickup);
+    if (!searchParams.get("pickup") && stored.pickupPlace) setPickupPlace(stored.pickupPlace);
+    if (!searchParams.get("destination") && stored.destination) setDestination(stored.destination);
+    if (!searchParams.get("destination") && stored.destinationPlace) {
+      setDestinationPlace(stored.destinationPlace);
+    }
+    if (stored.moveDate) setMoveDate(stored.moveDate);
+    if (stored.moveType) setMoveType(stored.moveType);
+    if (stored.whenChoice) setWhenChoice(stored.whenChoice);
+    if (stored.timeWindow) setTimeWindow(stored.timeWindow);
+    setTimeZone(stored.timeZone || defaultTimeZone());
+    if (stored.flexibleTime != null) setFlexibleTime(stored.flexibleTime);
+    if (stored.vehicleFilter) setVehicleFilter(stored.vehicleFilter);
+    if (stored.selectedVehicleId) setSelectedVehicleId(stored.selectedVehicleId);
+    if (stored.selectedVehicleName) setSelectedVehicleName(stored.selectedVehicleName);
+    if (stored.estimatedLoad) setEstimatedLoad(stored.estimatedLoad);
+    if (stored.moveDescription) setMoveDescription(stored.moveDescription);
+    if (stored.photos?.length) setPhotos(stored.photos);
+  }, [searchParams]);
 
   useEffect(() => {
     saveMoveDraft({

@@ -40,8 +40,8 @@ export function NotificationsBell({
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [page, setPage] = useState(1);
-  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">(() =>
-    hasWebPush && typeof Notification !== "undefined" ? Notification.permission : "unsupported",
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">(
+    "unsupported",
   );
 
   const unread = items.filter((n) => !n.isRead).length;
@@ -54,6 +54,12 @@ export function NotificationsBell({
       setItems([]);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hasWebPush && typeof Notification !== "undefined") {
+      setPushPermission(Notification.permission);
     }
   }, []);
 

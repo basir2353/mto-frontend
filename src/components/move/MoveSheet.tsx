@@ -31,9 +31,7 @@ export function MoveSheet({
   half = false,
   mobileModal = false,
 }: MoveSheetProps) {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(max-width: 820px)").matches : false,
-  );
+  const [isMobile, setIsMobile] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
   const [canDismiss, setCanDismiss] = useState(false);
 

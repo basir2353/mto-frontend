@@ -84,13 +84,7 @@ function DriverAppContent() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [negotiationBusyId, setNegotiationBusyId] = useState<string | null>(null);
-  const [activeTab, setActiveTabState] = useState<DriverTab>(() => {
-    if (typeof window === "undefined") return "overview";
-    const saved = sessionStorage.getItem("mto_driver_tab");
-    if (saved === "negotiations" || saved === "bookings") return "work";
-    if (saved === "overview" || saved === "messages" || saved === "jobs" || saved === "work" || saved === "pay") return saved;
-    return "overview";
-  });
+  const [activeTab, setActiveTabState] = useState<DriverTab>("overview");
   const setActiveTab = (tab: DriverTab) => {
     setActiveTabState(tab);
     if (typeof window !== "undefined") sessionStorage.setItem("mto_driver_tab", tab);
@@ -114,6 +108,20 @@ function DriverAppContent() {
     accuracy: number | null;
   } | null>(null);
   const prevActionableBookingsRef = useRef(0);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("mto_driver_tab");
+    if (saved === "negotiations" || saved === "bookings") setActiveTabState("work");
+    else if (
+      saved === "overview" ||
+      saved === "messages" ||
+      saved === "jobs" ||
+      saved === "work" ||
+      saved === "pay"
+    ) {
+      setActiveTabState(saved);
+    }
+  }, []);
 
   const sendPresence = useCallback(async (online: boolean, coords?: { latitude: number; longitude: number }) => {
     try {

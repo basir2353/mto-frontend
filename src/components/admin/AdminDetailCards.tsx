@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TextInput, TextArea } from "@/components/FormControls";
 import { BookingInsightsPanel } from "@/components/booking/BookingInsightsPanel";
 import { DisputeThreadPanel } from "@/components/dispute/DisputeThreadPanel";
@@ -41,7 +41,7 @@ export function AdminBookingCard({
           <div style={{ font: "800 15px 'Archivo'", flex: "none" }}>${Number(booking.price).toFixed(0)}</div>
         </div>
         <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 6 }}>
-          {customer} · {mover} · {new Date(booking.scheduledDate).toLocaleDateString()}
+          {customer} · {mover} · {formatAdminDate(booking.scheduledDate)}
         </div>
         <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <Badge text={booking.status} />
@@ -58,8 +58,8 @@ export function AdminBookingCard({
             <MetaRow label="Customer email" value={booking.customer?.email ?? "—"} />
             <MetaRow label="Mover email" value={booking.mover?.email ?? "—"} />
             <MetaRow label="Request ID" value={booking.requestId ?? "—"} mono />
-            <MetaRow label="Created" value={new Date(booking.createdAt).toLocaleString()} />
-            <MetaRow label="Updated" value={new Date(booking.updatedAt).toLocaleString()} />
+            <MetaRow label="Created" value={formatAdminDateTime(booking.createdAt)} />
+            <MetaRow label="Updated" value={formatAdminDateTime(booking.updatedAt)} />
 
             <BookingInsightsPanel booking={booking} />
             <BookingTimelinePanel bookingId={booking.id} compact />
@@ -138,7 +138,7 @@ export function AdminDisputeCard({
               Dispute · {booking ? `${formatAddress(booking.pickupAddress) ?? "Move"} → ${formatAddress(booking.destinationAddress) ?? "…"}` : dispute.bookingId.slice(0, 8)}
             </div>
             <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 4 }}>
-              Raised by {raiserName} · {new Date(dispute.createdAt).toLocaleString()}
+              Raised by {raiserName} · {formatAdminDateTime(dispute.createdAt)}
             </div>
           </div>
           <Badge text={dispute.status} tone={dispute.status === "open" ? "warn" : "ok"} />
@@ -250,7 +250,12 @@ export function AdminUserCard({
   const isMover = user.roles.includes("mover");
   const isCustomer = user.roles.includes("customer");
   const needsVerify = isMover && (!user.isVerified || !user.moverProfile?.isVerified);
-  const [open, setOpen] = useState(needsVerify);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (needsVerify) setOpen(true);
+  }, [needsVerify]);
+
   const name = isMover
     ? user.moverProfile?.businessName ?? "Mover"
     : `${user.customerProfile?.firstName ?? ""} ${user.customerProfile?.lastName ?? ""}`.trim() || "Customer";
@@ -323,7 +328,7 @@ export function AdminUserCard({
             hint={
               missingDocs.length
                 ? `Driver must upload: ${missingDocs.map((d) => d.label).join(", ")}.`
-                : "Verify each document below, then click “Verify driver”."
+                : "Verify each document below, then click Verify driver."
             }
           />
         </div>
@@ -334,8 +339,8 @@ export function AdminUserCard({
           <div className={styles.metaGrid} style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <MetaRow label="User ID" value={user.id} mono />
             <MetaRow label="Active" value={user.isActive ? "Yes" : "No"} />
-            <MetaRow label="Joined" value={new Date(user.createdAt).toLocaleDateString()} />
-            <MetaRow label="Last updated" value={new Date(user.updatedAt).toLocaleDateString()} />
+            <MetaRow label="Joined" value={formatAdminDate(user.createdAt)} />
+            <MetaRow label="Last updated" value={formatAdminDate(user.updatedAt)} />
           </div>
 
           {isCustomer && user.customerProfile && (
@@ -496,7 +501,7 @@ function DocumentReviewList({
         ))}
       </div>
       {hint ? (
-        <p style={{ margin: "10px 0 0", font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>{hint}</p>
+        <div style={{ margin: "10px 0 0", font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>{hint}</div>
       ) : null}
     </div>
   );
@@ -616,6 +621,25 @@ function Badge({ text, tone = "neutral" }: { text: string; tone?: "neutral" | "o
       {text}
     </span>
   );
+}
+
+function formatAdminDate(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  // Fixed locale so SSR and client match
+  return d.toLocaleDateString("en-CA", { year: "numeric", month: "numeric", day: "numeric" });
+}
+
+function formatAdminDateTime(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-CA", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function formatAddress(value?: Record<string, unknown> | null): string | null {

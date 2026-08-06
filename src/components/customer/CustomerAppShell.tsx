@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { NotificationsBell } from "@/components/notifications/NotificationsBell";
 import { AppIcon, type AppIconName } from "@/components/ui/Icons";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,14 +36,15 @@ export function CustomerAppShell({
   const { logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
     try {
-      return sessionStorage.getItem(COLLAPSED_KEY) === "1";
+      if (sessionStorage.getItem(COLLAPSED_KEY) === "1") setCollapsed(true);
     } catch {
-      return false;
+      /* ignore */
     }
-  });
+  }, []);
 
   const handleLogout = async () => {
     if (loggingOut) return;
