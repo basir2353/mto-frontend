@@ -30,6 +30,10 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
     };
   }, [menuOpen]);
 
+  const loginHref = `${appUrls.customerApp}/auth#login`;
+  const signupHref = `${appUrls.customerApp}/customer-app`;
+  const signupLabel = "Sign up";
+
   return (
     <div className="mto-nav">
       <Link href="/" className="mto-nav-brand" onClick={() => setMenuOpen(false)}>
@@ -126,11 +130,11 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
         <Link href="/help" className="mto-nav-help">
           Help
         </Link>
-        <a href={`${appUrls.customerApp}/auth#login`} className="mto-nav-login">
+        <a href={loginHref} className="mto-nav-login">
           Log in
         </a>
-        <a href={`${appUrls.customerApp}/auth#signup`} className="mto-nav-signup">
-          Sign up
+        <a href={signupHref} className="mto-nav-signup">
+          {signupLabel}
         </a>
       </div>
 
@@ -166,11 +170,11 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
             </Link>
           </div>
           <div className="mto-nav-drawer-cta">
-            <a href={`${appUrls.customerApp}/auth#login`} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-login">
+            <a href={loginHref} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-login">
               Log in
             </a>
-            <a href={`${appUrls.customerApp}/auth#signup`} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-signup">
-              Sign up
+            <a href={signupHref} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-signup">
+              {signupLabel}
             </a>
           </div>
         </div>
