@@ -13,6 +13,7 @@ try {
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  transpilePackages: ["@mto/theme"],
   images: {
     remotePatterns: [
       ...(apiHostname

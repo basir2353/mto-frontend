@@ -24,6 +24,7 @@
     "apk:debug:driver": "npm run cap:sync && cd android && gradlew.bat assembleDriverDebug --no-daemon && cd .. && node scripts/copy-apk.mjs driver"
   },
   "dependencies": {
+    "@mto/theme": "*",
     "@capacitor/android": "^7.4.3",
     "@capacitor/app": "^7.1.0",
     "@capacitor/core": "^7.4.3",

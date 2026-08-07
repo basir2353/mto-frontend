@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { appUrls } from "@mto/theme/apps";
 
 type NavKey = "move" | "earn" | "business" | "about" | "";
 
@@ -125,12 +126,12 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
         <Link href="/help" className="mto-nav-help">
           Help
         </Link>
-        <Link href="/auth#login" className="mto-nav-login">
+        <a href={`${appUrls.customerApp}/auth#login`} className="mto-nav-login">
           Log in
-        </Link>
-        <Link href="/auth#signup" className="mto-nav-signup">
+        </a>
+        <a href={`${appUrls.customerApp}/auth#signup`} className="mto-nav-signup">
           Sign up
-        </Link>
+        </a>
       </div>
 
       <button
@@ -165,12 +166,12 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
             </Link>
           </div>
           <div className="mto-nav-drawer-cta">
-            <Link href="/auth#login" onClick={() => setMenuOpen(false)} className="mto-nav-drawer-login">
+            <a href={`${appUrls.customerApp}/auth#login`} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-login">
               Log in
-            </Link>
-            <Link href="/auth#signup" onClick={() => setMenuOpen(false)} className="mto-nav-drawer-signup">
+            </a>
+            <a href={`${appUrls.customerApp}/auth#signup`} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-signup">
               Sign up
-            </Link>
+            </a>
           </div>
         </div>
       )}

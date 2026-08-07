@@ -2,6 +2,7 @@ import Link from "next/link";
 import MarketingShell from "@/components/MarketingShell";
 import ImageSlot from "@/components/ImageSlot";
 import { CheckBadge } from "@/components/ui/Icons";
+import { appUrls } from "@mto/theme/apps";
 
 const steps = [
   ["1", "Sign up & verify", "Add your licence, insurance and vehicle. We approve most drivers within 48 hours."],
@@ -107,22 +108,22 @@ export default function DrivePage() {
             more of every fare. Cash out whenever you want.
           </p>
           <div className="drive-hero-actions" style={{ display: "flex", gap: 14, marginBottom: 20 }}>
-            <Link
-              href="/driver-signup"
-              style={{
-                height: 56,
-                padding: "0 30px",
-                borderRadius: 12,
-                background: "var(--accent)",
-                color: "#0E0E10",
-                display: "inline-flex",
-                alignItems: "center",
-                font: "800 16px 'Archivo'",
-                textDecoration: "none",
-              }}
-            >
-              Start earning →
-            </Link>
+          <a
+            href={`${appUrls.driverWeb}/signup`}
+            style={{
+              height: 56,
+              padding: "0 30px",
+              borderRadius: 12,
+              background: "var(--accent)",
+              color: "#0E0E10",
+              display: "inline-flex",
+              alignItems: "center",
+              font: "800 16px 'Archivo'",
+              textDecoration: "none",
+            }}
+          >
+            Start earning →
+          </a>
             <Link
               href="#how"
               style={{
@@ -399,8 +400,8 @@ export default function DrivePage() {
               Sign up today — most drivers are approved within 48 hours.
             </p>
           </div>
-          <Link
-            href="/driver-signup"
+          <a
+            href={`${appUrls.driverWeb}/signup`}
             style={{
               height: 60,
               padding: "0 34px",
@@ -415,7 +416,7 @@ export default function DrivePage() {
             }}
           >
             Sign up to drive →
-          </Link>
+          </a>
         </div>
       </div>
     </MarketingShell>

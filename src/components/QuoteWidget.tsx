@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useState } from "react";
 import PlaceAutocompleteInput from "@/components/maps/PlaceAutocompleteInput";
-import { useAuth } from "@/contexts/AuthContext";
 import { hasGoogleMaps } from "@/lib/env";
 import type { MapPlace } from "@/lib/maps";
+import { appUrls } from "@mto/theme/apps";
 
 type QuoteWidgetProps = {
   onPickupPlaceChange?: (place: MapPlace) => void;
@@ -13,7 +12,6 @@ type QuoteWidgetProps = {
 };
 
 export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange }: QuoteWidgetProps = {}) {
-  const { isAuthenticated } = useAuth();
   const [pickup, setPickup] = useState("");
   const [pickupPlace, setPickupPlace] = useState<MapPlace>({ address: "" });
   const [dropoff, setDropoff] = useState("");
@@ -66,19 +64,18 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
           Start typing an address to see Google Maps suggestions
         </p>
       )}
-      <Link
-        href={{
-          pathname: isAuthenticated ? "/customer-app" : "/auth",
-          hash: isAuthenticated ? undefined : "login",
-          query: {
-            ...(pickup ? { pickup } : {}),
-            ...(dropoff ? { destination: dropoff } : {}),
-            ...(pickupPlace.lat != null ? { pickupLat: String(pickupPlace.lat) } : {}),
-            ...(pickupPlace.lng != null ? { pickupLng: String(pickupPlace.lng) } : {}),
-            ...(dropoffPlace.lat != null ? { destinationLat: String(dropoffPlace.lat) } : {}),
-            ...(dropoffPlace.lng != null ? { destinationLng: String(dropoffPlace.lng) } : {}),
-          },
-        }}
+      <a
+        href={(() => {
+          const params = new URLSearchParams();
+          if (pickup) params.set("pickup", pickup);
+          if (dropoff) params.set("destination", dropoff);
+          if (pickupPlace.lat != null) params.set("pickupLat", String(pickupPlace.lat));
+          if (pickupPlace.lng != null) params.set("pickupLng", String(pickupPlace.lng));
+          if (dropoffPlace.lat != null) params.set("destinationLat", String(dropoffPlace.lat));
+          if (dropoffPlace.lng != null) params.set("destinationLng", String(dropoffPlace.lng));
+          const q = params.toString();
+          return `${appUrls.customerApp}/customer-app${q ? `?${q}` : ""}`;
+        })()}
         style={{
           marginTop: 12,
           height: 54,
@@ -93,7 +90,7 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
         }}
       >
         See prices →
-      </Link>
+      </a>
     </div>
   );
 }

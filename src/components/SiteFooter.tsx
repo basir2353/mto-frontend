@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { appUrls } from "@mto/theme/apps";
 
 export default function SiteFooter() {
   return (
@@ -19,7 +20,7 @@ export default function SiteFooter() {
           links={[
             { label: "How it works", href: "/#how" },
             { label: "Vehicles", href: "/#vehicles" },
-            { label: "Get a quote", href: "/customer-app" },
+            { label: "Get a quote", href: appUrls.customerApp },
             { label: "Business moves", href: "/business" },
           ]}
         />
@@ -29,7 +30,7 @@ export default function SiteFooter() {
             { label: "Become a driver", href: "/drive" },
             { label: "Earnings", href: "/drive#how" },
             { label: "Requirements", href: "/drive#apply" },
-            { label: "Driver app", href: "/customer-app" },
+            { label: "Driver app", href: appUrls.driverApp },
           ]}
         />
         <FooterCol

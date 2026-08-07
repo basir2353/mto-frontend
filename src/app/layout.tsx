@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
+import "@mto/theme/css";
 import "./globals.css";
 
 const archivo = Archivo({

@@ -1,69 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
+import { appUrls } from "@mto/theme/apps";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { AppIcon } from "@/components/ui/Icons";
-import styles from "./app-welcome.module.css";
-
-/** Combined web entry — native APKs open /app/customer or /app/driver instead. */
-export default function MobileAppWelcomePage() {
-  const router = useRouter();
-  const { isAuthenticated, user, loading } = useAuth();
-
-  useEffect(() => {
-    if (loading || !isAuthenticated || !user) return;
-    if (user.roles.includes("admin")) router.replace("/admin");
-    else if (user.roles.includes("mover")) router.replace("/driver-app");
-    else router.replace("/customer-app");
-  }, [isAuthenticated, user, loading, router]);
-
-  if (loading || isAuthenticated) {
-    return (
-      <div className={styles.boot}>
-        <div className={styles.bootMark}>M</div>
-        <p>Opening MoveThisOut…</p>
-      </div>
-    );
-  }
-
-  return (
-    <main className={styles.page}>
-      <div className={styles.atmosphere} aria-hidden />
-      <div className={styles.inner}>
-        <header className={styles.brand}>
-          <div className={styles.mark}>M</div>
-          <h1 className={styles.title}>MoveThisOut</h1>
-          <p className={styles.tagline}>Move anything. Right now.</p>
-        </header>
-
-        <p className={styles.support}>
-          Choose your app. Customers book moves; drivers earn with their vehicles.
-        </p>
-
-        <div className={styles.actions}>
-          <Link href="/app/customer" className={styles.primary}>
-            <span className={styles.actionIcon}>
-              <AppIcon name="package" size={22} color="#0E0E10" />
-            </span>
-            <span>
-              <strong>Customer</strong>
-              <em>Book and track a move</em>
-            </span>
-          </Link>
-
-          <Link href="/app/driver" className={styles.secondary}>
-            <span className={styles.actionIconDark}>
-              <AppIcon name="truck" size={22} color="var(--accent)" />
-            </span>
-            <span>
-              <strong>Driver</strong>
-              <em>Earn with your vehicle</em>
-            </span>
-          </Link>
-        </div>
-      </div>
-    </main>
-  );
+/** App chooser → customer / driver apps (same old UI, separate ports). */
+export default function AppWelcomeRedirect() {
+  redirect(appUrls.customerApp);
 }
