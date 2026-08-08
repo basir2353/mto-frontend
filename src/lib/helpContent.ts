@@ -67,7 +67,7 @@ Request a cash-out from the Wallet tab when you want to move available balance t
     title: "How do I become a driver?",
     summary: "Complete driver signup with vehicle, documents, and base location.",
     category: "Driving & earnings",
-    body: `Go to Drive → Apply or open /driver-signup. You’ll create an account, add vehicle details, upload licence / insurance / vehicle photos, take a selfie for face match, and set your Google Places home base.
+    body: `Go to Drive → Become a driver to open the driver site's signup flow. You’ll create an account, add vehicle details, upload licence / insurance / vehicle photos, take a selfie for face match, and set your Google Places home base.
 
 An admin verifies your profile before you can go online and receive jobs.`,
   },

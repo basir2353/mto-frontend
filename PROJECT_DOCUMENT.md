@@ -18,9 +18,14 @@ Is platform par:
 - Nearby **movers/drivers** quotes bhejte hain.
 - Customer quote compare/negotiate karke booking confirm karta hai.
 - Live tracking, chat, wallet payment, invoice, review, tip, aur dispute support available hai.
-- **Admin** users, bookings, disputes, zones, promotions, aur platform health manage karta hai.
 
-Yeh repository **sirf frontend** hai: Next.js App Router app jo public marketing site + customer app + driver app + admin panel serve karti hai. Backend alag REST API hai (`NEXT_PUBLIC_API_URL`).
+Yeh repository **public marketing site + customer app shell** hai (Next.js App Router). The full customer booking experience, driver app, and admin panel are separate deployments (see §2 — `appUrls`). This repo:
+
+- Serves the public marketing site (landing, about, business, help, drive-recruitment marketing).
+- Hosts the customer account/profile/support pages and `AuthGuard`-protected routes.
+- Redirect-stubs (`/app`, `/auth`, `/customer-app`, etc.) that hand off to the separate customer app deployment (`NEXT_PUBLIC_CUSTOMER_APP_URL`).
+
+The driver app and admin dashboard used to live in this repo too; they've been split into their own deployments and all driver/admin-only code has been removed from here (see §14).
 
 ---
 
@@ -35,7 +40,7 @@ Yeh repository **sirf frontend** hai: Next.js App Router app jo public marketing
 | Realtime | `socket.io-client` (chat namespace `/chat`) |
 | Icons | `lucide-react` |
 | Styling | CSS modules, global CSS, component-level inline styles |
-| Lint | ESLint (Next Core Web Vitals + TypeScript) |
+| Lint | ESLint (Next Core Web Vitals + TypeScript + React Compiler rules) |
 | Deploy | Vercel |
 
 **State management:** React Context + local `useState` / hooks. Redux / Zustand nahi hai.
@@ -43,8 +48,15 @@ Yeh repository **sirf frontend** hai: Next.js App Router app jo public marketing
 **Important contexts:**
 
 - `src/contexts/AuthContext.tsx` — login session / user
-- `src/contexts/MoveFlowContext.tsx` — customer booking/API flow
-- `src/contexts/MoveFormContext.tsx` — move form draft state
+
+**Sibling deployments** (`src/lib/theme/apps.ts` → `appUrls`), not part of this repo:
+
+| Key | Purpose |
+| --- | --- |
+| `admin` | Admin operations dashboard |
+| `driverWeb` | Driver marketing / signup / login web |
+| `customerApp` | Customer app (Expo/React Native) |
+| `driverApp` | Driver app (Expo/React Native) |
 
 ---
 
@@ -53,10 +65,10 @@ Yeh repository **sirf frontend** hai: Next.js App Router app jo public marketing
 ```
 mto_frontend/
   src/
-    app/                 # Routes / pages (marketing, auth, customer, driver, admin)
+    app/                 # Routes / pages (marketing + customer-facing only)
     components/          # UI + feature components
-    contexts/            # Auth, move form, move flow
-    hooks/               # Custom hooks (chat, nearby movers, route metrics, ...)
+    contexts/             # Auth context
+    hooks/                # Custom hooks (chat, geocoding, route metrics, ...)
     lib/
       api/               # REST client + resource modules + mock backend
       env.ts             # Runtime env flags
@@ -65,6 +77,7 @@ mto_frontend/
       maps.ts            # Maps helpers
       push.ts            # Web push subscription helper
       session.ts         # Token / session storage helpers
+      theme/             # Theme tokens + sibling-app URLs (appUrls)
   scripts/
     use-env.mjs          # local/live/production env switcher
     integration-test.mjs # Backend smoke test
@@ -78,22 +91,16 @@ mto_frontend/
 
 ## 4. User Roles & Access Control
 
-API model mein **3 roles** hain:
-
-| Role | Home app | Purpose |
-| --- | --- | --- |
-| `customer` | `/customer-app` | Move request, booking, track, pay, review |
-| `mover` | `/driver-app` | Jobs, quotes, tracking, earnings |
-| `admin` | `/admin` | Operations dashboard |
+The backend API models 3 roles (`customer`, `mover`, `admin`), but **this repo only serves the `customer` role**. Mover and admin accounts use the separate `driverWeb`/`driverApp` and `admin` deployments.
 
 **Auth flow:**
 
-1. Login / register on `/auth`
-2. Tokens `sessionStorage` mein save hote hain
-3. API calls par Bearer token attach hota hai
-4. `401` par ek dafa `/auth/refresh` try hota hai
-5. Protected pages `AuthGuard` use karti hain
-6. Galat role hone par user apne role ke home app par redirect hota hai
+1. Login / register on the customer app (`NEXT_PUBLIC_CUSTOMER_APP_URL`) — `/auth` in this repo is a redirect stub pointing there.
+2. Tokens stored via `src/lib/session.ts` (localStorage, migrated from legacy sessionStorage).
+3. API calls attach a Bearer token.
+4. `401` triggers one `/auth/refresh` attempt.
+5. Protected pages (`/customer-app/profile`, `/customer-app/support`) use `AuthGuard` with `roles={["customer"]}`.
+6. On a role mismatch, `AuthGuard` redirects to `/customer-app`.
 
 Files:
 
@@ -111,36 +118,24 @@ Files:
 
 | Route | File | Kya hai |
 | --- | --- | --- |
-| `/` | `src/app/page.tsx` | Landing page: quote widget, route map, marketplace explanation, vehicles, driver CTA |
+| `/` | `src/app/page.tsx` | Landing page: quote widget, route map, marketplace explanation, vehicles, driver-recruitment CTA (links out to `driverWeb`) |
 | `/about` | `src/app/about/page.tsx` | Company story, values, safety, stats |
 | `/business` | `src/app/business/page.tsx` | Enterprise marketing + sales lead form |
-| `/help` | `src/app/help/page.tsx` | Help categories / popular articles (mostly static UI) |
-| `/drive` | `src/app/drive/page.tsx` | Mover recruitment page (requirements, earnings, signup links) |
-| `/auth` | `src/app/auth/page.tsx` | Login, customer register, email verify, forgot/reset password, role redirect |
-| `/driver-signup` | `src/app/driver-signup/page.tsx` | 5-step mover onboarding / verification wizard |
-| `/customer-wireframes` | `src/app/customer-wireframes/page.tsx` | Old customer flow design artifact (publicly reachable) |
+| `/help` | `src/app/help/page.tsx` | Help categories / popular articles |
+| `/help/[slug]` | `src/app/help/[slug]/page.tsx` | Individual help article |
+| `/auth` | `src/app/auth/page.tsx` | Redirect stub → customer app auth |
+| `/privacy`, `/terms` | `src/app/privacy`, `src/app/terms` | Legal pages |
+| `/track/[token]` | `src/app/track/[token]/page.tsx` | Shared move-tracking link target |
 
 ### 5.2 Customer (protected)
 
 | Route | File | Kya hai |
 | --- | --- | --- |
-| `/customer-app` | `src/app/customer-app/page.tsx` | Main customer app (plan → details → quotes → book → track + messages/wallet/history/rate) |
-| `/customer-app/profile` | `src/app/customer-app/profile/page.tsx` | Profile, stats, disputes, saved addresses |
-| `/customer-app/support` | `src/app/customer-app/support/page.tsx` | Customer FAQ / dispute guidance |
+| `/app`, `/app/customer`, `/customer-app` | redirect stubs | All hand off to the customer app deployment |
+| `/customer-app/profile` | `src/app/customer-app/profile/page.tsx` | Profile, stats, disputes, saved addresses (`AuthGuard roles={["customer"]}`) |
+| `/customer-app/support` | `src/app/customer-app/support/page.tsx` | Customer FAQ / dispute guidance (`AuthGuard roles={["customer"]}`) |
 
-### 5.3 Driver / Mover (protected)
-
-| Route | File | Kya hai |
-| --- | --- | --- |
-| `/driver-app` | `src/app/driver-app/page.tsx` | Jobs, active work, messaging, tracking, earnings |
-| `/driver-app/settings` | `src/app/driver-app/settings/page.tsx` | Identity, vehicle, availability, location, documents, profile |
-
-### 5.4 Admin (protected)
-
-| Route | File | Kya hai |
-| --- | --- | --- |
-| `/admin` | `src/app/admin/page.tsx` | Operations dashboard |
-| `/admin/profile` | `src/app/admin/profile/page.tsx` | Admin account profile |
+There is no `/driver-app`, `/admin`, `/driver-signup`, or `/drive` route in this repo anymore — those surfaces live in the separate deployments linked via `appUrls`.
 
 ---
 
@@ -151,179 +146,48 @@ Files:
 - Landing page with live quote / location widget
 - Route preview on Google Maps
 - Vehicle options showcase
-- About / Business / Help / Drive pages
+- About / Business / Help pages
 - Business enterprise contact form (`BusinessContactForm` → `businessApi`)
-- Driver recruitment CTA linking to signup
+- Driver-recruitment CTAs linking out to the external driver site (`appUrls.driverWeb`)
+- `AppPromptPopup` — bottom-corner nudge to open the customer app or the driver site
 
 ### 6.2 Authentication Features
 
-- Customer registration
-- Login (role-based redirect)
-- Email verification
-- Forgot password / reset password
-- Session restore via `/auth/me`
+- Session restore via `/auth/me` (`AuthContext`)
 - Token refresh
 - Logout
-- **Note:** Google / Apple auth buttons currently visual only (OAuth wired nahi)
+- Role-gated routing via `AuthGuard` (customer-only in this repo)
 
-### 6.3 Customer App Features
+### 6.3 Customer Profile & Support (`/customer-app/*`)
 
-Customer app ek multi-screen wizard + dashboard hai.
-
-#### A) Move planning (`PlanScreen`)
-
-- Pickup / destination Google Places autocomplete
-- Move date, timing tabs, time window, timezone
-- Vehicle preference / filter
-- Nearby movers list (distance / price / rating / arrival sorting)
-- Route metrics (distance / duration)
-- Local estimate helpers
-
-#### B) Move details (`DetailsScreen`)
-
-- Load / inventory description
-- Item suggestions
-- Optional item photo uploads
-- Publish moving request
-
-#### C) Quotes (`QuotesScreen`)
-
-- Poll for mover quotes
-- Compare price / mover info
-- Negotiation / counteroffers
-- Select a quote
-
-#### D) Booking confirm (`BookScreen`)
-
-- Fee review
-- Confirm booking
-- Payment model presentation (see known gaps: cash vs wallet inconsistency)
-
-#### E) Tracking (`TrackScreen`)
-
-- Canonical job stages / timeline
-- Live mover location
-- Booking insights
-- Delivery proof gallery
-- Chat entry
-- Manage actions (cancel / reschedule / share / dispute / duplicate / rebook)
-
-#### F) Other customer screens inside `/customer-app`
-
-- **Messages** — inbox + booking chat
-- **Wallet** — top-up, checkout, invoice preview/download/share
-- **Rate** — rate mover + optional tip
-- **History** — past moves / bookings
-
-#### G) Profile & support
-
-- Account profile edit (avatar/contact/address/preferences)
-- Language / privacy / notification settings
-- Activity / user statistics
-- Saved addresses + default address
-- Customer dispute history panel
+- Account profile edit (avatar/contact/address/preferences) — `AccountProfileForm`
+- Saved addresses + default address — `SavedAddressesPanel`
+- Activity / user statistics — `UserStatsPanel`
+- Customer dispute history + in-thread chat — `CustomerDisputesPanel` → `DisputeThreadPanel`
 - Support FAQ / dispute guidance
 
-### 6.4 Driver / Mover Features
-
-#### Onboarding (`/driver-signup`)
-
-5-step wizard:
-
-1. Account details
-2. Vehicle details
-3. Licence / insurance / vehicle photo checks
-4. Service location (Google Places) + schedule
-5. Selfie / licence face matching → uploads → mover profile create → pending approval
-
-#### Driver dashboard (`/driver-app`)
-
-- Go online with browser geolocation
-- Browse available moving requests
-- Submit / negotiate quotes
-- Accept booking
-- Job progress / status events
-- Continuously publish location
-- Chat with customer
-- Upload completion proof
-- Mark delivered / completed
-- Earnings, tips, wallet statements, invoices
-
-#### Driver settings
-
-- Identity / vehicle / availability
-- Service location
-- Documents
-- Profile editing
-
-### 6.5 Admin Features
-
-- Platform analytics overview
-- Platform health badge
-- Users list / filter
-- Mover verification
-- Bookings inspection
-- Dispute review / resolve
-- Optional wallet refunds from chat/dispute tooling
-- Platform transactions inspection
-- Pricing zones create / edit / delete
-- Promotions create
-- Admin profile management
-
-### 6.6 Shared Cross-App Features
+### 6.4 Shared Cross-App Primitives (kept for the customer surface)
 
 | Feature | Details |
 | --- | --- |
-| Maps | Route display, place autocomplete, location fields, geocoding |
-| Messaging | Inbox, read status, text / image / voice messages, dispute rooms |
-| Notifications | Bell UI, unread filter, mark read / mark all, role-specific deep links |
-| Negotiation | Customer ↔ mover counteroffers, accept/reject |
-| Wallet / billing | Top-ups, job payment, statements, invoices, admin refunds |
-| Disputes | Raise dispute + evidence, thread panel, admin resolution |
-| Uploads | Photos, documents, chat media |
-| Verification | Document / vehicle / face checks (fail-open fallbacks exist) |
+| Maps | Route display, place autocomplete, geocoding — `components/maps/*` |
+| Messaging | Dispute-room chat: text / image / voice messages — `ChatComposer`, `ChatMessageContent`, `useChat` |
+| Disputes | Raise/view dispute thread + evidence — `BookingDisputeBanner`, `DisputeThreadPanel` |
+| Notifications | Bell UI, unread filter, mark read / mark all — `NotificationsBell` |
 | Mock mode | Local mock API for development (`NEXT_PUBLIC_USE_MOCKS=true`) |
+
+The customer booking wizard (plan → details → quotes → book → track), the driver dashboard, and the admin panel are **not** part of this repo — they live in the separate customer app, driver app, and admin deployments.
 
 ---
 
-## 7. Key Workflows (End-to-End)
+## 7. Key Workflows (End-to-End, as seen from this repo)
 
-### 7.1 Customer move lifecycle
+1. Visitor lands on `/`, gets a quote widget preview, and is funneled to `appUrls.customerApp` to actually book.
+2. A prospective driver clicks a "Become a driver" CTA (nav, footer, or homepage) and is sent to `appUrls.driverWeb`.
+3. A logged-in customer visits `/customer-app/profile` or `/customer-app/support` for account management, saved addresses, and dispute threads.
+4. Shared tracking links (`/track/{token}`) resolve in this repo for anyone with the link.
 
-1. Pickup / drop-off choose karo (Google Places)
-2. Date, timing, vehicle preference set karo
-3. Nearby movers + route metrics dekho
-4. Inventory / photos add karo
-5. Moving request publish karo
-6. Quotes receive / compare / negotiate karo
-7. Quote select + booking confirm
-8. Live track + chat + delivery evidence
-9. Wallet top-up / pay / invoice
-10. Rate + tip
-11. History mein retain
-12. Optional: cancel, reschedule, duplicate, rebook, share tracking, dispute
-
-### 7.2 Mover job lifecycle
-
-1. Signup + verification
-2. Online jao (geolocation)
-3. Available jobs browse
-4. Quote submit / negotiate
-5. Booking accept
-6. Status + location updates
-7. Customer chat
-8. Completion proof upload
-9. Delivered / completed
-10. Earnings / tips / statements check
-
-### 7.3 Admin ops lifecycle
-
-1. Dashboard / health dekho
-2. Users / movers verify
-3. Bookings inspect
-4. Disputes resolve (+ refunds if needed)
-5. Transactions review
-6. Zones / promotions manage
+The full move lifecycle (publish request → quotes → negotiate → book → track → pay → rate) happens in the separate customer app deployment, not in this repository.
 
 ---
 
@@ -333,53 +197,18 @@ Customer app ek multi-screen wizard + dashboard hai.
 
 - `components/MarketingShell.tsx`
 - `components/SiteNav.tsx` / `SiteFooter.tsx`
-- `components/customer/CustomerAppShell.tsx`
-- `components/driver/DriverDashboardShell.tsx`
+- `components/AppPromptPopup.tsx`
 
-### Customer move wizard
+### Booking / dispute (shared with the customer profile pages)
 
-- `components/move/PlanScreen.tsx`
-- `components/move/DetailsScreen.tsx`
-- `components/move/QuotesScreen.tsx`
-- `components/move/BookScreen.tsx`
-- `components/move/TrackScreen.tsx`
-- `components/move/WizardChrome.tsx`
-- `components/move/MoveSheet.tsx`
-- `components/move/MovesSwitcher.tsx`
-- `components/move/WalletPanels.tsx`
-- `components/move/JobPanels.tsx`
-- `components/move/ItemSuggestionsField.tsx`
-
-### Booking tools
-
-- `components/booking/BookingManageActions.tsx`
-- `components/booking/BookingInsightsPanel.tsx`
-- `components/booking/BookingTimelinePanel.tsx`
 - `components/booking/BookingDisputeBanner.tsx`
-- `components/booking/VehicleCardPicker.tsx`
-- `components/booking/MoveTimingTabs.tsx`
-- `components/booking/TimeZoneSelect.tsx`
-- `components/NegotiationPanel.tsx`
+- `components/dispute/DisputeThreadPanel.tsx`
+- `components/NegotiationPanel.tsx` (used only if re-wired — currently unreferenced pending the booking wizard's return)
 
-### Driver
+### Messaging / notifications
 
-- `components/driver/DriverWorkPanel.tsx`
-- `components/driver/DriverJobProgress.tsx`
-- `components/driver/DriverDashboardShell.tsx`
-
-### Admin
-
-- `components/admin/AdminDetailCards.tsx`
-- `components/admin/AdminZonesPanel.tsx`
-- `components/admin/PlatformHealthBadge.tsx`
-
-### Messaging / disputes / notifications
-
-- `components/messaging/MessagesInbox.tsx`
 - `components/messaging/ChatComposer.tsx`
 - `components/messaging/ChatMessageContent.tsx`
-- `components/messaging/AdminChatRefundBar.tsx`
-- `components/dispute/DisputeThreadPanel.tsx`
 - `components/notifications/NotificationsBell.tsx`
 
 ### Maps / profile / forms
@@ -387,7 +216,6 @@ Customer app ek multi-screen wizard + dashboard hai.
 - `components/maps/GoogleMapsProvider.tsx`
 - `components/maps/RouteMap.tsx`
 - `components/maps/PlaceAutocompleteInput.tsx`
-- `components/maps/LocationField.tsx`
 - `components/profile/AccountProfileForm.tsx`
 - `components/profile/SavedAddressesPanel.tsx`
 - `components/profile/UserStatsPanel.tsx`
@@ -404,38 +232,32 @@ Customer app ek multi-screen wizard + dashboard hai.
 
 | Hook | Purpose |
 | --- | --- |
-| `useCustomerFlow.ts` | Customer request/booking/payment/dispute flow orchestration |
-| `useChat.ts` | Socket.IO chat + mock polling fallback |
-| `useNearbyMovers.ts` | Nearby movers discovery + refresh |
-| `useRouteMetrics.ts` | Distance/duration calculations |
+| `useChat.ts` | Socket.IO chat + mock polling fallback (used by dispute threads) |
 | `useGeocodedPlace.ts` | Place geocoding helper |
+| `useRouteMetrics.ts` | Distance/duration calculations |
 
 ### Lib helpers (`src/lib`)
 
 | File | Purpose |
 | --- | --- |
 | `bookingFlow.ts` | Booking status / paid / trackable helpers |
-| `driverJobFlow.ts` | Driver job stage logic |
-| `customerMoveNav.ts` | Customer screen navigation rules |
-| `moveEstimate.ts` | Local estimate calculation |
-| `moveItems.ts` | Inventory item helpers |
 | `negotiation.ts` | Negotiation rules |
-| `requestSchedule.ts` | Scheduling helpers |
-| `quoteTiming.ts` | Quote timing helpers |
 | `trackingDisplay.ts` | Tracking UI display helpers |
 | `invoiceDocument.ts` | Invoice PDF download / share |
 | `notificationNav.ts` | Notification deep-link routing |
 | `maps.ts` | Maps utilities |
 | `push.ts` | Web Push subscription helper |
 | `session.ts` | Auth session storage |
+| `appRole.ts` | Customer auth-path helpers (`appHomePath`, `appAuthPath`) |
 | `displayNames.ts` | Customer/mover display name helpers |
 | `env.ts` | Env flags (`hasGoogleMaps`, `hasWebPush`, `apiBaseUrl`) |
+| `theme/apps.ts` | `appUrls` — URLs of the sibling marketing/admin/driver/customer-app/driver-app deployments |
 
 ---
 
 ## 10. API Modules (Frontend → Backend)
 
-Shared client: `src/lib/api/client.ts`  
+Shared client: `src/lib/api/client.ts`
 Exports barrel: `src/lib/api/index.ts`
 
 | Module | File | Covers |
@@ -443,14 +265,15 @@ Exports barrel: `src/lib/api/index.ts`
 | Auth | `api/auth.ts` | login, register, me, refresh, password recovery, verify |
 | Users | `api/users.ts` | profile, preferences, stats, saved addresses, notifications |
 | Customers | `api/customers.ts` | requests, accept quote, wallet, invoices, payment, review, disputes |
-| Movers | `api/movers.ts` | presence, quoting, bookings, tracking, evidence, messaging |
 | Bookings | `api/bookings.ts` | booking CRUD, estimates, share, timeline, location, status, items |
-| Admin | `api/admin.ts` | analytics, verification, disputes/refunds, promotions, transactions |
 | Public | `api/public.ts` | vehicles, zones, nearby movers, platform health |
 | Uploads | `api/uploads.ts` | file uploads |
 | Business | `api/business.ts` | enterprise lead form |
 | Verification | `api/verification.ts` | document / vehicle / face verification |
+| Messages | `api/messages.ts` | dispute-room chat: list, send, mark read |
 | Mock | `api/mock/*` | browser-persisted mock backend for local dev |
+
+`api/movers.ts` and `api/admin.ts` (driver/admin-only endpoints) have been removed from this repo along with the driver/admin UI that called them.
 
 **Default API base URL:** `http://localhost:4000/api/v1`
 
@@ -462,8 +285,6 @@ Exports barrel: `src/lib/api/index.ts`
 | --- | --- | --- |
 | Google Maps / Places / Directions | maps components + hooks | Implemented (needs `NEXT_PUBLIC_GOOGLE_MAPS_KEY`) |
 | Socket.IO chat | `useChat.ts` | Implemented (`/chat` namespace + token auth) |
-| Browser geolocation | driver app | Implemented for presence/tracking |
-| Camera / mic | driver signup selfie + chat voice | Implemented |
 | Web Push (VAPID) | `lib/push.ts` | Helper only — full app wiring / service worker missing |
 | Mock API | `api/mock/*` | Dev-only; production mein disable |
 
@@ -477,6 +298,7 @@ Exports barrel: `src/lib/api/index.ts`
 | `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Google Maps key (maps enable karta hai) |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web push public key |
 | `NEXT_PUBLIC_USE_MOCKS` | `true` → mock APIs (prod mein avoid) |
+| `NEXT_PUBLIC_MARKETING_URL`, `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_DRIVER_WEB_URL`, `NEXT_PUBLIC_CUSTOMER_APP_URL`, `NEXT_PUBLIC_DRIVER_APP_URL` | Sibling-deployment URLs consumed via `appUrls` |
 
 Env presets:
 
@@ -522,42 +344,40 @@ App locally: http://localhost:3000
 
 ---
 
-## 14. Known Gaps / Incomplete Areas
+## 14. Known Gaps / Incomplete Areas / Recent Changes
 
-Yeh cheezein currently incomplete / inconsistent hain:
-
-1. **Google / Apple auth buttons** — UI only, OAuth handlers nahi.
-2. **Help page search / articles** — static presentation, real searchable content nahi.
-3. **Marketing images (`ImageSlot`)** — local browser preview / placeholders; production media incomplete.
-4. **Verification fail-open** — agar backend verification endpoints 404/405/501 den to frontend heuristically pass treat kar sakta hai.
-5. **Web Push incomplete** — subscription helper hai, lekin service worker + app call-site wiring missing.
-6. **Shared tracking route missing** — code `/track/{token}` synthesize kar sakta hai, lekin App Router page exist nahi karti.
-7. **Payment messaging inconsistency** — Book screen “Cash on site” dikhata hai, baad mein wallet settlement flow hai.
-8. **`/customer-wireframes` public** — internal design artifact publicly reachable hai.
-9. **Automated tests missing** — unit/component/e2e framework configured nahi; sirf lint/typecheck + manual integration script.
-10. **Mock mode production-disabled** — live features backend availability/compatibility par depend karti hain.
+1. **Driver app & admin panel removed from this repo.** They previously lived here as `/driver-app` and `/admin` (plus a large shared `components/move/*` booking-wizard tree). All driver/admin-exclusive code, and code that was already orphaned (unreachable from any live route) has been deleted. Driver and admin now live in separate deployments referenced via `appUrls`.
+2. **Android/Capacitor removed.** This repo previously also shipped an `android/` Capacitor wrapper for building customer/driver APKs; that's been removed — this is a pure web app now.
+3. **Google / Apple auth buttons** — not present in this repo (auth happens in the separate customer app).
+4. **Help page search / articles** — static presentation, real searchable content nahi.
+5. **Marketing images (`ImageSlot`)** — local browser preview / placeholders; production media incomplete.
+6. **Web Push incomplete** — subscription helper hai, lekin service worker + app call-site wiring missing.
+7. **Automated tests missing** — unit/component/e2e framework configured nahi; sirf lint/typecheck + manual integration script.
+8. **Mock mode production-disabled** — live features backend availability/compatibility par depend karti hain.
 
 ---
 
 ## 15. Quick Mental Model
 
 ```text
-Public marketing site
+Public marketing site (this repo)
         │
-        ├── /auth ──────────────┐
-        │                       │
-        ├── customer  →  plan → details → quotes → book → track → pay/rate
-        │                       │
-        ├── mover     →  signup → online → quote → job progress → earnings
-        │                       │
-        └── admin     →  users / bookings / disputes / zones / promotions
+        ├── /  ────────────────── quote widget → sends visitor to customerApp
+        ├── /drive CTAs ────────── sends visitor to driverWeb
+        ├── /auth ──────────────── redirect stub → customerApp
+        ├── /app, /app/customer,
+        │   /customer-app ──────── redirect stubs → customerApp
+        ├── /customer-app/profile,
+        │   /customer-app/support ─ real pages, AuthGuard-protected, customer role only
+        └── /track/[token] ─────── shared tracking link target
+
+Sibling deployments (NOT in this repo): admin dashboard, driverWeb, driverApp, customerApp
 ```
 
-Realtime pieces:
+Realtime pieces still present here:
 
-- Socket chat
-- Polling for quotes / nearby movers / tracking (especially mock mode)
-- Maps for places + route + live location display
+- Dispute-room chat (Socket.IO + polling fallback)
+- Maps for places + route display
 
 ---
 

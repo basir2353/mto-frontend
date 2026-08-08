@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { appUrls } from "@mto/theme/apps";
+import { appUrls } from "@/lib/theme/apps";
 
 const DISMISS_KEY = "mto_app_prompt_dismissed";
 
-type Mode = "move" | "earn";
-
-export default function AppPromptPopup({ mode = "move" }: { mode?: Mode }) {
+export default function AppPromptPopup() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -30,8 +28,6 @@ export default function AppPromptPopup({ mode = "move" }: { mode?: Mode }) {
   };
 
   if (!visible) return null;
-
-  const isDriver = mode === "earn";
 
   return (
     <div
@@ -87,12 +83,10 @@ export default function AppPromptPopup({ mode = "move" }: { mode?: Mode }) {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ font: "800 16px/1.2 Archivo", letterSpacing: "-.02em" }}>
-              {isDriver ? "Ready to drive?" : "Use the MoveThisOut app"}
+              Use the MoveThisOut app
             </div>
             <p style={{ margin: "6px 0 0", font: "500 13px/1.4 Hanken Grotesk", color: "rgba(255,255,255,.62)" }}>
-              {isDriver
-                ? "Enter your details on the driver site — signup, docs, then open the driver app."
-                : "Start a move with locations first. Account details only when you book."}
+              Start a move with locations first. Account details only when you book.
             </p>
           </div>
           <button
@@ -117,29 +111,12 @@ export default function AppPromptPopup({ mode = "move" }: { mode?: Mode }) {
         </div>
 
         <div className="mto-app-prompt-actions" style={{ display: "flex", gap: 8 }}>
-          {isDriver ? (
-            <>
-              <a
-                href={`${appUrls.driverWeb}/signup`}
-                onClick={dismiss}
-                style={primaryBtn}
-              >
-                Driver signup
-              </a>
-              <a href={`${appUrls.driverWeb}/login`} onClick={dismiss} style={secondaryBtn}>
-                Driver login
-              </a>
-            </>
-          ) : (
-            <>
-              <a href={`${appUrls.customerApp}/customer-app`} onClick={dismiss} style={primaryBtn}>
-                Open customer app
-              </a>
-              <a href={`${appUrls.driverWeb}`} onClick={dismiss} style={secondaryBtn}>
-                I want to drive
-              </a>
-            </>
-          )}
+          <a href={`${appUrls.customerApp}/customer-app`} onClick={dismiss} style={primaryBtn}>
+            Open customer app
+          </a>
+          <a href={appUrls.driverWeb} onClick={dismiss} style={secondaryBtn}>
+            I want to drive
+          </a>
         </div>
       </div>
     </div>

@@ -47,6 +47,7 @@ export function BookingDisputeBanner({ disputes }: { disputes?: Dispute[] }) {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
           {latest.evidenceUrls!.map((url) => (
             <a key={url} href={url} target="_blank" rel="noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element -- remote upload host isn't guaranteed to be in next.config.ts remotePatterns; next/image would 500 on an unconfigured domain */}
               <img src={url} alt="Dispute evidence" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 10, border: "1px solid rgba(0,0,0,.1)" }} />
             </a>
           ))}

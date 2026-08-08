@@ -33,10 +33,14 @@ export function SavedAddressesPanel() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const fetchAddresses = async () => {
+    setAddresses(await savedAddressesApi.list());
+  };
+
   const load = async () => {
     setLoading(true);
     try {
-      setAddresses(await savedAddressesApi.list());
+      await fetchAddresses();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load addresses");
     } finally {
@@ -45,7 +49,19 @@ export function SavedAddressesPanel() {
   };
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    // Mount-only fetch; setAddresses/setError land after the request resolves, not synchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAddresses()
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Could not load addresses");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const startEdit = (a: SavedAddress) => {

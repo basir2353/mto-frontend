@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { FieldLabel } from "@/components/FormControls";
 
 export type DialCountry = {
@@ -63,18 +63,19 @@ export function PhoneInput({
   const [national, setNational] = useState(initial.national);
   const iso = "CA";
 
-  useEffect(() => {
+  const [syncedValue, setSyncedValue] = useState(value);
+  if (value !== syncedValue) {
+    setSyncedValue(value);
     if (!value.trim()) {
       setNational("");
-      return;
+    } else {
+      const parsed = parsePhoneValue(value, iso);
+      const current = formatFullPhone(iso, national);
+      if (digitsOnly(value) !== digitsOnly(current)) {
+        setNational(parsed.national);
+      }
     }
-    const parsed = parsePhoneValue(value, iso);
-    const current = formatFullPhone(iso, national);
-    if (digitsOnly(value) !== digitsOnly(current)) {
-      setNational(parsed.national);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }
 
   const emit = (nextNational: string) => {
     onChange(formatFullPhone(iso, nextNational));

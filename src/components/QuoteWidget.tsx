@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import PlaceAutocompleteInput from "@/components/maps/PlaceAutocompleteInput";
 import { hasGoogleMaps } from "@/lib/env";
 import type { MapPlace } from "@/lib/maps";
-import { appUrls } from "@mto/theme/apps";
+import { appUrls } from "@/lib/theme/apps";
 
 type QuoteWidgetProps = {
   onPickupPlaceChange?: (place: MapPlace) => void;

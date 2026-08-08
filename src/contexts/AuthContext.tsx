@@ -57,6 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.user;
   }, []);
 
+  // react-hooks/preserve-manual-memoization: the compiler's static analysis can't
+  // resolve `Parameters<typeof authApi.register>[0]` the same way it does for the
+  // (simpler-signature) `login` callback above; reactCompiler isn't enabled in this
+  // project, so this has no runtime effect.
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const register = useCallback(async (input: Parameters<typeof authApi.register>[0]) => {
     setError(null);
     const res = await authApi.register(input);

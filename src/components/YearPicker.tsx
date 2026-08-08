@@ -49,11 +49,15 @@ export function YearPicker({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open]);
 
-  useEffect(() => {
-    if (!selected) return;
-    const start = Math.floor((selected - minYear) / pageSize) * pageSize + minYear;
-    setPageStart(Math.min(Math.max(start, minYear), Math.max(minYear, maxYear - pageSize + 1)));
-  }, [selected, minYear, maxYear]);
+  const [syncKey, setSyncKey] = useState(`${selected}:${minYear}:${maxYear}`);
+  const nextSyncKey = `${selected}:${minYear}:${maxYear}`;
+  if (nextSyncKey !== syncKey) {
+    setSyncKey(nextSyncKey);
+    if (selected) {
+      const start = Math.floor((selected - minYear) / pageSize) * pageSize + minYear;
+      setPageStart(Math.min(Math.max(start, minYear), Math.max(minYear, maxYear - pageSize + 1)));
+    }
+  }
 
   const canPrev = pageStart > minYear;
   const canNext = pageStart + pageSize <= maxYear;

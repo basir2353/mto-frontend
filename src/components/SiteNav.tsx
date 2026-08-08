@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { appUrls } from "@mto/theme/apps";
+import { appUrls } from "@/lib/theme/apps";
 
 type NavKey = "move" | "earn" | "business" | "about" | "";
 
@@ -51,8 +51,8 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
           onMouseEnter={() => setOpen("earn")}
           onMouseLeave={() => setOpen(null)}
         >
-          <Link
-            href="/drive"
+          <a
+            href={`${appUrls.driverWeb}/signup`}
             style={{
               textDecoration: "none",
               color: cEarn,
@@ -63,20 +63,17 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
             }}
           >
             Earn <span style={{ fontSize: 8, opacity: 0.7 }}>▼</span>
-          </Link>
+          </a>
           {open === "earn" && (
             <div style={{ position: "absolute", top: "100%", left: -18, paddingTop: 14 }}>
               <div className="mto-nav-dropdown">
-                <Link href="/drive" className="mto-nav-dropdown-link">
+                <a href={`${appUrls.driverWeb}/signup`} className="mto-nav-dropdown-link">
                   <b>Become a driver</b>
                   <span>Drive with your own vehicle</span>
-                </Link>
-                <Link href="/drive#how" className="mto-nav-dropdown-link">
-                  How it works
-                </Link>
-                <Link href="/drive#apply" className="mto-nav-dropdown-link">
-                  Earnings &amp; requirements
-                </Link>
+                </a>
+                <a href={`${appUrls.driverWeb}/login`} className="mto-nav-dropdown-link">
+                  Driver login
+                </a>
               </div>
             </div>
           )}
@@ -156,9 +153,9 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
             <Link href="/" onClick={() => setMenuOpen(false)} className={active === "move" ? "is-active" : undefined}>
               Move
             </Link>
-            <Link href="/drive" onClick={() => setMenuOpen(false)} className={active === "earn" ? "is-active" : undefined}>
+            <a href={`${appUrls.driverWeb}/signup`} onClick={() => setMenuOpen(false)} className={active === "earn" ? "is-active" : undefined}>
               Earn
-            </Link>
+            </a>
             <Link href="/business" onClick={() => setMenuOpen(false)} className={active === "business" ? "is-active" : undefined}>
               Business
             </Link>

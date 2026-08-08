@@ -14,23 +14,9 @@
     "start": "next start -p 3000",
     "start:prod": "node scripts/use-env.mjs production && next start -p 3000",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
-    "apk:prepare": "node scripts/prepare-apk-variants.mjs",
-    "cap:sync": "node scripts/prepare-apk-variants.mjs && npx cap sync android && node scripts/prepare-apk-variants.mjs",
-    "cap:open:android": "npx cap open android",
-    "apk:open": "npx cap open android",
-    "apk:debug": "npm run apk:debug:customer && npm run apk:debug:driver",
-    "apk:debug:customer": "npm run cap:sync && cd android && gradlew.bat assembleCustomerDebug --no-daemon && cd .. && node scripts/copy-apk.mjs customer",
-    "apk:debug:driver": "npm run cap:sync && cd android && gradlew.bat assembleDriverDebug --no-daemon && cd .. && node scripts/copy-apk.mjs driver"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mto/theme": "*",
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/app": "^7.1.0",
-    "@capacitor/core": "^7.4.3",
-    "@capacitor/geolocation": "^7.1.5",
-    "@capacitor/splash-screen": "^7.0.2",
-    "@capacitor/status-bar": "^7.0.2",
     "@vis.gl/react-google-maps": "^1.9.0",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
@@ -39,7 +25,6 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

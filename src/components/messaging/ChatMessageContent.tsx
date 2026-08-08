@@ -23,6 +23,7 @@ export function ChatMessageContent({
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <a href={mediaUrl(message.attachmentUrl)} target="_blank" rel="noreferrer">
+          {/* eslint-disable-next-line @next/next/no-img-element -- unknown natural dimensions + remote upload host isn't guaranteed to be in next.config.ts remotePatterns */}
           <img
             src={mediaUrl(message.attachmentUrl)}
             alt="Shared photo"

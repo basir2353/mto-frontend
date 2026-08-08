@@ -10,8 +10,8 @@ export const directApiBaseUrl =
   (process.env.NODE_ENV === "production" ? PROD_API_FALLBACK : DEV_API_FALLBACK);
 
 /**
- * Browser/Capacitor fetch base. On Vercel (and local Next) use same-origin `/mto-api`
- * rewrite so Android WebView does not fail cross-origin multipart uploads.
+ * Browser fetch base. On Vercel (and local Next) use the same-origin `/mto-api`
+ * rewrite so uploads and requests avoid cross-origin issues.
  */
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {

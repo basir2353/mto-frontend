@@ -67,15 +67,20 @@ export function NotificationsBell({
 
   useEffect(() => {
     if (hasWebPush && typeof Notification !== "undefined") {
+      // Browser-only API — Notification isn't defined during SSR.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPushPermission(Notification.permission);
     }
   }, []);
 
+  const [syncedCanFetch, setSyncedCanFetch] = useState(canFetch);
+  if (canFetch !== syncedCanFetch) {
+    setSyncedCanFetch(canFetch);
+    if (!canFetch) setItems([]);
+  }
+
   useEffect(() => {
-    if (!canFetch) {
-      setItems([]);
-      return;
-    }
+    if (!canFetch) return;
     const initial = setTimeout(() => void load(), 0);
     const t = setInterval(() => void load(), 30000);
     return () => {

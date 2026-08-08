@@ -1,0 +1,33 @@
+:root {
+  --mto-accent: #ffde2e;
+  --mto-ink: #0e0e10;
+  --mto-surface: #ffffff;
+  --mto-canvas: #f5f4ef;
+  --mto-border: rgba(0, 0, 0, 0.1);
+  --mto-border-strong: rgba(0, 0, 0, 0.16);
+  --mto-text-primary: #0e0e10;
+  --mto-text-secondary: #6b6b70;
+  --mto-text-tertiary: #8a8a90;
+  --mto-success: #146e46;
+  --mto-success-surface: #e7f5ee;
+  --mto-warning: #965f0a;
+  --mto-warning-surface: #fdf3e1;
+  --mto-danger: #c23b3b;
+  --mto-danger-surface: #fbeaea;
+  --mto-radius-sm: 8px;
+  --mto-radius-md: 12px;
+  --mto-radius-lg: 16px;
+  --mto-radius-xl: 20px;
+  --mto-motion-fast: 140ms;
+  --mto-motion-base: 220ms;
+  --mto-motion-slow: 320ms;
+  --mto-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Back-compat with existing mto-frontend CSS */
+  --accent: var(--mto-accent);
+  --motion-fast: var(--mto-motion-fast);
+  --motion-base: var(--mto-motion-base);
+  --motion-slow: var(--mto-motion-slow);
+  --motion-ease: var(--mto-motion-ease);
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}

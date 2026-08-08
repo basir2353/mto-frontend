@@ -13,7 +13,6 @@ try {
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
-  transpilePackages: ["@mto/theme"],
   images: {
     remotePatterns: [
       ...(apiHostname
@@ -38,7 +37,7 @@ const nextConfig: NextConfig = {
     const dest = apiUrl.replace(/\/$/, "");
     return [
       {
-        // Same-origin proxy so Capacitor WebView avoids flaky cross-origin multipart uploads.
+        // Same-origin proxy so the browser avoids flaky cross-origin multipart uploads.
         source: "/mto-api/:path*",
         destination: `${dest}/:path*`,
       },

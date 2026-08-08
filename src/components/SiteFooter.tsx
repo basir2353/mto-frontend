@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { appUrls } from "@mto/theme/apps";
+import { appUrls } from "@/lib/theme/apps";
 
 export default function SiteFooter() {
   return (
@@ -27,9 +27,8 @@ export default function SiteFooter() {
         <FooterCol
           title="Drive"
           links={[
-            { label: "Become a driver", href: "/drive" },
-            { label: "Earnings", href: "/drive#how" },
-            { label: "Requirements", href: "/drive#apply" },
+            { label: "Become a driver", href: `${appUrls.driverWeb}/signup` },
+            { label: "Driver login", href: `${appUrls.driverWeb}/login` },
             { label: "Driver app", href: appUrls.driverApp },
           ]}
         />

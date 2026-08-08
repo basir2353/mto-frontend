@@ -1,8 +1,7 @@
-export { adminApi } from "./admin";
 export { businessApi } from "./business";
 export { authApi } from "./auth";
 export { customersApi } from "./customers";
-export { moversApi, messagesApi } from "./movers";
+export { messagesApi } from "./messages";
 export { bookingsApi } from "./bookings";
 export { vehiclesApi, zonesApi, discoveryApi, platformApi } from "./public";
 export { savedAddressesApi, notificationsApi, usersApi } from "./users";

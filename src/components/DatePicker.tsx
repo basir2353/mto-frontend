@@ -65,10 +65,11 @@ export default function DatePicker({
   }, [value]);
 
   const [viewMonth, setViewMonth] = useState(() => selected ?? today);
-
-  useEffect(() => {
+  const [syncedSelected, setSyncedSelected] = useState(selected);
+  if (selected !== syncedSelected) {
+    setSyncedSelected(selected);
     if (selected) setViewMonth(selected);
-  }, [selected]);
+  }
 
   useEffect(() => {
     if (!open) return;

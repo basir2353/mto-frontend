@@ -18,13 +18,7 @@ export default function AuthGuard({
 }) {
   const { user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const unauthRedirect =
-    redirectTo ??
-    (roles?.includes("mover")
-      ? appAuthPath("driver")
-      : roles?.includes("customer")
-        ? appAuthPath("customer")
-        : appAuthPath());
+  const unauthRedirect = redirectTo ?? appAuthPath();
 
   useEffect(() => {
     if (loading) return;
@@ -33,13 +27,7 @@ export default function AuthGuard({
       return;
     }
     if (roles?.length && user && !roles.some((r) => user.roles.includes(r))) {
-      router.replace(
-        user.roles.includes("admin")
-          ? "/admin"
-          : user.roles.includes("mover")
-            ? "/driver-app"
-            : "/customer-app",
-      );
+      router.replace("/customer-app");
     }
   }, [loading, isAuthenticated, user, roles, router, unauthRedirect]);
 

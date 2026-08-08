@@ -2,17 +2,15 @@
 
 **Move anything, right now.**
 
-MoveThisOut is an on-demand moving and delivery platform. This repository contains the frontend, a [Next.js](https://nextjs.org) application serving the public marketing site plus dedicated experiences for customers, drivers, and admins.
+MoveThisOut is an on-demand moving and delivery platform. This repository contains the public marketing site and customer account pages, a [Next.js](https://nextjs.org) application. The driver app, admin panel, and full customer booking wizard are separate deployments (see `src/lib/theme/apps.ts`'s `appUrls`) — this repo redirects to them rather than hosting them.
 
 **Live app:** [https://mto-frontend.vercel.app/](https://mto-frontend.vercel.app/)
 
 ## Features
 
 - **Marketing site** — landing page, about, business/enterprise contact, and help pages.
-- **Customer app** — booking flow, live quote widget, move tracking, profile, and support.
-- **Driver app** — driver signup, job flow, in-app messaging, and settings.
-- **Admin panel** — operations dashboard and profile management.
-- **Booking & negotiation** — quote estimation, price negotiation, and dispute handling.
+- **Customer profile & support** — account profile, saved addresses, dispute threads, FAQ.
+- **Dispute chat** — text/image/voice messaging in a dispute thread.
 - **Maps integration** — route display and place lookups via Google Maps.
 - **Real-time updates** — Socket.IO client for live messaging/notifications.
 - **Web push notifications** — via VAPID keys.
@@ -29,13 +27,14 @@ MoveThisOut is an on-demand moving and delivery platform. This repository contai
 
 ```
 src/
-  app/                # App Router routes (marketing, auth, customer-app, driver-app, admin, business, drive, help, ...)
-  components/          # Shared UI + feature components (booking, driver, dispute, maps, messaging, admin, ui, ...)
-  contexts/             # React context providers
+  app/                # App Router routes (marketing, auth, customer-app, business, help, ...)
+  components/          # Shared UI + feature components (booking, dispute, maps, messaging, ui, ...)
+  contexts/             # React context providers (auth)
   hooks/                # Custom hooks
   lib/
     api/                # API client, resource modules, and mock data
     env.ts               # Runtime environment config
+    theme/apps.ts         # appUrls — sibling deployment URLs (admin, driverWeb, driverApp, customerApp)
     ...                   # Booking flow, negotiation, maps, push, session helpers
 scripts/
   use-env.mjs           # Switches active .env file between local/live/production

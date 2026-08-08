@@ -17,7 +17,7 @@ export default function MarketingShell({
         <SiteNav active={active} />
         {children}
         <SiteFooter />
-        <AppPromptPopup mode={active === "earn" ? "earn" : "move"} />
+        <AppPromptPopup />
       </div>
     </div>
   );

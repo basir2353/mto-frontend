@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { appUrls } from "@mto/theme/apps";
+import { appUrls } from "@/lib/theme/apps";
 
 /** Auth lives on the customer app so the session stays on the same origin. */
 export default async function AuthRedirectPage({

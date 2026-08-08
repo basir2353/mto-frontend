@@ -1,18 +1,6 @@
-import { Capacitor } from "@capacitor/core";
-
-/** True when running inside a Capacitor native shell (Android/iOS). */
-export function isNativeApp(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return Capacitor.isNativePlatform();
-  } catch {
-    return false;
-  }
-}
-
+/** True when the site was opened in "app" mode via the `?mobile=1` entry link. */
 export function isMobileAppEntry(): boolean {
   if (typeof window === "undefined") return false;
-  if (isNativeApp()) return true;
   try {
     return new URLSearchParams(window.location.search).get("mobile") === "1";
   } catch {

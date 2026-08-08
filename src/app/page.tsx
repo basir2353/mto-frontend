@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import MarketingShell from "@/components/MarketingShell";
 import ImageSlot from "@/components/ImageSlot";
 import QuoteWidget from "@/components/QuoteWidget";
 import RouteMap from "@/components/maps/RouteMap";
 import type { MapPlace } from "@/lib/maps";
 import { CheckBadge } from "@/components/ui/Icons";
+import { appUrls } from "@/lib/theme/apps";
 
 export default function LandingPage() {
   const [pickupPlace, setPickupPlace] = useState<MapPlace>({ address: "" });
@@ -203,12 +203,12 @@ export default function LandingPage() {
             keep more of every fare. Cash out anytime.
           </p>
           <div className="mto-drive-actions">
-            <Link href="/drive" className="mto-btn-accent">
+            <a href={`${appUrls.driverWeb}/signup`} className="mto-btn-accent">
               Start driving
-            </Link>
-            <Link href="/drive" className="mto-btn-ghost">
+            </a>
+            <a href={appUrls.driverWeb} className="mto-btn-ghost">
               How earnings work
-            </Link>
+            </a>
           </div>
         </div>
       </div>
