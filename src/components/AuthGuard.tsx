@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/lib/api/types";
-import { appAuthPath } from "@/lib/appRole";
+import { appAuthPath, appHomePath } from "@/lib/appRole";
 import { PageLoader } from "@/components/ui/MtoLoader";
 
 export default function AuthGuard({
@@ -27,7 +27,7 @@ export default function AuthGuard({
       return;
     }
     if (roles?.length && user && !roles.some((r) => user.roles.includes(r))) {
-      router.replace("/customer-app");
+      router.replace(appHomePath());
     }
   }, [loading, isAuthenticated, user, roles, router, unauthRedirect]);
 
