@@ -322,7 +322,6 @@ export function MessagesInbox({
                   bookingId={active.bookingId}
                   myUserId={myUserId}
                   fillHeight
-                  disputeId={active.disputeId ?? undefined}
                 />
               ) : (
                 <MessagePanel

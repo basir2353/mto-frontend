@@ -1,4 +1,3 @@
-export { adminApi } from "./admin";
 export { businessApi } from "./business";
 export { authApi } from "./auth";
 export { customersApi } from "./customers";

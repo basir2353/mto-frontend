@@ -14,9 +14,7 @@ export default function MobileAppWelcomePage() {
 
   useEffect(() => {
     if (loading || !isAuthenticated || !user) return;
-    if (user.roles.includes("admin")) router.replace("/admin");
-    else if (user.roles.includes("mover")) router.replace("/driver-app");
-    else router.replace("/customer-app");
+    router.replace("/customer-app");
   }, [isAuthenticated, user, loading, router]);
 
   if (loading || isAuthenticated) {
@@ -39,7 +37,7 @@ export default function MobileAppWelcomePage() {
         </header>
 
         <p className={styles.support}>
-          Choose your app. Customers book moves; drivers earn with their vehicles.
+          Book, manage, and track your moves from one place.
         </p>
 
         <div className={styles.actions}>
@@ -53,15 +51,6 @@ export default function MobileAppWelcomePage() {
             </span>
           </Link>
 
-          <Link href="/app/driver" className={styles.secondary}>
-            <span className={styles.actionIconDark}>
-              <AppIcon name="truck" size={22} color="var(--accent)" />
-            </span>
-            <span>
-              <strong>Driver</strong>
-              <em>Earn with your vehicle</em>
-            </span>
-          </Link>
         </div>
       </div>
     </main>

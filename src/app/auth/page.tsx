@@ -8,7 +8,7 @@ import { PhoneInput, isValidNationalPhone, parsePhoneValue } from "@/components/
 import { AppIcon } from "@/components/ui/Icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi, verificationApi, ApiError } from "@/lib/api";
-import { setAppRole, type AppRole } from "@/lib/appRole";
+import { setAppRole } from "@/lib/appRole";
 
 type Screen = "login" | "signup" | "verify" | "forgot" | "reset" | "done";
 
@@ -49,6 +49,8 @@ function AuthPageInner() {
   const [phone, setPhone] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [accountType, setAccountType] = useState<"move" | "drive">("move");
+  const customerOnly = true;
+  const driverOnly = false;
 
   const [forgotEmail, setForgotEmail] = useState("");
   const [resetToken, setResetToken] = useState("");
@@ -58,18 +60,12 @@ function AuthPageInner() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const appParam = searchParams.get("app");
-  const appRole: AppRole | null =
-    appParam === "driver" ? "driver" : appParam === "customer" ? "customer" : null;
-  const customerOnly = appRole === "customer";
-  const driverOnly = appRole === "driver";
-
   const verifiedName = fullName.trim().split(" ")[0] || "there";
   const verifiedEmail = signupEmail || loginEmail || forgotEmail || "your email";
 
   useEffect(() => {
-    if (appRole) setAppRole(appRole);
-  }, [appRole]);
+    setAppRole("customer");
+  }, []);
 
   useEffect(() => {
     const h = (window.location.hash || "").replace("#", "");
@@ -78,33 +74,20 @@ function AuthPageInner() {
 
   useEffect(() => {
     const intent = searchParams.get("intent");
-    if (intent === "drive") {
-      router.replace("/driver-signup");
-      return;
-    }
-    if (intent === "move" || customerOnly) {
-      setAccountType("move");
-      if (intent === "move") setScreen("signup");
-    }
+    if (intent === "move") setScreen("signup");
     const token = searchParams.get("resetToken") ?? searchParams.get("token");
     if (token) {
       setResetToken(token);
       setScreen("reset");
     }
-  }, [searchParams, router, customerOnly]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
-    if (user.roles.includes("admin")) router.replace("/admin");
-    else if (user.roles.includes("mover")) router.replace("/driver-app");
-    else router.replace(customerAppHref);
+    router.replace(customerAppHref);
   }, [isAuthenticated, user, router, customerAppHref]);
 
-  const redirectByRole = (roles: string[]) => {
-    if (roles.includes("admin")) router.push("/admin");
-    else if (roles.includes("mover")) router.push("/driver-app");
-    else router.push(customerAppHref);
-  };
+  const redirectToCustomerApp = () => router.push(customerAppHref);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +107,7 @@ function AuthPageInner() {
     setApiError(null);
     try {
       const u = await login(email, password);
-      redirectByRole(u.roles);
+      redirectToCustomerApp();
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.statusCode === 401) {
@@ -345,11 +328,7 @@ function AuthPageInner() {
             {screen === "login" && (
               <div style={{ animation: "rise .3s ease" }}>
                 <h1 style={heading}>Welcome back</h1>
-                <p style={sub}>
-                  {driverOnly
-                    ? "Log in to find jobs, send quotes, and manage your moves."
-                    : "Log in to book, track and manage your moves."}
-                </p>
+                <p style={sub}>Log in to book, track and manage your moves.</p>
                 <form onSubmit={handleLogin}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     <TextInput label="Email" type="email" value={loginEmail} onChange={setLoginEmail} placeholder="ava@email.com" />
@@ -369,15 +348,9 @@ function AuthPageInner() {
                 </form>
                 <p style={{ margin: "24px 0 0", textAlign: "center", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
                   New here?{" "}
-                  {driverOnly ? (
-                    <Link href="/driver-signup" style={linkText}>
-                      Apply to drive
-                    </Link>
-                  ) : (
-                    <span onClick={() => setScreen("signup")} style={linkText}>
-                      Create an account
-                    </span>
-                  )}
+                  <span onClick={() => setScreen("signup")} style={linkText}>
+                    Create an account
+                  </span>
                 </p>
               </div>
             )}
@@ -385,11 +358,7 @@ function AuthPageInner() {
             {screen === "signup" && (
               <div style={{ animation: "rise .3s ease" }}>
                 <h1 style={heading}>Create your account</h1>
-                <p style={sub2}>
-                  {customerOnly
-                    ? "Create a customer account to book and track moves."
-                    : "Choose how you want to use MoveThisOut, then finish signup."}
-                </p>
+                <p style={sub2}>Create a customer account to book and track moves.</p>
                 {!customerOnly && (
                 <div className="mto-auth-account-types">
                   <button
@@ -418,7 +387,7 @@ function AuthPageInner() {
                     </span>
                   </button>
                   <Link
-                    href="/driver-signup"
+                    href="/auth#signup"
                     className="mto-auth-role-card"
                     style={{
                       flex: 1,
@@ -448,7 +417,7 @@ function AuthPageInner() {
                 {!customerOnly && accountType === "drive" ? (
                   <div style={{ marginTop: 8 }}>
                     <Link
-                      href="/driver-signup"
+                      href="/auth#signup"
                       style={{ ...primaryBtn, textDecoration: "none", boxSizing: "border-box" }}
                     >
                       Continue driver signup →

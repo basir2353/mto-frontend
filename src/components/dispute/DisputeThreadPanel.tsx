@@ -7,22 +7,17 @@ import type { Message } from "@/lib/api/types";
 import { partyDisplayName } from "@/lib/displayNames";
 import { ChatComposer } from "@/components/messaging/ChatComposer";
 import { ChatMessageContent } from "@/components/messaging/ChatMessageContent";
-import { AdminChatRefundBar } from "@/components/messaging/AdminChatRefundBar";
 
 export function DisputeThreadPanel({
   bookingId,
   myUserId,
   compact = false,
   fillHeight = false,
-  disputeId,
-  showAdminRefund = false,
 }: {
   bookingId: string;
   myUserId: string;
   compact?: boolean;
   fillHeight?: boolean;
-  disputeId?: string;
-  showAdminRefund?: boolean;
 }) {
   const chat = useChat(bookingId);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -67,12 +62,6 @@ export function DisputeThreadPanel({
           <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 4 }}>
             Send text, photos, or voice messages. Customer, admin, and mover are all here.
           </div>
-        </div>
-      )}
-
-      {showAdminRefund && disputeId && (
-        <div style={{ padding: "12px 14px 0" }}>
-          <AdminChatRefundBar disputeId={disputeId} onRefunded={refresh} />
         </div>
       )}
 

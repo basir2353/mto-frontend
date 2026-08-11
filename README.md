@@ -2,7 +2,7 @@
 
 **Move anything, right now.**
 
-MoveThisOut is an on-demand moving and delivery platform. This repository contains the frontend, a [Next.js](https://nextjs.org) application serving the public marketing site plus dedicated experiences for customers, drivers, and admins.
+MoveThisOut is an on-demand moving and delivery platform. This repository contains the public marketing site and customer application, built with [Next.js](https://nextjs.org).
 
 **Live app:** [https://mto-frontend.vercel.app/](https://mto-frontend.vercel.app/)
 
@@ -10,8 +10,6 @@ MoveThisOut is an on-demand moving and delivery platform. This repository contai
 
 - **Marketing site** — landing page, about, business/enterprise contact, and help pages.
 - **Customer app** — booking flow, live quote widget, move tracking, profile, and support.
-- **Driver app** — driver signup, job flow, in-app messaging, and settings.
-- **Admin panel** — operations dashboard and profile management.
 - **Booking & negotiation** — quote estimation, price negotiation, and dispute handling.
 - **Maps integration** — route display and place lookups via Google Maps.
 - **Real-time updates** — Socket.IO client for live messaging/notifications.
@@ -29,8 +27,8 @@ MoveThisOut is an on-demand moving and delivery platform. This repository contai
 
 ```
 src/
-  app/                # App Router routes (marketing, auth, customer-app, driver-app, admin, business, drive, help, ...)
-  components/          # Shared UI + feature components (booking, driver, dispute, maps, messaging, admin, ui, ...)
+  app/                # App Router routes (marketing, auth, customer-app, business, help, ...)
+  components/          # Shared UI + customer features (booking, dispute, maps, messaging, ui, ...)
   contexts/             # React context providers
   hooks/                # Custom hooks
   lib/

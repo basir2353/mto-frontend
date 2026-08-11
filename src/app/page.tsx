@@ -183,36 +183,6 @@ export default function LandingPage() {
       </div>
 
       {/* DRIVE & EARN */}
-      <div className="mto-drive">
-        <div className="mto-drive-visual">
-          <ImageSlot
-            placeholder="Drop a driver photo"
-            src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=1000&q=80"
-            alt="Driver with van"
-          />
-          <div className="mto-drive-chip">
-            <div className="mto-drive-chip-label">THIS WEEK</div>
-            <div className="mto-drive-chip-value">$1,240 earned</div>
-          </div>
-        </div>
-        <div className="mto-drive-copy">
-          <div className="mto-drive-eyebrow">Drive &amp; earn</div>
-          <h2 className="mto-drive-title">Got a truck? Get paid to move stuff.</h2>
-          <p className="mto-drive-sub">
-            Turn your SUV, van or pickup into income. See nearby jobs, send your own quote, and
-            keep more of every fare. Cash out anytime.
-          </p>
-          <div className="mto-drive-actions">
-            <Link href="/drive" className="mto-btn-accent">
-              Start driving
-            </Link>
-            <Link href="/drive" className="mto-btn-ghost">
-              How earnings work
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* APP BAND */}
       <div className="mto-section mto-appband-wrap">
         <div className="mto-appband">

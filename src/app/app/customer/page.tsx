@@ -18,10 +18,7 @@ export default function CustomerAppWelcomePage() {
 
   useEffect(() => {
     if (loading || !isAuthenticated || !user) return;
-    if (user.roles.includes("admin")) router.replace("/admin");
-    else if (user.roles.includes("customer")) router.replace("/customer-app");
-    else if (user.roles.includes("mover")) router.replace("/driver-app");
-    else router.replace("/customer-app");
+    router.replace("/customer-app");
   }, [isAuthenticated, user, loading, router]);
 
   if (loading || isAuthenticated) {

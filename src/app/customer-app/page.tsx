@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChipToggle, TextArea } from "@/components/FormControls";
 import { formatMoveDate } from "@/components/DatePicker";
 import AuthGuard from "@/components/AuthGuard";
@@ -53,6 +53,19 @@ const SELECTED_QUOTE_KEY = "mto_selected_quote";
 const SELECTED_REQUEST_KEY = "mto_selected_request";
 const SCREEN_KEY = "mto_customer_screen";
 const MOVE_DRAFT_KEY = "mto_customer_move_draft";
+
+function screenFromPath(pathname: string): Screen {
+  if (pathname === "/customer-app/messages") return "messages";
+  if (pathname === "/customer-app/history") return "history";
+  if (pathname.startsWith("/customer-app/requests/")) return "quotes";
+  if (pathname.startsWith("/customer-app/bookings/")) return "track";
+  return "plan";
+}
+
+function resourceIdFromPath(pathname: string, segment: "requests" | "bookings"): string | null {
+  const match = pathname.match(new RegExp(`^/customer-app/${segment}/([^/]+)$`));
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
 
 type MoveFormDraft = {
   pickup: string;
@@ -189,12 +202,29 @@ export default function CustomerAppPage() {
 
 function CustomerAppContent() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
   const flow = useMoveFlow();
-  const [screen, setScreenState] = useState<Screen>("plan");
-  const setScreen = (s: Screen) => {
+  const [screen, setScreenState] = useState<Screen>(() => screenFromPath(pathname));
+  const setScreen = (s: Screen, resourceId?: string | null) => {
     setScreenState(s);
     if (typeof window !== "undefined") sessionStorage.setItem(SCREEN_KEY, s);
+    const requestId = resourceId ?? selectedRequestId;
+    const bookingId = resourceId ?? flow.activeBooking?.id;
+    const nextPath =
+      s === "plan" || s === "details"
+        ? "/customer-app/new"
+        : s === "quotes" || s === "book"
+          ? requestId ? `/customer-app/requests/${encodeURIComponent(requestId)}` : "/customer-app/new"
+          : s === "track" || s === "rate"
+            ? bookingId ? `/customer-app/bookings/${encodeURIComponent(bookingId)}` : "/customer-app"
+            : s === "messages"
+              ? "/customer-app/messages"
+              : s === "history"
+                ? "/customer-app/history"
+                : "/customer-app";
+    if (pathname !== nextPath) router.push(nextPath, { scroll: false });
   };
   const [selectedMessagesBookingId, setSelectedMessagesBookingId] = useState<string | null>(null);
   const [historyFocusId, setHistoryFocusId] = useState<string | null>(null);
@@ -207,7 +237,9 @@ function CustomerAppContent() {
     else sessionStorage.removeItem(SELECTED_QUOTE_KEY);
   };
 
-  const [selectedRequestId, setSelectedRequestIdState] = useState<string | null>(null);
+  const [selectedRequestId, setSelectedRequestIdState] = useState<string | null>(() =>
+    resourceIdFromPath(pathname, "requests"),
+  );
 
   const setSelectedRequestId = (id: string | null) => {
     setSelectedRequestIdState(id);
@@ -215,6 +247,12 @@ function CustomerAppContent() {
     if (id) sessionStorage.setItem(SELECTED_REQUEST_KEY, id);
     else sessionStorage.removeItem(SELECTED_REQUEST_KEY);
   };
+
+  useEffect(() => {
+    setScreenState(screenFromPath(pathname));
+    const requestId = resourceIdFromPath(pathname, "requests");
+    if (requestId) setSelectedRequestIdState(requestId);
+  }, [pathname]);
 
   // Form fields: URL params only on first paint. sessionStorage draft restored in useEffect.
 
@@ -264,7 +302,7 @@ function CustomerAppContent() {
     draftRestoredRef.current = true;
 
     const savedScreen = sessionStorage.getItem(SCREEN_KEY);
-    if (savedScreen) {
+    if (pathname === "/customer-app" && savedScreen) {
       if ((RESUMABLE_SCREENS as string[]).includes(savedScreen)) setScreenState(savedScreen as Screen);
       else if (savedScreen in LEGACY_SCREEN_MAP) setScreenState(LEGACY_SCREEN_MAP[savedScreen]);
     }
@@ -296,7 +334,7 @@ function CustomerAppContent() {
     if (stored.estimatedLoad) setEstimatedLoad(stored.estimatedLoad);
     if (stored.moveDescription) setMoveDescription(stored.moveDescription);
     if (stored.photos?.length) setPhotos(stored.photos);
-  }, [searchParams]);
+  }, [searchParams, pathname]);
 
   useEffect(() => {
     saveMoveDraft({
@@ -346,6 +384,34 @@ function CustomerAppContent() {
         typeof window !== "undefined" ? sessionStorage.getItem(SCREEN_KEY) : null;
 
       const bookings = (await flow.loadBookings()) ?? [];
+      if (["/customer-app/new", "/customer-app/messages", "/customer-app/history"].includes(pathname)) {
+        setScreenState(screenFromPath(pathname));
+        setBootReady(true);
+        return;
+      }
+
+      const routeBookingId = resourceIdFromPath(pathname, "bookings");
+      if (routeBookingId) {
+        const booking = await flow.loadBooking(routeBookingId);
+        if (cancelled) return;
+        if (booking?.requestId) setSelectedRequestId(booking.requestId);
+        if (booking?.quoteId) setSelectedQuoteId(booking.quoteId);
+        if (booking?.request) {
+          hydrateFormFromRequest(booking.request, {
+            setPickup,
+            setPickupPlace,
+            setDestination,
+            setDestinationPlace,
+            setMoveDate,
+            setMoveType,
+            setMoveDescription,
+          });
+        }
+        setScreenState("track");
+        setBootReady(true);
+        return;
+      }
+
       const openRequestFirst = (await flow.restoreActiveRequest(selectedRequestId ?? undefined)) ?? null;
       if (openRequestFirst?.id && isOpenRequest(openRequestFirst)) {
         if (cancelled) return;
@@ -359,7 +425,7 @@ function CustomerAppContent() {
           setMoveType,
           setMoveDescription,
         });
-        setScreen("quotes");
+        setScreen("quotes", openRequestFirst.id);
         setBootReady(true);
         return;
       }
@@ -381,7 +447,7 @@ function CustomerAppContent() {
             setMoveDescription,
           });
         }
-        setScreen(resolveMoveScreen({ trackableBooking: full ?? trackable, savedScreen }));
+        setScreen(resolveMoveScreen({ trackableBooking: full ?? trackable, savedScreen }), full?.id ?? trackable.id);
         setBootReady(true);
         return;
       }
@@ -405,7 +471,7 @@ function CustomerAppContent() {
         });
 
         if (isOpenRequest(request)) {
-          setScreen("quotes");
+          setScreen("quotes", request.id);
         } else if (!savedScreen || savedScreen === "plan") {
           setScreen("plan");
         }
@@ -456,7 +522,7 @@ function CustomerAppContent() {
         setMoveType,
         setMoveDescription,
       });
-      setScreen("quotes");
+      setScreen("quotes", requestFirst.id);
       return;
     }
     const trackable = list.find((b) => isTrackableBooking(b) && b.status !== "completed");
@@ -475,7 +541,7 @@ function CustomerAppContent() {
           setMoveDescription,
         });
       }
-      setScreen("track");
+      setScreen("track", full?.id ?? trackable.id);
       return;
     }
 
@@ -588,7 +654,7 @@ function CustomerAppContent() {
     if (req) {
       setSelectedRequestId(req.id);
       clearMoveDraft();
-      setScreen("quotes");
+      setScreen("quotes", req.id);
     }
   };
 
@@ -616,7 +682,7 @@ function CustomerAppContent() {
     try {
       const result = await flow.acceptQuote(request.id, bookQuote.id, paymentMethod);
       if (result) {
-        setScreen("track");
+        setScreen("track", result.id);
       } else {
         setBookError(flow.error ?? "Could not confirm booking. Please try again.");
       }
@@ -663,7 +729,7 @@ function CustomerAppContent() {
         if (action.requestId) {
           flow.setActiveBooking(null);
           await flow.selectRequest(action.requestId);
-          setScreen("quotes");
+          setScreen("quotes", action.requestId);
           return;
         }
 
@@ -714,14 +780,14 @@ function CustomerAppContent() {
       const full = await flow.selectTrackableBooking(tab.id);
       if (full?.requestId) setSelectedRequestId(full.requestId);
       if (full?.quoteId) setSelectedQuoteId(full.quoteId);
-      setScreen("track");
+      setScreen("track", full?.id ?? tab.id);
       return;
     }
     flow.setActiveBooking(null);
     const request = await flow.selectRequest(tab.id);
     if (request?.id) {
       setSelectedRequestId(request.id);
-      setScreen("quotes");
+      setScreen("quotes", request.id);
     }
   };
   const activeNav: CustomerNavId =

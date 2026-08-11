@@ -1,5 +1,26 @@
 import Link from "next/link";
 
+const columns = [
+  {
+    title: "Move",
+    links: [
+      { label: "How it works", href: "/#how" },
+      { label: "Vehicles", href: "/#vehicles" },
+      { label: "Get a quote", href: "/customer-app" },
+      { label: "Business moves", href: "/business" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Safety", href: "/about#safety" },
+      { label: "Support", href: "/help" },
+      { label: "Careers", href: "/about" },
+    ],
+  },
+];
+
 export default function SiteFooter() {
   return (
     <div className="mto-footer">
@@ -9,38 +30,9 @@ export default function SiteFooter() {
             <div className="mto-footer-mark">M</div>
             <span className="mto-footer-name">MoveThisOut</span>
           </div>
-          <p className="mto-footer-tagline">
-            The on-demand marketplace connecting you with local drivers who move things — big or
-            small.
-          </p>
+          <p className="mto-footer-tagline">The on-demand marketplace connecting customers with local moving professionals.</p>
         </div>
-        <FooterCol
-          title="Move"
-          links={[
-            { label: "How it works", href: "/#how" },
-            { label: "Vehicles", href: "/#vehicles" },
-            { label: "Get a quote", href: "/customer-app" },
-            { label: "Business moves", href: "/business" },
-          ]}
-        />
-        <FooterCol
-          title="Drive"
-          links={[
-            { label: "Become a driver", href: "/drive" },
-            { label: "Earnings", href: "/drive#how" },
-            { label: "Requirements", href: "/drive#apply" },
-            { label: "Driver app", href: "/customer-app" },
-          ]}
-        />
-        <FooterCol
-          title="Company"
-          links={[
-            { label: "About", href: "/about" },
-            { label: "Safety", href: "/about#safety" },
-            { label: "Support", href: "/help" },
-            { label: "Careers", href: "/about" },
-          ]}
-        />
+        {columns.map((column) => <FooterCol key={column.title} {...column} />)}
       </div>
       <div className="mto-footer-bottom">
         <span>© 2026 MoveThisOut, Inc.</span>
@@ -54,22 +46,12 @@ export default function SiteFooter() {
   );
 }
 
-function FooterCol({
-  title,
-  links,
-}: {
-  title: string;
-  links: { label: string; href: string }[];
-}) {
+function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div className="mto-footer-col">
       <div className="mto-footer-col-title">{title}</div>
       <div className="mto-footer-col-links">
-        {links.map((l) => (
-          <Link key={l.label} href={l.href}>
-            {l.label}
-          </Link>
-        ))}
+        {links.map((link) => <Link key={link.label} href={link.href}>{link.label}</Link>)}
       </div>
     </div>
   );
