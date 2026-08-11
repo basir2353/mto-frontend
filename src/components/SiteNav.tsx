@@ -2,15 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getAppUrls, sameAppOrigin } from "@/lib/theme/apps";
-
 type NavKey = "move" | "business" | "about" | "";
 
 export default function SiteNav({ active = "" }: { active?: NavKey }) {
   const [open, setOpen] = useState<"about" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const appUrls = getAppUrls();
-  const customerOnMarketing = sameAppOrigin(appUrls.customerApp, appUrls.marketing);
 
   const on = "#fff";
   const off = "rgba(255,255,255,.6)";
@@ -31,12 +27,8 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
     };
   }, [menuOpen]);
 
-  const loginHref = customerOnMarketing
-    ? "/auth#login"
-    : `${appUrls.customerApp}/auth#login`;
-  const signupHref = customerOnMarketing
-    ? "/customer-app"
-    : `${appUrls.customerApp}/customer-app`;
+  const loginHref = "/auth#login";
+  const signupHref = "/auth#signup";
   const signupLabel = "Sign up";
 
   return (
@@ -99,12 +91,12 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
         <Link href="/help" className="mto-nav-help">
           Help
         </Link>
-        <a href={loginHref} className="mto-nav-login">
+        <Link href={loginHref} className="mto-nav-login">
           Log in
-        </a>
-        <a href={signupHref} className="mto-nav-signup">
+        </Link>
+        <Link href={signupHref} className="mto-nav-signup">
           {signupLabel}
-        </a>
+        </Link>
       </div>
 
       <button
@@ -136,12 +128,12 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
             </Link>
           </div>
           <div className="mto-nav-drawer-cta">
-            <a href={loginHref} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-login">
+            <Link href={loginHref} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-login">
               Log in
-            </a>
-            <a href={signupHref} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-signup">
+            </Link>
+            <Link href={signupHref} onClick={() => setMenuOpen(false)} className="mto-nav-drawer-signup">
               {signupLabel}
-            </a>
+            </Link>
           </div>
         </div>
       )}

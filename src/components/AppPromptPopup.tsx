@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAppUrls } from "@/lib/theme/apps";
 
 const DISMISS_KEY = "mto_app_prompt_dismissed";
 
@@ -28,8 +27,6 @@ export default function AppPromptPopup() {
   };
 
   if (!visible) return null;
-
-  const appUrls = getAppUrls();
 
   return (
     <div
@@ -113,12 +110,12 @@ export default function AppPromptPopup() {
         </div>
 
         <div className="mto-app-prompt-actions" style={{ display: "flex", gap: 8 }}>
-          <a href={`${appUrls.customerApp}/customer-app`} onClick={dismiss} style={primaryBtn}>
-            Open customer app
+          <a href="/auth#signup" onClick={dismiss} style={primaryBtn}>
+            Sign up
           </a>
-          <button type="button" onClick={dismiss} style={secondaryBtn}>
-            Not now
-          </button>
+          <a href="/auth#login" onClick={dismiss} style={secondaryBtn}>
+            Log in
+          </a>
         </div>
       </div>
     </div>
