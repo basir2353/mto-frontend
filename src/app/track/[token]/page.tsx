@@ -57,8 +57,8 @@ export default function SharedTrackingPage() {
     return (
       <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#F5F4EF" }}>
         <div style={{ maxWidth: 520, padding: 28, borderRadius: 18, background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", textAlign: "center" }}>
-          <h1 style={{ margin: "0 0 10px", font: "900 28px 'Archivo'" }}>Tracking unavailable</h1>
-          <p style={{ margin: 0, color: "#6B6B70", font: "500 15px/1.5 'Hanken Grotesk'" }}>{error}</p>
+          <h1 style={{ margin: "0 0 10px", font: "900 28px var(--font-archivo)" }}>Tracking unavailable</h1>
+          <p style={{ margin: 0, color: "#6B6B70", font: "500 15px/1.5 var(--font-hanken)" }}>{error}</p>
         </div>
       </main>
     );
@@ -66,7 +66,7 @@ export default function SharedTrackingPage() {
 
   if (!tracking) {
     return (
-      <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#F5F4EF", font: "700 15px 'Hanken Grotesk'" }}>
+      <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#F5F4EF", font: "700 15px var(--font-hanken)" }}>
         Loading live tracking…
       </main>
     );
@@ -76,34 +76,34 @@ export default function SharedTrackingPage() {
     <main style={{ minHeight: "100vh", background: "#F5F4EF", padding: 20 }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <header style={{ marginBottom: 16 }}>
-          <div style={{ font: "900 23px 'Archivo'" }}>MoveThisOut</div>
-          <div style={{ color: "#6B6B70", font: "600 13px 'Hanken Grotesk'" }}>Shared live tracking · read only</div>
+          <div style={{ font: "900 23px var(--font-archivo)" }}>MoveThisOut</div>
+          <div style={{ color: "#6B6B70", font: "600 13px var(--font-hanken)" }}>Shared live tracking · read only</div>
         </header>
 
         <div style={{ display: "grid", gridTemplateColumns: "minmax(280px, 380px) 1fr", gap: 16 }}>
           <section style={{ padding: 22, borderRadius: 18, background: "#fff", border: "1.5px solid rgba(0,0,0,.1)" }}>
-            <div style={{ display: "inline-flex", padding: "6px 10px", borderRadius: 999, background: "var(--accent)", font: "800 11px 'Hanken Grotesk'", marginBottom: 14 }}>
+            <div style={{ display: "inline-flex", padding: "6px 10px", borderRadius: 999, background: "var(--accent)", font: "800 11px var(--font-hanken)", marginBottom: 14 }}>
               {tracking.status.replace(/_/g, " ").toUpperCase()}
             </div>
-            <h1 style={{ margin: "0 0 6px", font: "900 27px 'Archivo'" }}>{tracking.mover?.businessName ?? "Your mover"}</h1>
-            <p style={{ margin: "0 0 20px", color: "#6B6B70", font: "500 14px 'Hanken Grotesk'" }}>
+            <h1 style={{ margin: "0 0 6px", font: "900 27px var(--font-archivo)" }}>{tracking.mover?.businessName ?? "Your mover"}</h1>
+            <p style={{ margin: "0 0 20px", color: "#6B6B70", font: "500 14px var(--font-hanken)" }}>
               Last updated {tracking.lastUpdatedAt ? new Date(tracking.lastUpdatedAt).toLocaleString() : "just now"}
             </p>
 
             <RouteRow label="Pickup" value={pickup?.address || "Pickup location"} />
             <RouteRow label="Destination" value={destination?.address || "Destination"} />
 
-            <div style={{ marginTop: 22, font: "800 13px 'Archivo'" }}>Move progress</div>
+            <div style={{ marginTop: 22, font: "800 13px var(--font-archivo)" }}>Move progress</div>
             <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
               {tracking.events.length ? tracking.events.slice(-6).reverse().map((event) => (
                 <div key={event.id} style={{ padding: "10px 12px", borderRadius: 10, background: "#F5F4EF" }}>
-                  <div style={{ font: "700 13px 'Hanken Grotesk'" }}>{event.status.replace(/_/g, " ")}</div>
-                  <div style={{ color: "#8A8A90", font: "500 11px 'Hanken Grotesk'", marginTop: 3 }}>
+                  <div style={{ font: "700 13px var(--font-hanken)" }}>{event.status.replace(/_/g, " ")}</div>
+                  <div style={{ color: "#8A8A90", font: "500 11px var(--font-hanken)", marginTop: 3 }}>
                     {new Date(event.createdAt).toLocaleString()}
                   </div>
                 </div>
               )) : (
-                <div style={{ color: "#8A8A90", font: "500 13px 'Hanken Grotesk'" }}>Waiting for the next update.</div>
+                <div style={{ color: "#8A8A90", font: "500 13px var(--font-hanken)" }}>Waiting for the next update.</div>
               )}
             </div>
           </section>
@@ -126,8 +126,8 @@ export default function SharedTrackingPage() {
 function RouteRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ color: "#8A8A90", font: "800 10px 'Hanken Grotesk'", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
-      <div style={{ font: "600 14px/1.35 'Hanken Grotesk'" }}>{value}</div>
+      <div style={{ color: "#8A8A90", font: "800 10px var(--font-hanken)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+      <div style={{ font: "600 14px/1.35 var(--font-hanken)" }}>{value}</div>
     </div>
   );
 }

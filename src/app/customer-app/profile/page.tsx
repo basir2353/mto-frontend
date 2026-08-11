@@ -111,9 +111,9 @@ export default function CustomerProfilePage() {
           .customer-profile-mark{
             width:30px;height:30px;border-radius:9px;background:var(--accent);
             display:flex;align-items:center;justify-content:center;
-            font:900 17px 'Archivo';color:#0E0E10;flex:none;
+            font:900 17px var(--font-archivo);color:#0E0E10;flex:none;
           }
-          .customer-profile-brand>span{font:800 18px 'Archivo';letter-spacing:-.02em}
+          .customer-profile-brand>span{font:800 18px var(--font-archivo);letter-spacing:-.02em}
           .customer-profile-logout-top{
             margin-left:auto;
             height:34px;
@@ -122,7 +122,7 @@ export default function CustomerProfilePage() {
             border-radius:10px;
             background:var(--accent);
             color:#0E0E10;
-            font:800 12px 'Hanken Grotesk';
+            font:800 12px var(--font-hanken);
             cursor:pointer;
             flex:none;
           }
@@ -148,7 +148,7 @@ export default function CustomerProfilePage() {
             border-radius:14px;
             background:#0E0E10;
             color:#fff;
-            font:800 15px 'Hanken Grotesk';
+            font:800 15px var(--font-hanken);
             cursor:pointer;
           }
           .customer-profile-logout:disabled{opacity:.7;cursor:wait}
@@ -174,7 +174,7 @@ export default function CustomerProfilePage() {
             border-radius:12px;
             text-decoration:none;
             color:#0E0E10;
-            font:700 11px 'Hanken Grotesk';
+            font:700 11px var(--font-hanken);
             background:#f5f4ef;
           }
           .customer-profile-footer a[aria-current="page"]{

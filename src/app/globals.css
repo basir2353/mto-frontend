@@ -20,7 +20,7 @@ body {
 }
 
 body {
-  font-family: "Hanken Grotesk", system-ui, sans-serif;
+  font-family: var(--font-hanken), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -163,7 +163,7 @@ a {
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-  font-family: "Hanken Grotesk", system-ui, sans-serif;
+  font-family: var(--font-hanken), system-ui, sans-serif;
   margin-top: 6px;
   overflow: hidden;
 }
@@ -216,7 +216,7 @@ a {
   align-items: center;
   padding: 0 44px;
   gap: 36px;
-  font-family: "Hanken Grotesk", system-ui, sans-serif;
+  font-family: var(--font-hanken), system-ui, sans-serif;
   position: relative;
   z-index: 100;
 }
@@ -239,12 +239,12 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 900 18px "Archivo", sans-serif;
+  font: 900 18px var(--font-archivo), sans-serif;
   color: #0e0e10;
 }
 
 .mto-nav-name {
-  font: 800 20px "Archivo", sans-serif;
+  font: 800 20px var(--font-archivo), sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -252,7 +252,7 @@ a {
   display: flex;
   align-items: center;
   gap: 24px;
-  font: 600 14px "Hanken Grotesk", sans-serif;
+  font: 600 14px var(--font-hanken), sans-serif;
 }
 
 .mto-nav-dropdown {
@@ -271,16 +271,16 @@ a {
   color: #0e0e10;
   padding: 12px 14px;
   border-radius: 10px;
-  font: 600 14px "Hanken Grotesk", sans-serif;
+  font: 600 14px var(--font-hanken), sans-serif;
 }
 
 .mto-nav-dropdown-link b {
   display: block;
-  font: 700 14px "Hanken Grotesk", sans-serif;
+  font: 700 14px var(--font-hanken), sans-serif;
 }
 
 .mto-nav-dropdown-link span {
-  font: 400 12px "Hanken Grotesk", sans-serif;
+  font: 400 12px var(--font-hanken), sans-serif;
   color: #6b6b70;
 }
 
@@ -289,7 +289,7 @@ a {
   display: flex;
   align-items: center;
   gap: 22px;
-  font: 600 14px "Hanken Grotesk", sans-serif;
+  font: 600 14px var(--font-hanken), sans-serif;
 }
 
 .mto-nav-lang {
@@ -326,7 +326,7 @@ a {
   color: #0e0e10;
   display: inline-flex;
   align-items: center;
-  font: 800 14px "Archivo", sans-serif;
+  font: 800 14px var(--font-archivo), sans-serif;
 }
 
 .mto-nav-burger {
@@ -393,7 +393,7 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 7px 14px;
   border-radius: 999px;
-  font: 700 11px "Hanken Grotesk", sans-serif;
+  font: 700 11px var(--font-hanken), sans-serif;
   letter-spacing: 0.05em;
   margin-bottom: 24px;
 }
@@ -407,13 +407,13 @@ a {
 
 .mto-hero-title {
   margin: 0 0 20px;
-  font: 900 66px/0.98 "Archivo", sans-serif;
+  font: 900 66px/0.98 var(--font-archivo), sans-serif;
   letter-spacing: -0.035em;
 }
 
 .mto-hero-sub {
   margin: 0 0 32px;
-  font: 400 18px/1.5 "Hanken Grotesk", sans-serif;
+  font: 400 18px/1.5 var(--font-hanken), sans-serif;
   color: rgba(255, 255, 255, 0.68);
   max-width: 460px;
 }
@@ -468,12 +468,12 @@ a {
 }
 
 .mto-hero-chip-title {
-  font: 700 14px "Hanken Grotesk", sans-serif;
+  font: 700 14px var(--font-hanken), sans-serif;
   color: #0e0e10;
 }
 
 .mto-hero-chip-meta {
-  font: 600 12px "Hanken Grotesk", sans-serif;
+  font: 600 12px var(--font-hanken), sans-serif;
   color: #6b6b70;
 }
 
@@ -488,13 +488,13 @@ a {
 }
 
 .mto-hero-chip-label {
-  font: 700 10px "Hanken Grotesk", sans-serif;
+  font: 700 10px var(--font-hanken), sans-serif;
   letter-spacing: 0.08em;
   color: var(--accent);
 }
 
 .mto-hero-chip-price {
-  font: 900 22px "Archivo", sans-serif;
+  font: 900 22px var(--font-archivo), sans-serif;
 }
 
 /* ─── Stats ─── */
@@ -515,16 +515,16 @@ a {
 }
 
 .mto-stat-n {
-  font: 900 30px "Archivo", sans-serif;
+  font: 900 30px var(--font-archivo), sans-serif;
 }
 
 .mto-stat-l {
-  font: 600 13px "Hanken Grotesk", sans-serif;
+  font: 600 13px var(--font-hanken), sans-serif;
   opacity: 0.7;
 }
 
 .mto-stats-note {
-  font: 700 14px "Hanken Grotesk", sans-serif;
+  font: 700 14px var(--font-hanken), sans-serif;
   flex-shrink: 0;
 }
 
@@ -539,7 +539,7 @@ a {
 }
 
 .mto-eyebrow {
-  font: 700 12px "Hanken Grotesk", sans-serif;
+  font: 700 12px var(--font-hanken), sans-serif;
   letter-spacing: 0.1em;
   color: #8a8a90;
   text-transform: uppercase;
@@ -548,13 +548,13 @@ a {
 
 .mto-h2 {
   margin: 0;
-  font: 800 42px/1.05 "Archivo", sans-serif;
+  font: 800 42px/1.05 var(--font-archivo), sans-serif;
   letter-spacing: -0.025em;
 }
 
 .mto-h2-sm {
   margin: 0;
-  font: 800 34px "Archivo", sans-serif;
+  font: 800 34px var(--font-archivo), sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -580,18 +580,18 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 900 18px "Archivo", sans-serif;
+  font: 900 18px var(--font-archivo), sans-serif;
   margin-bottom: 20px;
 }
 
 .mto-how-card h3 {
   margin: 0 0 8px;
-  font: 800 22px "Archivo", sans-serif;
+  font: 800 22px var(--font-archivo), sans-serif;
 }
 
 .mto-how-card p {
   margin: 0;
-  font: 400 15px/1.5 "Hanken Grotesk", sans-serif;
+  font: 400 15px/1.5 var(--font-hanken), sans-serif;
   color: #6b6b70;
 }
 
@@ -608,7 +608,7 @@ a {
 }
 
 .mto-vehicles-note {
-  font: 600 14px "Hanken Grotesk", sans-serif;
+  font: 600 14px var(--font-hanken), sans-serif;
   color: #6b6b70;
 }
 
@@ -635,17 +635,17 @@ a {
 }
 
 .mto-vehicle-title {
-  font: 800 18px "Archivo", sans-serif;
+  font: 800 18px var(--font-archivo), sans-serif;
 }
 
 .mto-vehicle-desc {
-  font: 500 13px "Hanken Grotesk", sans-serif;
+  font: 500 13px var(--font-hanken), sans-serif;
   color: #6b6b70;
   margin: 2px 0 8px;
 }
 
 .mto-vehicle-price {
-  font: 800 14px "Archivo", sans-serif;
+  font: 800 14px var(--font-archivo), sans-serif;
   color: #0e0e10;
 }
 
@@ -669,7 +669,7 @@ a {
 
 .mto-market-sub {
   margin: 16px 0 26px;
-  font: 400 17px/1.6 "Hanken Grotesk", sans-serif;
+  font: 400 17px/1.6 var(--font-hanken), sans-serif;
   color: #6b6b70;
   max-width: 420px;
 }
@@ -685,7 +685,7 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
-  font: 600 15px "Hanken Grotesk", sans-serif;
+  font: 600 15px var(--font-hanken), sans-serif;
 }
 
 .mto-market-panel {
@@ -722,15 +722,15 @@ a {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  font: 700 14px "Hanken Grotesk", sans-serif;
+  font: 700 14px var(--font-hanken), sans-serif;
 }
 
 .mto-quote-price {
-  font: 900 18px "Archivo", sans-serif !important;
+  font: 900 18px var(--font-archivo), sans-serif !important;
 }
 
 .mto-quote-meta {
-  font: 600 12px "Hanken Grotesk", sans-serif;
+  font: 600 12px var(--font-hanken), sans-serif;
   color: #6b6b70;
 }
 
@@ -765,12 +765,12 @@ a {
 }
 
 .mto-drive-chip-label {
-  font: 700 10px "Hanken Grotesk", sans-serif;
+  font: 700 10px var(--font-hanken), sans-serif;
   letter-spacing: 0.08em;
 }
 
 .mto-drive-chip-value {
-  font: 900 24px "Archivo", sans-serif;
+  font: 900 24px var(--font-archivo), sans-serif;
 }
 
 .mto-drive-copy {
@@ -780,7 +780,7 @@ a {
 }
 
 .mto-drive-eyebrow {
-  font: 700 12px "Hanken Grotesk", sans-serif;
+  font: 700 12px var(--font-hanken), sans-serif;
   letter-spacing: 0.1em;
   color: var(--accent);
   text-transform: uppercase;
@@ -789,13 +789,13 @@ a {
 
 .mto-drive-title {
   margin: 0 0 16px;
-  font: 900 46px/1.02 "Archivo", sans-serif;
+  font: 900 46px/1.02 var(--font-archivo), sans-serif;
   letter-spacing: -0.03em;
 }
 
 .mto-drive-sub {
   margin: 0 0 30px;
-  font: 400 17px/1.6 "Hanken Grotesk", sans-serif;
+  font: 400 17px/1.6 var(--font-hanken), sans-serif;
   color: rgba(255, 255, 255, 0.68);
   max-width: 440px;
 }
@@ -819,13 +819,13 @@ a {
 .mto-btn-accent {
   background: var(--accent);
   color: #0e0e10;
-  font: 800 15px "Archivo", sans-serif;
+  font: 800 15px var(--font-archivo), sans-serif;
 }
 
 .mto-btn-ghost {
   border: 1.5px solid rgba(255, 255, 255, 0.25);
   color: #fff;
-  font: 700 15px "Hanken Grotesk", sans-serif;
+  font: 700 15px var(--font-hanken), sans-serif;
 }
 
 .mto-appband-wrap {
@@ -844,14 +844,14 @@ a {
 
 .mto-appband-title {
   margin: 0 0 10px;
-  font: 900 40px/1.05 "Archivo", sans-serif;
+  font: 900 40px/1.05 var(--font-archivo), sans-serif;
   letter-spacing: -0.025em;
   color: #0e0e10;
 }
 
 .mto-appband-sub {
   margin: 0;
-  font: 500 16px "Hanken Grotesk", sans-serif;
+  font: 500 16px var(--font-hanken), sans-serif;
   color: rgba(0, 0, 0, 0.65);
 }
 
@@ -870,7 +870,7 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
-  font: 700 15px "Hanken Grotesk", sans-serif;
+  font: 700 15px var(--font-hanken), sans-serif;
 }
 
 /* ─── Footer ─── */
@@ -878,18 +878,26 @@ a {
   background: #0e0e10;
   color: #fff;
   padding: 60px 44px 40px;
-  font-family: "Hanken Grotesk", system-ui, sans-serif;
+  font-family: var(--font-hanken), system-ui, sans-serif;
 }
 
 .mto-footer-top {
   display: flex;
-  gap: 72px;
+  flex-wrap: wrap;
+  gap: 48px 72px;
   padding-bottom: 44px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .mto-footer-brand {
-  flex: 1;
+  flex: 1 1 240px;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.mto-footer-col {
+  flex: 0 0 auto;
+  min-width: 140px;
 }
 
 .mto-footer-logo {
@@ -900,18 +908,18 @@ a {
 }
 
 .mto-footer-name {
-  font: 800 20px "Archivo", sans-serif;
+  font: 800 20px var(--font-archivo), sans-serif;
 }
 
 .mto-footer-tagline {
   margin: 0;
-  font: 400 14px/1.6 "Hanken Grotesk", sans-serif;
+  font: 400 14px/1.6 var(--font-hanken), sans-serif;
   color: rgba(255, 255, 255, 0.55);
   max-width: 280px;
 }
 
 .mto-footer-col-title {
-  font: 700 13px "Hanken Grotesk", sans-serif;
+  font: 700 13px var(--font-hanken), sans-serif;
   margin-bottom: 14px;
 }
 
@@ -919,7 +927,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font: 500 14px "Hanken Grotesk", sans-serif;
+  font: 500 14px var(--font-hanken), sans-serif;
 }
 
 .mto-footer-col-links a {
@@ -932,7 +940,7 @@ a {
   justify-content: space-between;
   align-items: center;
   padding-top: 24px;
-  font: 500 13px "Hanken Grotesk", sans-serif;
+  font: 500 13px var(--font-hanken), sans-serif;
   color: rgba(255, 255, 255, 0.5);
   gap: 16px;
 }
@@ -981,7 +989,7 @@ a {
   .mto-nav-drawer-links a {
     display: block;
     padding: 14px 4px;
-    font: 700 20px "Archivo", sans-serif;
+    font: 700 20px var(--font-archivo), sans-serif;
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -1005,7 +1013,7 @@ a {
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    font: 800 15px "Archivo", sans-serif;
+    font: 800 15px var(--font-archivo), sans-serif;
   }
 
   .mto-nav-drawer-login {

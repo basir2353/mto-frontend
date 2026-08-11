@@ -117,7 +117,7 @@ export function ChatComposer({
   return (
     <div className={styles.composer} style={{ padding: 12, borderTop: "1px solid rgba(0,0,0,.08)" }}>
       {error && (
-        <div style={{ marginBottom: 8, font: "600 12px 'Hanken Grotesk'", color: "#a8442a" }}>{error}</div>
+        <div style={{ marginBottom: 8, font: "600 12px var(--font-hanken)", color: "#a8442a" }}>{error}</div>
       )}
       <div className={styles.row} style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button
@@ -150,7 +150,7 @@ export function ChatComposer({
             borderRadius: 999,
             border: "1.5px solid rgba(0,0,0,.14)",
             padding: "0 14px",
-            font: "500 13px 'Hanken Grotesk'",
+            font: "500 13px var(--font-hanken)",
             outline: "none",
           }}
         />
@@ -164,7 +164,7 @@ export function ChatComposer({
             borderRadius: "50%",
             border: "none",
             background: "var(--accent)",
-            font: "800 16px 'Archivo'",
+            font: "800 16px var(--font-archivo)",
             cursor: disabled || !bookingId || busy || !draft.trim() ? "not-allowed" : "pointer",
             opacity: disabled || !bookingId || busy || !draft.trim() ? 0.5 : 1,
           }}
@@ -193,7 +193,7 @@ const iconBtn: React.CSSProperties = {
   borderRadius: "50%",
   border: "1.5px solid rgba(0,0,0,.12)",
   background: "#fff",
-  font: "16px 'Archivo'",
+  font: "16px var(--font-archivo)",
   cursor: "pointer",
   flex: "none",
 };

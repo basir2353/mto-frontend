@@ -230,25 +230,25 @@ export function AccountProfileForm({
   return (
     <div style={{ flex: 1, overflow: "auto", background: "#F5F4EF", minHeight: 0 }}>
       <div className={styles.container} style={{ maxWidth: 760, margin: "0 auto", padding: "32px 28px 48px" }}>
-        <a href={backHref} style={{ font: "700 13px 'Hanken Grotesk'", color: "#6B6B70", textDecoration: "none" }}>
+        <a href={backHref} style={{ font: "700 13px var(--font-hanken)", color: "#6B6B70", textDecoration: "none" }}>
           ← {backLabel}
         </a>
-        <h1 style={{ margin: "16px 0 6px", font: "900 34px 'Archivo'", letterSpacing: "-.025em" }}>{title}</h1>
-        <p style={{ margin: "0 0 24px", font: "500 15px 'Hanken Grotesk'", color: "#6B6B70" }}>{subtitle}</p>
+        <h1 style={{ margin: "16px 0 6px", font: "900 34px var(--font-archivo)", letterSpacing: "-.025em" }}>{title}</h1>
+        <p style={{ margin: "0 0 24px", font: "500 15px var(--font-hanken)", color: "#6B6B70" }}>{subtitle}</p>
 
         {moverNote && (
-          <div style={{ marginBottom: 20, padding: 14, borderRadius: 12, background: "#fff", border: "1.5px solid rgba(0,0,0,.08)", font: "600 13px 'Hanken Grotesk'", color: "#6B6B70" }}>
+          <div style={{ marginBottom: 20, padding: 14, borderRadius: 12, background: "#fff", border: "1.5px solid rgba(0,0,0,.08)", font: "600 13px var(--font-hanken)", color: "#6B6B70" }}>
             {moverNote}
           </div>
         )}
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 14, borderRadius: 12, background: "#fff0f0", color: "#b00020", font: "600 14px 'Hanken Grotesk'" }}>
+          <div style={{ marginBottom: 16, padding: 14, borderRadius: 12, background: "#fff0f0", color: "#b00020", font: "600 14px var(--font-hanken)" }}>
             {error}
           </div>
         )}
         {success && (
-          <div style={{ marginBottom: 16, padding: 14, borderRadius: 12, background: "rgba(31,107,31,.08)", color: "#1f6b1f", font: "600 14px 'Hanken Grotesk'" }}>
+          <div style={{ marginBottom: 16, padding: 14, borderRadius: 12, background: "rgba(31,107,31,.08)", color: "#1f6b1f", font: "600 14px var(--font-hanken)" }}>
             {success}
           </div>
         )}
@@ -262,12 +262,12 @@ export function AccountProfileForm({
               <div className={styles.photoRow} style={{ display: "flex", gap: 16, alignItems: "center" }}>
                 <UserAvatar name={displayName} imageUrl={avatarPreview} size={72} />
                 <div>
-                  <div style={{ font: "700 15px 'Hanken Grotesk'" }}>{displayName}</div>
-                  <div style={{ font: "600 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 4 }}>{user?.email}</div>
+                  <div style={{ font: "700 15px var(--font-hanken)" }}>{displayName}</div>
+                  <div style={{ font: "600 13px var(--font-hanken)", color: "#6B6B70", marginTop: 4 }}>{user?.email}</div>
                   <button
                     type="button"
                     onClick={() => avatarInputRef.current?.click()}
-                    style={{ marginTop: 10, height: 38, padding: "0 14px", borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", background: "#fff", font: "700 13px 'Hanken Grotesk'", cursor: "pointer" }}
+                    style={{ marginTop: 10, height: 38, padding: "0 14px", borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", background: "#fff", font: "700 13px var(--font-hanken)", cursor: "pointer" }}
                   >
                     {avatarPreview ? "Change photo" : "Upload photo"}
                   </button>
@@ -293,10 +293,10 @@ export function AccountProfileForm({
               </div>
               <div style={{ marginTop: 12 }}>
                 <FieldLabel>Email</FieldLabel>
-                <div style={{ height: 52, borderRadius: 12, border: "1.5px solid rgba(0,0,0,.1)", background: "#F5F4EF", display: "flex", alignItems: "center", padding: "0 14px", font: "600 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
+                <div style={{ height: 52, borderRadius: 12, border: "1.5px solid rgba(0,0,0,.1)", background: "#F5F4EF", display: "flex", alignItems: "center", padding: "0 14px", font: "600 14px var(--font-hanken)", color: "#6B6B70" }}>
                   {user?.email ?? "—"}
                 </div>
-                <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#8A8A90", marginTop: 6 }}>Email cannot be changed here.</div>
+                <div style={{ font: "500 12px var(--font-hanken)", color: "#8A8A90", marginTop: 6 }}>Email cannot be changed here.</div>
               </div>
             </section>
 
@@ -351,7 +351,7 @@ export function AccountProfileForm({
                 borderRadius: 12,
                 border: "none",
                 background: busy ? "rgba(0,0,0,.12)" : "var(--accent)",
-                font: "800 16px 'Archivo'",
+                font: "800 16px var(--font-archivo)",
                 color: "#0E0E10",
                 cursor: busy ? "wait" : "pointer",
               }}
@@ -367,7 +367,7 @@ export function AccountProfileForm({
 
 function SectionTitle({ title }: { title: string }) {
   return (
-    <div style={{ font: "800 16px 'Archivo'", marginBottom: 14 }}>{title}</div>
+    <div style={{ font: "800 16px var(--font-archivo)", marginBottom: 14 }}>{title}</div>
   );
 }
 
@@ -390,7 +390,7 @@ function ToggleRow({ label, active, onToggle }: { label: string; active: boolean
         textAlign: "left",
       }}
     >
-      <span style={{ font: "600 14px 'Hanken Grotesk'" }}>{label}</span>
+      <span style={{ font: "600 14px var(--font-hanken)" }}>{label}</span>
       <span
         style={{
           width: 44,

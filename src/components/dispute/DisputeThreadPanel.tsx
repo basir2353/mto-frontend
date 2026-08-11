@@ -58,8 +58,8 @@ export function DisputeThreadPanel({
     >
       {!fillHeight && (
         <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(0,0,0,.08)" }}>
-          <div style={{ font: "800 14px 'Archivo'" }}>Dispute room</div>
-          <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 4 }}>
+          <div style={{ font: "800 14px var(--font-archivo)" }}>Dispute room</div>
+          <div style={{ font: "500 12px var(--font-hanken)", color: "#6B6B70", marginTop: 4 }}>
             Send text, photos, or voice messages. Customer, admin, and mover are all here.
           </div>
         </div>
@@ -78,7 +78,7 @@ export function DisputeThreadPanel({
         }}
       >
         {messages.length === 0 && (
-          <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70" }}>
+          <div style={{ font: "500 13px var(--font-hanken)", color: "#6B6B70" }}>
             Dispute opened. Share photos, voice notes, or text here.
           </div>
         )}
@@ -92,7 +92,7 @@ export function DisputeThreadPanel({
                 padding: "8px 12px",
                 borderRadius: 10,
                 background: "#f5f4ef",
-                font: "600 12px/1.45 'Hanken Grotesk'",
+                font: "600 12px/1.45 var(--font-hanken)",
                 color: "#5a5a60",
                 textAlign: "center",
               }}
@@ -112,7 +112,7 @@ export function DisputeThreadPanel({
             >
               <div
                 style={{
-                  font: "700 11px 'Hanken Grotesk'",
+                  font: "700 11px var(--font-hanken)",
                   color: "#8A8A90",
                   textAlign: m.senderId === myUserId ? "right" : "left",
                 }}

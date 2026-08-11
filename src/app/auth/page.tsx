@@ -328,16 +328,16 @@ function AuthPageInner() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              font: "900 19px 'Archivo'",
+              font: "900 19px var(--font-archivo)",
               color: "#0E0E10",
             }}
           >
             M
           </div>
-          <span style={{ font: "800 21px 'Archivo'", letterSpacing: "-.02em" }}>MoveThisOut</span>
+          <span style={{ font: "800 21px var(--font-archivo)", letterSpacing: "-.02em" }}>MoveThisOut</span>
         </Link>
         <div className="mto-auth-brand-copy" style={{ marginTop: "auto", position: "relative", zIndex: 2 }}>
-          <h2 style={{ margin: "0 0 16px", font: "900 44px/1.02 'Archivo'", letterSpacing: "-.03em" }}>
+          <h2 style={{ margin: "0 0 16px", font: "900 44px/1.02 var(--font-archivo)", letterSpacing: "-.03em" }}>
             Move anything.
             <br />
             Right now.
@@ -345,7 +345,7 @@ function AuthPageInner() {
           <p
             style={{
               margin: "0 0 28px",
-              font: "400 16px/1.55 'Hanken Grotesk'",
+              font: "400 16px/1.55 var(--font-hanken)",
               color: "rgba(255,255,255,.62)",
               maxWidth: 400,
             }}
@@ -380,7 +380,7 @@ function AuthPageInner() {
                 borderRadius: 10,
                 background: "#fff0f0",
                 color: "#b00020",
-                font: "600 13px 'Hanken Grotesk'",
+                font: "600 13px var(--font-hanken)",
               }}
             >
               {apiError}
@@ -413,7 +413,7 @@ function AuthPageInner() {
                       <span
                         onClick={() => setScreen("forgot")}
                         style={{
-                          font: "600 12px 'Hanken Grotesk'",
+                          font: "600 12px var(--font-hanken)",
                           color: "#0E0E10",
                           textDecoration: "underline",
                           cursor: "pointer",
@@ -438,7 +438,7 @@ function AuthPageInner() {
                 style={{
                   margin: "24px 0 0",
                   textAlign: "center",
-                  font: "500 14px 'Hanken Grotesk'",
+                  font: "500 14px var(--font-hanken)",
                   color: "#6B6B70",
                 }}
               >
@@ -493,7 +493,7 @@ function AuthPageInner() {
                 style={{
                   margin: "16px 0 0",
                   textAlign: "center",
-                  font: "400 12px/1.5 'Hanken Grotesk'",
+                  font: "400 12px/1.5 var(--font-hanken)",
                   color: "#9a9aa0",
                 }}
               >
@@ -511,7 +511,7 @@ function AuthPageInner() {
                 style={{
                   margin: "16px 0 0",
                   textAlign: "center",
-                  font: "500 14px 'Hanken Grotesk'",
+                  font: "500 14px var(--font-hanken)",
                   color: "#6B6B70",
                 }}
               >
@@ -540,7 +540,7 @@ function AuthPageInner() {
                 <AppIcon name="mail" size={28} color="var(--accent)" />
               </div>
               <h1 style={heading}>Verify your email</h1>
-              <p style={{ margin: "0 0 28px", font: "400 15px/1.5 'Hanken Grotesk'", color: "#6B6B70" }}>
+              <p style={{ margin: "0 0 28px", font: "400 15px/1.5 var(--font-hanken)", color: "#6B6B70" }}>
                 Paste the verification token from your email to finish setting up your account.
               </p>
               <TextInput
@@ -555,7 +555,7 @@ function AuthPageInner() {
               >
                 {busy ? "Verifying…" : "Verify & continue →"}
               </div>
-              <p style={{ margin: "18px 0 0", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
+              <p style={{ margin: "18px 0 0", font: "500 14px var(--font-hanken)", color: "#6B6B70" }}>
                 <span onClick={goSignup} style={linkText}>
                   Change email
                 </span>
@@ -583,7 +583,7 @@ function AuthPageInner() {
                 style={{
                   margin: "20px 0 0",
                   textAlign: "center",
-                  font: "500 14px 'Hanken Grotesk'",
+                  font: "500 14px var(--font-hanken)",
                   color: "#6B6B70",
                 }}
               >
@@ -629,7 +629,7 @@ function AuthPageInner() {
                 style={{
                   margin: "20px 0 0",
                   textAlign: "center",
-                  font: "500 14px 'Hanken Grotesk'",
+                  font: "500 14px var(--font-hanken)",
                   color: "#6B6B70",
                 }}
               >
@@ -668,7 +668,7 @@ function AuthPageInner() {
                 </div>
               </div>
               <h1 style={heading}>You&apos;re all set, {verifiedName}</h1>
-              <p style={{ margin: "0 0 28px", font: "400 15px/1.5 'Hanken Grotesk'", color: "#6B6B70" }}>
+              <p style={{ margin: "0 0 28px", font: "400 15px/1.5 var(--font-hanken)", color: "#6B6B70" }}>
                 Your account is ready. Continue to your profile or start a quote from the home page.
               </p>
               <Link
@@ -681,7 +681,7 @@ function AuthPageInner() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  font: "800 16px 'Archivo'",
+                  font: "800 16px var(--font-archivo)",
                   textDecoration: "none",
                 }}
               >
@@ -697,17 +697,17 @@ function AuthPageInner() {
 
 const heading: React.CSSProperties = {
   margin: "0 0 6px",
-  font: "800 32px 'Archivo'",
+  font: "800 32px var(--font-archivo)",
   letterSpacing: "-.025em",
 };
 const sub: React.CSSProperties = {
   margin: "0 0 28px",
-  font: "400 15px 'Hanken Grotesk'",
+  font: "400 15px var(--font-hanken)",
   color: "#6B6B70",
 };
 const sub2: React.CSSProperties = {
   margin: "0 0 22px",
-  font: "400 15px 'Hanken Grotesk'",
+  font: "400 15px var(--font-hanken)",
   color: "#6B6B70",
 };
 
@@ -721,7 +721,7 @@ const primaryBtn: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  font: "800 16px 'Archivo'",
+  font: "800 16px var(--font-archivo)",
   color: "#0E0E10",
   cursor: "pointer",
 };

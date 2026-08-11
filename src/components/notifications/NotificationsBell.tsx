@@ -162,7 +162,7 @@ export function NotificationsBell({
           background: dark ? "rgba(255,255,255,.08)" : "#fff",
           color: dark ? "#fff" : "#0E0E10",
           cursor: "pointer",
-          font: "700 16px 'Hanken Grotesk'",
+          font: "700 16px var(--font-hanken)",
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
@@ -185,7 +185,7 @@ export function NotificationsBell({
               background: dark ? "var(--accent)" : "#0E0E10",
               color: dark ? "#0E0E10" : "#fff",
               border: dark ? "none" : "1.5px solid #fff",
-              font: "800 10px 'Archivo'",
+              font: "800 10px var(--font-archivo)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -235,9 +235,9 @@ export function NotificationsBell({
           >
             <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(0,0,0,.08)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <b style={{ font: "800 16px 'Archivo'" }}>Notifications</b>
+                <b style={{ font: "800 16px var(--font-archivo)" }}>Notifications</b>
                 {unread > 0 && (
-                  <button type="button" onClick={() => void markAll()} style={{ border: "none", background: "transparent", font: "700 12px 'Hanken Grotesk'", color: "#6B6B70", cursor: "pointer" }}>
+                  <button type="button" onClick={() => void markAll()} style={{ border: "none", background: "transparent", font: "700 12px var(--font-hanken)", color: "#6B6B70", cursor: "pointer" }}>
                     Mark all read
                   </button>
                 )}
@@ -254,7 +254,7 @@ export function NotificationsBell({
                       borderRadius: 999,
                       border: "none",
                       background: "var(--accent)",
-                      font: "700 11px 'Hanken Grotesk'",
+                      font: "700 11px var(--font-hanken)",
                       cursor: pushPermission === "denied" ? "not-allowed" : "pointer",
                       opacity: pushPermission === "denied" ? 0.6 : 1,
                     }}
@@ -277,7 +277,7 @@ export function NotificationsBell({
                       border: filter === f ? "none" : "1px solid rgba(0,0,0,.12)",
                       background: filter === f ? "#0E0E10" : "#fff",
                       color: filter === f ? "#fff" : "#0E0E10",
-                      font: "700 11px 'Hanken Grotesk'",
+                      font: "700 11px var(--font-hanken)",
                       cursor: "pointer",
                       textTransform: "capitalize",
                     }}
@@ -292,7 +292,7 @@ export function NotificationsBell({
               {loading && items.length === 0 ? (
                 <BlockLoader label="Loading alerts…" minHeight={180} />
               ) : visible.length === 0 ? (
-                <div style={{ padding: 24, textAlign: "center", font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>
+                <div style={{ padding: 24, textAlign: "center", font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>
                   {filter === "unread" ? "All caught up!" : "No notifications yet"}
                 </div>
               ) : (
@@ -315,21 +315,21 @@ export function NotificationsBell({
                       <span style={{ fontSize: 18, lineHeight: 1 }}>{typeIcon(n.type)}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
-                          <div style={{ font: "700 14px 'Hanken Grotesk'" }}>{n.title}</div>
-                          <span style={{ font: "700 10px 'Hanken Grotesk'", textTransform: "uppercase", color: "#8A8A90", flex: "none" }}>
+                          <div style={{ font: "700 14px var(--font-hanken)" }}>{n.title}</div>
+                          <span style={{ font: "700 10px var(--font-hanken)", textTransform: "uppercase", color: "#8A8A90", flex: "none" }}>
                             {typeLabel(n.type)}
                           </span>
                         </div>
-                        <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 4 }}>{n.body}</div>
+                        <div style={{ font: "500 13px var(--font-hanken)", color: "#6B6B70", marginTop: 4 }}>{n.body}</div>
                         {n.metadata && Object.keys(n.metadata).length > 0 && (
-                          <div style={{ font: "500 11px 'Hanken Grotesk'", color: "#9a9aa0", marginTop: 6 }}>
+                          <div style={{ font: "500 11px var(--font-hanken)", color: "#9a9aa0", marginTop: 6 }}>
                             {Object.entries(n.metadata)
                               .slice(0, 3)
                               .map(([k, v]) => `${k}: ${String(v)}`)
                               .join(" · ")}
                           </div>
                         )}
-                        <div style={{ font: "500 11px 'Hanken Grotesk'", color: "#9a9aa0", marginTop: 6 }}>
+                        <div style={{ font: "500 11px var(--font-hanken)", color: "#9a9aa0", marginTop: 6 }}>
                           {new Date(n.createdAt).toLocaleString()}
                         </div>
                       </div>
@@ -363,9 +363,9 @@ export function NotificationsBell({
                   Prev
                 </button>
 
-                <div style={{ font: "700 12px 'Hanken Grotesk'", color: "#6B6B70", textAlign: "center" }}>
+                <div style={{ font: "700 12px var(--font-hanken)", color: "#6B6B70", textAlign: "center" }}>
                   Page {currentPage} of {totalPages}
-                  <div style={{ font: "500 11px 'Hanken Grotesk'", color: "#9a9aa0", marginTop: 2 }}>
+                  <div style={{ font: "500 11px var(--font-hanken)", color: "#9a9aa0", marginTop: 2 }}>
                     {visible.length} total
                   </div>
                 </div>
@@ -397,7 +397,7 @@ function pagerBtn(disabled: boolean): React.CSSProperties {
     border: "1.5px solid rgba(0,0,0,.12)",
     background: disabled ? "rgba(0,0,0,.04)" : "#fff",
     color: disabled ? "#c0c0c4" : "#0E0E10",
-    font: "700 12px 'Hanken Grotesk'",
+    font: "700 12px var(--font-hanken)",
     cursor: disabled ? "not-allowed" : "pointer",
     display: "inline-flex",
     alignItems: "center",

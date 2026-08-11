@@ -74,17 +74,17 @@ export default function AppPromptPopup() {
               color: "#0E0E10",
               display: "grid",
               placeItems: "center",
-              font: "900 20px Archivo",
+              font: "900 20px var(--font-archivo)",
               flex: "none",
             }}
           >
             M
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ font: "800 16px/1.2 Archivo", letterSpacing: "-.02em" }}>
+            <div style={{ font: "800 16px/1.2 var(--font-archivo)", letterSpacing: "-.02em" }}>
               Use the MoveThisOut app
             </div>
-            <p style={{ margin: "6px 0 0", font: "500 13px/1.4 Hanken Grotesk", color: "rgba(255,255,255,.62)" }}>
+            <p style={{ margin: "6px 0 0", font: "500 13px/1.4 var(--font-hanken)", color: "rgba(255,255,255,.62)" }}>
               Start a move with locations first. Account details only when you book.
             </p>
           </div>
@@ -131,7 +131,7 @@ const primaryBtn: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  font: "800 13px Archivo",
+  font: "800 13px var(--font-archivo)",
   textDecoration: "none",
   padding: "0 12px",
 };
@@ -146,7 +146,7 @@ const secondaryBtn: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  font: "800 13px Archivo",
+  font: "800 13px var(--font-archivo)",
   textDecoration: "none",
   padding: "0 12px",
   cursor: "pointer",

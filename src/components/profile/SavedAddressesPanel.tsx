@@ -140,23 +140,23 @@ export function SavedAddressesPanel() {
 
   return (
     <div className={styles.panel} style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "22px 24px" }}>
-      <h2 style={{ margin: "0 0 6px", font: "800 22px 'Archivo'" }}>Saved addresses</h2>
-      <p style={{ margin: "0 0 18px", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
+      <h2 style={{ margin: "0 0 6px", font: "800 22px var(--font-archivo)" }}>Saved addresses</h2>
+      <p style={{ margin: "0 0 18px", font: "500 14px var(--font-hanken)", color: "#6B6B70" }}>
         Store pickup and drop-off locations with delivery instructions for faster booking.
       </p>
 
       {error && (
-        <div style={{ marginBottom: 14, padding: "10px 12px", borderRadius: 10, background: "rgba(168,68,42,.08)", color: "#a8442a", font: "600 13px 'Hanken Grotesk'" }}>
+        <div style={{ marginBottom: 14, padding: "10px 12px", borderRadius: 10, background: "rgba(168,68,42,.08)", color: "#a8442a", font: "600 13px var(--font-hanken)" }}>
           {error}
         </div>
       )}
 
       {loading ? (
-        <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>Loading…</div>
+        <div style={{ font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>Loading…</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
           {addresses.length === 0 ? (
-            <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>No saved addresses yet.</div>
+            <div style={{ font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>No saved addresses yet.</div>
           ) : (
             addresses.map((a) => (
               <div
@@ -173,16 +173,16 @@ export function SavedAddressesPanel() {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ font: "700 14px 'Hanken Grotesk'" }}>
+                  <div style={{ font: "700 14px var(--font-hanken)" }}>
                     {a.label} {a.isDefault ? <span style={{ color: "#1f6b1f" }}>· Default</span> : null}
                   </div>
-                  <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 4 }}>
+                  <div style={{ font: "500 13px var(--font-hanken)", color: "#6B6B70", marginTop: 4 }}>
                     {a.street}, {a.city}
                     {a.province ? `, ${a.province}` : ""}
                     {a.postalCode ? ` ${a.postalCode}` : ""}
                   </div>
                   {a.instructions && (
-                    <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#8A8A90", marginTop: 6, fontStyle: "italic" }}>
+                    <div style={{ font: "500 12px var(--font-hanken)", color: "#8A8A90", marginTop: 6, fontStyle: "italic" }}>
                       Note: {a.instructions}
                     </div>
                   )}
@@ -207,17 +207,17 @@ export function SavedAddressesPanel() {
       )}
 
       <form onSubmit={save} style={{ display: "grid", gap: 12, padding: "16px 18px", borderRadius: 12, background: "#fafaf8", border: "1.5px solid rgba(0,0,0,.08)" }}>
-        <div style={{ font: "800 15px 'Archivo'" }}>{editingId ? "Edit address" : "Add new address"}</div>
+        <div style={{ font: "800 15px var(--font-archivo)" }}>{editingId ? "Edit address" : "Add new address"}</div>
         <TextInput label="Label" value={form.label} onChange={(v) => setField("label", v)} placeholder="Home, Office, Storage unit…" />
         <TextInput label="Street address" value={form.street} onChange={(v) => setField("street", v)} placeholder="123 Main St, Unit 4B" />
         <div className={styles.cityRow} style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 12 }}>
           <TextInput label="City" value={form.city} onChange={(v) => setField("city", v)} placeholder="Toronto" />
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ font: "700 12px 'Hanken Grotesk'", color: "#3a3a40" }}>Province</span>
+            <span style={{ font: "700 12px var(--font-hanken)", color: "#3a3a40" }}>Province</span>
             <select
               value={form.province}
               onChange={(e) => setField("province", e.target.value)}
-              style={{ height: 44, borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", padding: "0 10px", font: "600 14px 'Hanken Grotesk'" }}
+              style={{ height: 44, borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", padding: "0 10px", font: "600 14px var(--font-hanken)" }}
             >
               {PROVINCES.map((p) => (
                 <option key={p} value={p}>
@@ -236,11 +236,11 @@ export function SavedAddressesPanel() {
           minHeight={72}
         />
         <div className={styles.actions} style={{ display: "flex", gap: 10 }}>
-          <button type="submit" disabled={busy} style={{ flex: 1, height: 44, borderRadius: 10, border: "none", background: "var(--accent)", font: "800 14px 'Archivo'", cursor: busy ? "wait" : "pointer" }}>
+          <button type="submit" disabled={busy} style={{ flex: 1, height: 44, borderRadius: 10, border: "none", background: "var(--accent)", font: "800 14px var(--font-archivo)", cursor: busy ? "wait" : "pointer" }}>
             {busy ? "Saving…" : editingId ? "Update address" : "Add address"}
           </button>
           {editingId && (
-            <button type="button" disabled={busy} onClick={cancelEdit} style={{ height: 44, padding: "0 16px", borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", background: "#fff", font: "700 13px 'Hanken Grotesk'", cursor: "pointer" }}>
+            <button type="button" disabled={busy} onClick={cancelEdit} style={{ height: 44, padding: "0 16px", borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", background: "#fff", font: "700 13px var(--font-hanken)", cursor: "pointer" }}>
               Cancel
             </button>
           )}
@@ -256,6 +256,6 @@ const chipBtn: React.CSSProperties = {
   borderRadius: 8,
   border: "1.5px solid rgba(0,0,0,.12)",
   background: "#fff",
-  font: "700 12px 'Hanken Grotesk'",
+  font: "700 12px var(--font-hanken)",
   cursor: "pointer",
 };

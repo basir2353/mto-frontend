@@ -26,7 +26,7 @@ export default function AboutPage() {
         <div style={{ maxWidth: 840 }}>
           <div
             style={{
-              font: "700 12px 'Hanken Grotesk'",
+              font: "700 12px var(--font-hanken)",
               letterSpacing: ".1em",
               color: "var(--accent)",
               textTransform: "uppercase",
@@ -35,10 +35,10 @@ export default function AboutPage() {
           >
             Our story
           </div>
-          <h1 className={styles.aboutHeroTitle} style={{ margin: "0 0 20px", font: "900 64px/1.0 'Archivo'", letterSpacing: "-.035em" }}>
+          <h1 className={styles.aboutHeroTitle} style={{ margin: "0 0 20px", font: "900 64px/1.0 var(--font-archivo)", letterSpacing: "-.035em" }}>
             Moving shouldn&apos;t mean renting a van or waiting a week.
           </h1>
-          <p className={styles.aboutHeroText} style={{ margin: 0, font: "400 19px/1.55 'Hanken Grotesk'", color: "rgba(255,255,255,.68)", maxWidth: 620 }}>
+          <p className={styles.aboutHeroText} style={{ margin: 0, font: "400 19px/1.55 var(--font-hanken)", color: "rgba(255,255,255,.68)", maxWidth: 620 }}>
             MoveThisOut connects people who need something moved with nearby drivers who already
             have the right vehicle. Fair prices, real people, right now.
           </p>
@@ -49,8 +49,8 @@ export default function AboutPage() {
       <div className={styles.aboutStats} style={{ background: "var(--accent)", color: "#0E0E10", padding: "30px 44px", display: "flex", gap: 64 }}>
         {stats.map(([n, l]) => (
           <div key={l}>
-            <div style={{ font: "900 34px 'Archivo'" }}>{n}</div>
-            <div style={{ font: "600 13px 'Hanken Grotesk'", opacity: 0.7 }}>{l}</div>
+            <div style={{ font: "900 34px var(--font-archivo)" }}>{n}</div>
+            <div style={{ font: "600 13px var(--font-hanken)", opacity: 0.7 }}>{l}</div>
           </div>
         ))}
       </div>
@@ -75,14 +75,14 @@ export default function AboutPage() {
           />
         </div>
         <div className={styles.aboutStoryCopy} style={{ width: 520, flex: "none" }}>
-          <h2 className={styles.sectionTitle} style={{ margin: "0 0 18px", font: "800 38px/1.05 'Archivo'", letterSpacing: "-.025em" }}>
+          <h2 className={styles.sectionTitle} style={{ margin: "0 0 18px", font: "800 38px/1.05 var(--font-archivo)", letterSpacing: "-.025em" }}>
             A marketplace, not a middleman
           </h2>
-          <p style={{ margin: "0 0 16px", font: "400 17px/1.65 'Hanken Grotesk'", color: "#3a3a40" }}>
+          <p style={{ margin: "0 0 16px", font: "400 17px/1.65 var(--font-hanken)", color: "#3a3a40" }}>
             We started MoveThisOut after one too many overpriced quotes and no-show movers. The
             idea was simple: let drivers compete for the job and let customers pick.
           </p>
-          <p style={{ margin: 0, font: "400 17px/1.65 'Hanken Grotesk'", color: "#6B6B70" }}>
+          <p style={{ margin: 0, font: "400 17px/1.65 var(--font-hanken)", color: "#6B6B70" }}>
             Today thousands of independent drivers earn on their own terms, and moving something
             big is as easy as ordering a ride.
           </p>
@@ -91,12 +91,12 @@ export default function AboutPage() {
 
       {/* VALUES */}
       <div id="values" className={styles.aboutValues} style={{ padding: "0 44px 70px" }}>
-        <h2 className={styles.sectionTitle} style={{ margin: "0 0 28px", font: "800 34px 'Archivo'", letterSpacing: "-.02em" }}>How we operate</h2>
+        <h2 className={styles.sectionTitle} style={{ margin: "0 0 28px", font: "800 34px var(--font-archivo)", letterSpacing: "-.02em" }}>How we operate</h2>
         <div className={styles.aboutValuesGrid} style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22 }}>
           {values.map(([title, body]) => (
             <div key={title} className={styles.aboutValueCard} style={{ border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 20, padding: 28, background: "#fff" }}>
-              <h3 style={{ margin: "0 0 8px", font: "800 21px 'Archivo'" }}>{title}</h3>
-              <p style={{ margin: 0, font: "400 15px/1.55 'Hanken Grotesk'", color: "#6B6B70" }}>{body}</p>
+              <h3 style={{ margin: "0 0 8px", font: "800 21px var(--font-archivo)" }}>{title}</h3>
+              <p style={{ margin: 0, font: "400 15px/1.55 var(--font-hanken)", color: "#6B6B70" }}>{body}</p>
             </div>
           ))}
         </div>
@@ -108,7 +108,7 @@ export default function AboutPage() {
           <div style={{ flex: 1 }}>
             <div
               style={{
-                font: "700 12px 'Hanken Grotesk'",
+                font: "700 12px var(--font-hanken)",
                 letterSpacing: ".1em",
                 color: "var(--accent)",
                 textTransform: "uppercase",
@@ -117,10 +117,10 @@ export default function AboutPage() {
             >
               Safety
             </div>
-            <h2 className={styles.sectionTitle} style={{ margin: "0 0 16px", font: "900 38px/1.05 'Archivo'", letterSpacing: "-.025em" }}>
+            <h2 className={styles.sectionTitle} style={{ margin: "0 0 16px", font: "900 38px/1.05 var(--font-archivo)", letterSpacing: "-.025em" }}>
               Vetted drivers. Covered moves. Real-time tracking.
             </h2>
-            <p style={{ margin: 0, font: "400 17px/1.6 'Hanken Grotesk'", color: "rgba(255,255,255,.68)", maxWidth: 440 }}>
+            <p style={{ margin: 0, font: "400 17px/1.6 var(--font-hanken)", color: "rgba(255,255,255,.68)", maxWidth: 440 }}>
               Every driver passes a background check and ID verification. Moves are tracked live
               and backed by in-trip coverage, with 24/7 support one tap away.
             </p>
@@ -133,7 +133,7 @@ export default function AboutPage() {
                   background: "rgba(255,255,255,.06)",
                   borderRadius: 14,
                   padding: "16px 18px",
-                  font: "600 15px 'Hanken Grotesk'",
+                  font: "600 15px var(--font-hanken)",
                   display: "flex",
                   gap: 12,
                   alignItems: "center",

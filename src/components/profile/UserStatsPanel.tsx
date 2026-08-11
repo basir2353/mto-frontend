@@ -48,7 +48,7 @@ export function UserStatsPanel() {
 
   if (loading) {
     return (
-      <div style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "22px 24px", font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>
+      <div style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "22px 24px", font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>
         Loading activity…
       </div>
     );
@@ -56,8 +56,8 @@ export function UserStatsPanel() {
 
   return (
     <div style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "22px 24px" }}>
-      <h2 style={{ margin: "0 0 6px", font: "800 22px 'Archivo'" }}>Your activity</h2>
-      <p style={{ margin: "0 0 18px", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
+      <h2 style={{ margin: "0 0 6px", font: "800 22px var(--font-archivo)" }}>Your activity</h2>
+      <p style={{ margin: "0 0 18px", font: "500 14px var(--font-hanken)", color: "#6B6B70" }}>
         Summary of your moves, requests, and account history on MoveThisOut.
       </p>
 
@@ -70,7 +70,7 @@ export function UserStatsPanel() {
       </div>
 
       {activity?.message && (
-        <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginBottom: 12, padding: "10px 12px", background: "#fafaf8", borderRadius: 10 }}>
+        <div style={{ font: "500 13px var(--font-hanken)", color: "#6B6B70", marginBottom: 12, padding: "10px 12px", background: "#fafaf8", borderRadius: 10 }}>
           {activity.message}
         </div>
       )}
@@ -88,7 +88,7 @@ export function UserStatsPanel() {
               border: filter === f ? "none" : "1px solid rgba(0,0,0,.12)",
               background: filter === f ? "#0E0E10" : "#fff",
               color: filter === f ? "#fff" : "#0E0E10",
-              font: "700 11px 'Hanken Grotesk'",
+              font: "700 11px var(--font-hanken)",
               cursor: "pointer",
               textTransform: "capitalize",
             }}
@@ -115,8 +115,8 @@ export function UserStatsPanel() {
             >
               <span style={{ fontSize: 18, lineHeight: 1, flex: "none" }}>{activityIcon(item.type)}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ font: "600 14px 'Hanken Grotesk'" }}>{item.description}</div>
-                <div style={{ display: "flex", gap: 10, marginTop: 4, font: "500 11px 'Hanken Grotesk'", color: "#9a9aa0" }}>
+                <div style={{ font: "600 14px var(--font-hanken)" }}>{item.description}</div>
+                <div style={{ display: "flex", gap: 10, marginTop: 4, font: "500 11px var(--font-hanken)", color: "#9a9aa0" }}>
                   <span style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{item.type.replace(/_/g, " ")}</span>
                   <span>{new Date(item.createdAt).toLocaleString()}</span>
                 </div>
@@ -125,7 +125,7 @@ export function UserStatsPanel() {
           ))}
         </div>
       ) : (
-        <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>
+        <div style={{ font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>
           {filter === "all" ? "No recent activity logged yet." : `No ${filter} activity yet.`}
         </div>
       )}
@@ -136,9 +136,9 @@ export function UserStatsPanel() {
 function StatCard({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
   return (
     <div style={{ border: "1.5px solid rgba(0,0,0,.08)", borderRadius: 12, padding: "14px 16px", background: "#fafaf8" }}>
-      <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".06em", textTransform: "uppercase", color: "#8A8A90" }}>{label}</div>
-      <div style={{ font: "800 26px 'Archivo'", marginTop: 6 }}>{value}</div>
-      {hint && <div style={{ font: "500 11px 'Hanken Grotesk'", color: "#9a9aa0", marginTop: 4 }}>{hint}</div>}
+      <div style={{ font: "700 11px var(--font-hanken)", letterSpacing: ".06em", textTransform: "uppercase", color: "#8A8A90" }}>{label}</div>
+      <div style={{ font: "800 26px var(--font-archivo)", marginTop: 6 }}>{value}</div>
+      {hint && <div style={{ font: "500 11px var(--font-hanken)", color: "#9a9aa0", marginTop: 4 }}>{hint}</div>}
     </div>
   );
 }

@@ -46,7 +46,7 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
           placeholder="Pickup location"
           height={52}
           containerStyle={{ padding: "0 15px", gap: 12 }}
-          inputStyle={{ font: "600 15px 'Hanken Grotesk'" }}
+          inputStyle={{ font: "600 15px var(--font-hanken)" }}
         />
         <PlaceAutocompleteInput
           dot={false}
@@ -56,11 +56,11 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
           placeholder="Drop-off location"
           height={52}
           containerStyle={{ padding: "0 15px", gap: 12 }}
-          inputStyle={{ font: "600 15px 'Hanken Grotesk'" }}
+          inputStyle={{ font: "600 15px var(--font-hanken)" }}
         />
       </div>
       {hasGoogleMaps && (
-        <p style={{ margin: "10px 0 0", font: "500 12px 'Hanken Grotesk'", color: "#8A8A90" }}>
+        <p style={{ margin: "10px 0 0", font: "500 12px var(--font-hanken)", color: "#8A8A90" }}>
           Start typing an address to see Google Maps suggestions
         </p>
       )}
@@ -85,7 +85,7 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          font: "800 16px 'Archivo'",
+          font: "800 16px var(--font-archivo)",
           color: "#0E0E10",
           textDecoration: "none",
         }}

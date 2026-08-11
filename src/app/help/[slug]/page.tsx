@@ -19,15 +19,15 @@ export default async function HelpArticlePage({
   return (
     <MarketingShell active="">
       <article style={{ padding: "64px 44px 96px", maxWidth: 720, margin: "0 auto" }}>
-        <Link href="/help" style={{ font: "700 13px 'Hanken Grotesk'", color: "#6B6B70", textDecoration: "none" }}>
+        <Link href="/help" style={{ font: "700 13px var(--font-hanken)", color: "#6B6B70", textDecoration: "none" }}>
           ← All help articles
         </Link>
-        <p style={{ margin: "24px 0 10px", font: "700 12px 'Hanken Grotesk'", letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8A90" }}>
+        <p style={{ margin: "24px 0 10px", font: "700 12px var(--font-hanken)", letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8A90" }}>
           {article.category}
         </p>
-        <h1 style={{ margin: "0 0 14px", font: "900 36px/1.1 'Archivo'", letterSpacing: "-.03em" }}>{article.title}</h1>
-        <p style={{ margin: "0 0 28px", font: "500 16px/1.5 'Hanken Grotesk'", color: "#6B6B70" }}>{article.summary}</p>
-        <div style={{ font: "400 16px/1.7 'Hanken Grotesk'", color: "#2a2a30", whiteSpace: "pre-wrap" }}>{article.body}</div>
+        <h1 style={{ margin: "0 0 14px", font: "900 36px/1.1 var(--font-archivo)", letterSpacing: "-.03em" }}>{article.title}</h1>
+        <p style={{ margin: "0 0 28px", font: "500 16px/1.5 var(--font-hanken)", color: "#6B6B70" }}>{article.summary}</p>
+        <div style={{ font: "400 16px/1.7 var(--font-hanken)", color: "#2a2a30", whiteSpace: "pre-wrap" }}>{article.body}</div>
       </article>
     </MarketingShell>
   );

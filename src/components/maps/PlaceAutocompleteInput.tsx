@@ -95,7 +95,7 @@ export default function PlaceAutocompleteInput({
         flex: 1,
         border: "none",
         outline: "none",
-        font: "600 15px 'Hanken Grotesk'",
+        font: "600 15px var(--font-hanken)",
         color: "#0E0E10",
         background: "transparent",
         ...inputStyle,

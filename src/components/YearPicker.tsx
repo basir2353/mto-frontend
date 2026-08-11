@@ -79,7 +79,7 @@ export function YearPicker({
           alignItems: "center",
           justifyContent: "space-between",
           cursor: "pointer",
-          font: value ? "700 15px 'Hanken Grotesk'" : "600 15px 'Hanken Grotesk'",
+          font: value ? "700 15px var(--font-hanken)" : "600 15px var(--font-hanken)",
           color: value ? "#0E0E10" : "#8A8A90",
         }}
       >
@@ -111,7 +111,7 @@ export function YearPicker({
             >
               <AppIcon name="chevronLeft" size={16} color={canPrev ? "#0E0E10" : "#c0c0c4"} />
             </button>
-            <div style={{ font: "800 14px 'Archivo'" }}>
+            <div style={{ font: "800 14px var(--font-archivo)" }}>
               {years[0]} – {years[years.length - 1]}
             </div>
             <button
@@ -140,7 +140,7 @@ export function YearPicker({
                     borderRadius: 10,
                     border: active ? "1.5px solid #0E0E10" : "1.5px solid rgba(0,0,0,.1)",
                     background: active ? "var(--accent)" : "#fff",
-                    font: active ? "800 14px 'Archivo'" : "700 14px 'Hanken Grotesk'",
+                    font: active ? "800 14px var(--font-archivo)" : "700 14px var(--font-hanken)",
                     color: "#0E0E10",
                     cursor: "pointer",
                   }}
@@ -154,7 +154,7 @@ export function YearPicker({
       )}
 
       {error ? (
-        <div style={{ marginTop: 6, font: "600 12px 'Hanken Grotesk'", color: "#a8442a" }}>{error}</div>
+        <div style={{ marginTop: 6, font: "600 12px var(--font-hanken)", color: "#a8442a" }}>{error}</div>
       ) : null}
     </div>
   );

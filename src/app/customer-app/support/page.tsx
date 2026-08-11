@@ -80,10 +80,10 @@ export default function CustomerSupportPage() {
             gap: 16,
           }}
         >
-          <Link href="/customer-app" style={{ color: "#fff", textDecoration: "none", font: "700 14px 'Hanken Grotesk'" }}>
+          <Link href="/customer-app" style={{ color: "#fff", textDecoration: "none", font: "700 14px var(--font-hanken)" }}>
             ← Back to app
           </Link>
-          <span style={{ marginLeft: "auto", font: "800 18px 'Archivo'" }}>Help & support</span>
+          <span style={{ marginLeft: "auto", font: "800 18px var(--font-archivo)" }}>Help & support</span>
         </div>
 
         <div
@@ -100,8 +100,8 @@ export default function CustomerSupportPage() {
             padding: "36px 40px calc(48px + env(safe-area-inset-bottom))",
           }}
         >
-          <h1 style={{ margin: "0 0 8px", font: "900 34px 'Archivo'", letterSpacing: "-.025em" }}>We&apos;re here to help</h1>
-          <p style={{ margin: "0 0 28px", font: "500 16px 'Hanken Grotesk'", color: "#6B6B70", maxWidth: 640 }}>
+          <h1 style={{ margin: "0 0 8px", font: "900 34px var(--font-archivo)", letterSpacing: "-.025em" }}>We&apos;re here to help</h1>
+          <p style={{ margin: "0 0 28px", font: "500 16px var(--font-hanken)", color: "#6B6B70", maxWidth: 640 }}>
             Guides for booking, payments, disputes, and cancellations. For urgent safety issues, email support@movethisout.com.
           </p>
 
@@ -114,17 +114,17 @@ export default function CustomerSupportPage() {
             ].map((card) => (
               <Link key={card.title} href={card.href} style={{ textDecoration: "none", color: "inherit" }}>
                 <div style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 14, padding: "18px 20px", height: "100%" }}>
-                  <div style={{ font: "800 16px 'Archivo'" }}>{card.title}</div>
-                  <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 6 }}>{card.desc}</div>
+                  <div style={{ font: "800 16px var(--font-archivo)" }}>{card.title}</div>
+                  <div style={{ font: "500 13px var(--font-hanken)", color: "#6B6B70", marginTop: 6 }}>{card.desc}</div>
                 </div>
               </Link>
             ))}
           </div>
 
           <section style={{ marginBottom: 32 }}>
-            <h2 style={{ margin: "0 0 14px", font: "800 22px 'Archivo'" }}>Dispute process</h2>
+            <h2 style={{ margin: "0 0 14px", font: "800 22px var(--font-archivo)" }}>Dispute process</h2>
             <div style={{ background: "#fff4df", border: "1.5px solid #e8c96a", borderRadius: 14, padding: "18px 20px" }}>
-              <ol style={{ margin: 0, paddingLeft: 20, font: "600 15px 'Hanken Grotesk'", lineHeight: 1.8, color: "#3a3a40" }}>
+              <ol style={{ margin: 0, paddingLeft: 20, font: "600 15px var(--font-hanken)", lineHeight: 1.8, color: "#3a3a40" }}>
                 {disputeSteps.map((step) => (
                   <li key={step}>{step}</li>
                 ))}
@@ -133,12 +133,12 @@ export default function CustomerSupportPage() {
           </section>
 
           <section>
-            <h2 style={{ margin: "0 0 14px", font: "800 22px 'Archivo'" }}>FAQ</h2>
+            <h2 style={{ margin: "0 0 14px", font: "800 22px var(--font-archivo)" }}>FAQ</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {faqs.map((f) => (
                 <details key={f.q} style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 14, padding: "14px 18px" }}>
-                  <summary style={{ font: "700 15px 'Hanken Grotesk'", cursor: "pointer" }}>{f.q}</summary>
-                  <p style={{ margin: "12px 0 0", font: "500 14px/1.55 'Hanken Grotesk'", color: "#6B6B70" }}>{f.a}</p>
+                  <summary style={{ font: "700 15px var(--font-hanken)", cursor: "pointer" }}>{f.q}</summary>
+                  <p style={{ margin: "12px 0 0", font: "500 14px/1.55 var(--font-hanken)", color: "#6B6B70" }}>{f.a}</p>
                 </details>
               ))}
             </div>

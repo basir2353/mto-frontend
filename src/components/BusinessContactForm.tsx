@@ -19,8 +19,8 @@ export default function BusinessContactForm() {
         <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}>
           <AppIcon name="check" size={22} color="#0E0E10" strokeWidth={3} />
         </div>
-        <div style={{ font: "800 18px 'Archivo'", color: "#fff" }}>Thanks — we&apos;ll be in touch</div>
-        <div style={{ font: "500 14px 'Hanken Grotesk'", color: "rgba(255,255,255,.6)" }}>
+        <div style={{ font: "800 18px var(--font-archivo)", color: "#fff" }}>Thanks — we&apos;ll be in touch</div>
+        <div style={{ font: "500 14px var(--font-hanken)", color: "rgba(255,255,255,.6)" }}>
           A specialist will reach out to {workEmail || "your inbox"} within a day.
         </div>
       </div>
@@ -33,7 +33,7 @@ export default function BusinessContactForm() {
     border: "1.5px solid rgba(255,255,255,.16)",
     borderRadius: 12,
     padding: "0 16px",
-    font: "600 14px 'Hanken Grotesk'",
+    font: "600 14px var(--font-hanken)",
     color: "#fff",
     background: "transparent",
     outline: "none",
@@ -61,7 +61,7 @@ export default function BusinessContactForm() {
       }}
       style={{ width: 480, flex: "none", background: "rgba(255,255,255,.04)", padding: 40, display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}
     >
-      {error && <div style={{ font: "600 13px 'Hanken Grotesk'", color: "#ff8080" }}>{error}</div>}
+      {error && <div style={{ font: "600 13px var(--font-hanken)", color: "#ff8080" }}>{error}</div>}
       <input required type="email" value={workEmail} onChange={(e) => setWorkEmail(e.target.value)} placeholder="Work email" style={inputStyle} />
       <input required value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company name" style={inputStyle} />
       <input value={movesPerMonth} onChange={(e) => setMovesPerMonth(e.target.value)} placeholder="Estimated moves / month" style={inputStyle} />
@@ -77,7 +77,7 @@ export default function BusinessContactForm() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          font: "800 16px 'Archivo'",
+          font: "800 16px var(--font-archivo)",
           marginTop: 4,
           cursor: submitting ? "wait" : "pointer",
           opacity: submitting ? 0.7 : 1,

@@ -4,7 +4,7 @@ import { CSSProperties } from "react";
 import { AppIcon } from "@/components/ui/Icons";
 
 const fieldLabelStyle: CSSProperties = {
-  font: "600 10px 'Hanken Grotesk'",
+  font: "600 10px var(--font-hanken)",
   letterSpacing: ".07em",
   textTransform: "uppercase",
   color: "#8A8A90",
@@ -22,7 +22,7 @@ const baseInputStyle: CSSProperties = {
   border: "1px solid rgba(0,0,0,.14)",
   borderRadius: 10,
   padding: "0 12px",
-  font: "600 13px 'Hanken Grotesk'",
+  font: "600 13px var(--font-hanken)",
   color: "#0E0E10",
   background: "#fff",
   outline: "none",
@@ -70,7 +70,7 @@ export function TextInput({
       {label ? <FieldLabel>{label}</FieldLabel> : null}
       {input}
       {error ? (
-        <div style={{ marginTop: 6, font: "600 12px 'Hanken Grotesk'", color: "#a8442a" }}>{error}</div>
+        <div style={{ marginTop: 6, font: "600 12px var(--font-hanken)", color: "#a8442a" }}>{error}</div>
       ) : null}
     </div>
   );
@@ -100,11 +100,11 @@ export function TextArea({
         border: "1.5px solid rgba(0,0,0,.14)",
         borderRadius: 12,
         padding: 16,
-        font: "500 14px/1.5 'Hanken Grotesk'",
+        font: "500 14px/1.5 var(--font-hanken)",
         color: "#3a3a40",
         resize: "vertical",
         outline: "none",
-        fontFamily: "'Hanken Grotesk', system-ui, sans-serif",
+        fontFamily: "var(--font-hanken), system-ui, sans-serif",
       }}
     />
   );
@@ -148,7 +148,7 @@ export function ChipToggle({
               border: active ? "1.5px solid var(--accent)" : "1.5px solid rgba(0,0,0,.14)",
               display: "inline-flex",
               alignItems: "center",
-              font: active ? "700 14px 'Hanken Grotesk'" : "600 14px 'Hanken Grotesk'",
+              font: active ? "700 14px var(--font-hanken)" : "600 14px var(--font-hanken)",
               color: active ? "#0E0E10" : "#3a3a40",
               cursor: "pointer",
             }}
@@ -185,7 +185,7 @@ export function Checkbox({
         gap: 12,
         alignItems: "flex-start",
         marginTop: 6,
-        font: "500 14px/1.45 'Hanken Grotesk'",
+        font: "500 14px/1.45 var(--font-hanken)",
         color: "#3a3a40",
         cursor: "pointer",
       }}
@@ -201,7 +201,7 @@ export function Checkbox({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          font: "900 12px 'Archivo'",
+          font: "900 12px var(--font-archivo)",
           color: "#0E0E10",
         }}
       >

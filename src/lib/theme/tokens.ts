@@ -21,8 +21,8 @@ export const colors = {
 } as const;
 
 export const fonts = {
-  display: 'Archivo',
-  body: 'Hanken Grotesk',
+  display: "var(--font-archivo), system-ui, sans-serif",
+  body: "var(--font-hanken), system-ui, sans-serif",
 } as const;
 
 export const radii = {

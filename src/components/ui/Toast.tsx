@@ -176,16 +176,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         color: "#0E0E10",
                         display: "grid",
                         placeItems: "center",
-                        font: "800 14px Archivo",
+                        font: "800 14px var(--font-archivo)",
                         flex: "none",
                       }}
                     >
                       {tone.icon}
                     </span>
                     <div style={{ flex: 1, minWidth: 0, paddingTop: 1 }}>
-                      <div style={{ font: "800 14px Archivo", color: "#0E0E10" }}>{item.title}</div>
+                      <div style={{ font: "800 14px var(--font-archivo)", color: "#0E0E10" }}>{item.title}</div>
                       {item.message && (
-                        <div style={{ font: "500 13px/1.4 'Hanken Grotesk'", color: "#6B6B70", marginTop: 4 }}>
+                        <div style={{ font: "500 13px/1.4 var(--font-hanken)", color: "#6B6B70", marginTop: 4 }}>
                           {item.message}
                         </div>
                       )}
@@ -199,7 +199,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         background: "transparent",
                         color: "#8A8A90",
                         cursor: "pointer",
-                        font: "700 18px 'Hanken Grotesk'",
+                        font: "700 18px var(--font-hanken)",
                         lineHeight: 1,
                         padding: 0,
                         width: 44,
@@ -273,18 +273,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         color: "#0E0E10",
                         display: "grid",
                         placeItems: "center",
-                        font: "900 20px Archivo",
+                        font: "900 20px var(--font-archivo)",
                         flex: "none",
                       }}
                     >
                       M
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div id="mto-confirm-title" style={{ font: "800 18px Archivo", color: "#0E0E10" }}>
+                      <div id="mto-confirm-title" style={{ font: "800 18px var(--font-archivo)", color: "#0E0E10" }}>
                         {confirmState.title}
                       </div>
                       {confirmState.message && (
-                        <div style={{ font: "500 14px/1.45 'Hanken Grotesk'", color: "#6B6B70", marginTop: 8 }}>
+                        <div style={{ font: "500 14px/1.45 var(--font-hanken)", color: "#6B6B70", marginTop: 8 }}>
                           {confirmState.message}
                         </div>
                       )}
@@ -331,7 +331,7 @@ function btnStyle(primary: boolean, danger = false): CSSProperties {
       border: "1.5px solid rgba(0,0,0,.16)",
       background: "#fff",
       color: "#0E0E10",
-      font: "700 14px 'Hanken Grotesk'",
+      font: "700 14px var(--font-hanken)",
       cursor: "pointer",
     };
   }
@@ -342,7 +342,7 @@ function btnStyle(primary: boolean, danger = false): CSSProperties {
     border: "none",
     background: danger ? "#a8442a" : "var(--accent)",
     color: danger ? "#fff" : "#0E0E10",
-    font: "800 15px Archivo",
+    font: "800 15px var(--font-archivo)",
     cursor: "pointer",
   };
 }

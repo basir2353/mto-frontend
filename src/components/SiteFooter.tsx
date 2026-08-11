@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { getAppUrls } from "@/lib/theme/apps";
 
 export default function SiteFooter() {
-  const appUrls = getAppUrls();
   return (
     <div className="mto-footer">
       <div className="mto-footer-top">
@@ -23,7 +21,7 @@ export default function SiteFooter() {
           links={[
             { label: "How it works", href: "/#how" },
             { label: "Vehicles", href: "/#vehicles" },
-            { label: "Get a quote", href: appUrls.customerApp },
+            { label: "Get a quote", href: "/auth#signup" },
             { label: "Business moves", href: "/business" },
           ]}
         />

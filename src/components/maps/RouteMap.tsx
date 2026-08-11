@@ -156,7 +156,7 @@ export default function RouteMap({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            font: "600 13px 'Hanken Grotesk'",
+            font: "600 13px var(--font-hanken)",
             color: "#6B6B70",
           }}
         >

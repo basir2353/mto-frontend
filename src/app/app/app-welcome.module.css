@@ -52,25 +52,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 900 28px/1 "Archivo", sans-serif;
+  font: 900 28px/1 var(--font-archivo), sans-serif;
 }
 
 .title {
   margin: 0;
-  font: 900 clamp(40px, 11vw, 56px)/0.95 "Archivo", sans-serif;
+  font: 900 clamp(40px, 11vw, 56px)/0.95 var(--font-archivo), sans-serif;
   letter-spacing: -0.04em;
 }
 
 .tagline {
   margin: 0;
-  font: 600 18px/1.35 "Hanken Grotesk", sans-serif;
+  font: 600 18px/1.35 var(--font-hanken), sans-serif;
   color: rgba(255, 255, 255, 0.72);
 }
 
 .support {
   margin: 0;
   max-width: 34ch;
-  font: 500 15px/1.5 "Hanken Grotesk", sans-serif;
+  font: 500 15px/1.5 var(--font-hanken), sans-serif;
   color: rgba(255, 255, 255, 0.55);
 }
 
@@ -132,7 +132,7 @@
 .primary strong,
 .secondary strong {
   display: block;
-  font: 800 17px/1.2 "Archivo", sans-serif;
+  font: 800 17px/1.2 var(--font-archivo), sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -140,7 +140,7 @@
 .secondary em {
   display: block;
   margin-top: 3px;
-  font: 500 13px/1.35 "Hanken Grotesk", sans-serif;
+  font: 500 13px/1.35 var(--font-hanken), sans-serif;
   font-style: normal;
   opacity: 0.72;
 }
@@ -148,7 +148,7 @@
 .signin {
   margin-top: 6px;
   text-align: center;
-  font: 700 14px/1.4 "Hanken Grotesk", sans-serif;
+  font: 700 14px/1.4 var(--font-hanken), sans-serif;
   color: rgba(255, 255, 255, 0.78);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -163,7 +163,7 @@
   gap: 14px;
   background: #0e0e10;
   color: rgba(255, 255, 255, 0.7);
-  font: 600 14px "Hanken Grotesk", sans-serif;
+  font: 600 14px var(--font-hanken), sans-serif;
 }
 
 .bootMark {
@@ -175,7 +175,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 900 26px/1 "Archivo", sans-serif;
+  font: 900 26px/1 var(--font-archivo), sans-serif;
 }
 
 @keyframes welcomeRise {

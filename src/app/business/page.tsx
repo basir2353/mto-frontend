@@ -31,7 +31,7 @@ export default function BusinessPage() {
               border: "1px solid rgba(255,255,255,.18)",
               padding: "7px 14px",
               borderRadius: 999,
-              font: "700 11px 'Hanken Grotesk'",
+              font: "700 11px var(--font-hanken)",
               letterSpacing: ".05em",
               marginBottom: 24,
             }}
@@ -39,10 +39,10 @@ export default function BusinessPage() {
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)" }} />
             MOVETHISOUT FOR BUSINESS
           </div>
-          <h1 className={styles.businessHeroTitle} style={{ margin: "0 0 20px", font: "900 60px/0.98 'Archivo'", letterSpacing: "-.035em" }}>
+          <h1 className={styles.businessHeroTitle} style={{ margin: "0 0 20px", font: "900 60px/0.98 var(--font-archivo)", letterSpacing: "-.035em" }}>
             Moving, handled for your whole team.
           </h1>
-          <p style={{ margin: "0 0 32px", font: "400 18px/1.5 'Hanken Grotesk'", color: "rgba(255,255,255,.68)", maxWidth: 480 }}>
+          <p style={{ margin: "0 0 32px", font: "400 18px/1.5 var(--font-hanken)", color: "rgba(255,255,255,.68)", maxWidth: 480 }}>
             On-demand drivers for deliveries, store restocks, office shuffles and marketplace
             fulfilment — booked from one dashboard, billed on one invoice.
           </p>
@@ -57,7 +57,7 @@ export default function BusinessPage() {
                 color: "#0E0E10",
                 display: "inline-flex",
                 alignItems: "center",
-                font: "800 16px 'Archivo'",
+                font: "800 16px var(--font-archivo)",
                 textDecoration: "none",
               }}
             >
@@ -73,7 +73,7 @@ export default function BusinessPage() {
                 color: "#fff",
                 display: "inline-flex",
                 alignItems: "center",
-                font: "700 16px 'Hanken Grotesk'",
+                font: "700 16px var(--font-hanken)",
                 textDecoration: "none",
               }}
             >
@@ -110,16 +110,16 @@ export default function BusinessPage() {
               boxShadow: "0 18px 40px rgba(0,0,0,.3)",
             }}
           >
-            <div style={{ font: "700 10px 'Hanken Grotesk'", letterSpacing: ".08em", color: "#6B6B70" }}>THIS MONTH</div>
-            <div className={styles.businessHeroStatValue} style={{ font: "900 22px 'Archivo'", color: "#0E0E10" }}>142 moves · 1 invoice</div>
+            <div style={{ font: "700 10px var(--font-hanken)", letterSpacing: ".08em", color: "#6B6B70" }}>THIS MONTH</div>
+            <div className={styles.businessHeroStatValue} style={{ font: "900 22px var(--font-archivo)", color: "#0E0E10" }}>142 moves · 1 invoice</div>
           </div>
         </div>
       </div>
 
       {/* TRUST BAR */}
       <div className={styles.businessTrust} style={{ background: "var(--accent)", color: "#0E0E10", padding: "24px 44px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ font: "700 14px 'Hanken Grotesk'" }}>Trusted by local retailers, studios &amp; online sellers</span>
-        <div className={styles.businessTrustLogos} style={{ display: "flex", gap: 40, font: "800 20px 'Archivo'", opacity: 0.5 }}>
+        <span style={{ font: "700 14px var(--font-hanken)" }}>Trusted by local retailers, studios &amp; online sellers</span>
+        <div className={styles.businessTrustLogos} style={{ display: "flex", gap: 40, font: "800 20px var(--font-archivo)", opacity: 0.5 }}>
           <span>NORTHGOODS</span>
           <span>PARCEL&amp;CO</span>
           <span>Studio 9</span>
@@ -132,7 +132,7 @@ export default function BusinessPage() {
         <div style={{ maxWidth: 680, marginBottom: 44 }}>
           <div
             style={{
-              font: "700 12px 'Hanken Grotesk'",
+              font: "700 12px var(--font-hanken)",
               letterSpacing: ".1em",
               color: "#8A8A90",
               textTransform: "uppercase",
@@ -141,7 +141,7 @@ export default function BusinessPage() {
           >
             Why business teams use us
           </div>
-          <h2 className={styles.businessFeaturesHeading} style={{ margin: 0, font: "800 42px/1.05 'Archivo'", letterSpacing: "-.025em" }}>
+          <h2 className={styles.businessFeaturesHeading} style={{ margin: 0, font: "800 42px/1.05 var(--font-archivo)", letterSpacing: "-.025em" }}>
             Everything the consumer app does — built for volume.
           </h2>
         </div>
@@ -158,14 +158,14 @@ export default function BusinessPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  font: "900 18px 'Archivo'",
+                  font: "900 18px var(--font-archivo)",
                   marginBottom: 20,
                 }}
               >
                 {n}
               </div>
-              <h3 style={{ margin: "0 0 8px", font: "800 21px 'Archivo'" }}>{title}</h3>
-              <p style={{ margin: 0, font: "400 15px/1.5 'Hanken Grotesk'", color: "#6B6B70" }}>{body}</p>
+              <h3 style={{ margin: "0 0 8px", font: "800 21px var(--font-archivo)" }}>{title}</h3>
+              <p style={{ margin: 0, font: "400 15px/1.5 var(--font-hanken)", color: "#6B6B70" }}>{body}</p>
             </div>
           ))}
         </div>
@@ -173,7 +173,7 @@ export default function BusinessPage() {
 
       {/* USE CASES */}
       <div className={styles.businessCases} style={{ padding: "48px 44px 80px" }}>
-        <h2 className={styles.sectionTitle} style={{ margin: "0 0 28px", font: "800 34px 'Archivo'", letterSpacing: "-.02em" }}>
+        <h2 className={styles.sectionTitle} style={{ margin: "0 0 28px", font: "800 34px var(--font-archivo)", letterSpacing: "-.02em" }}>
           Built for how your business moves
         </h2>
         <div className={styles.businessCaseGrid} style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18 }}>
@@ -183,8 +183,8 @@ export default function BusinessPage() {
                 <ImageSlot placeholder={title} src={src} alt={title} />
               </div>
               <div style={{ padding: "16px 18px" }}>
-                <div style={{ font: "800 18px 'Archivo'" }}>{title}</div>
-                <div style={{ font: "500 13px 'Hanken Grotesk'", color: "#6B6B70", marginTop: 4 }}>{body}</div>
+                <div style={{ font: "800 18px var(--font-archivo)" }}>{title}</div>
+                <div style={{ font: "500 13px var(--font-hanken)", color: "#6B6B70", marginTop: 4 }}>{body}</div>
               </div>
             </div>
           ))}
@@ -197,7 +197,7 @@ export default function BusinessPage() {
           <div className={styles.businessContactCopy} style={{ flex: 1, padding: "56px 52px" }}>
             <div
               style={{
-                font: "700 12px 'Hanken Grotesk'",
+                font: "700 12px var(--font-hanken)",
                 letterSpacing: ".1em",
                 color: "var(--accent)",
                 textTransform: "uppercase",
@@ -206,10 +206,10 @@ export default function BusinessPage() {
             >
               Get started
             </div>
-            <h2 className={styles.businessContactHeading} style={{ margin: "0 0 16px", font: "900 40px/1.05 'Archivo'", letterSpacing: "-.025em" }}>
+            <h2 className={styles.businessContactHeading} style={{ margin: "0 0 16px", font: "900 40px/1.05 var(--font-archivo)", letterSpacing: "-.025em" }}>
               Tell us how your business moves.
             </h2>
-            <p style={{ margin: 0, font: "400 17px/1.6 'Hanken Grotesk'", color: "rgba(255,255,255,.68)", maxWidth: 400 }}>
+            <p style={{ margin: 0, font: "400 17px/1.6 var(--font-hanken)", color: "rgba(255,255,255,.68)", maxWidth: 400 }}>
               A specialist will set up your account, add your team and get you moving within a day.
             </p>
           </div>

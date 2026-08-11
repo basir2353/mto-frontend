@@ -24,7 +24,7 @@ export default function HelpPage() {
   return (
     <MarketingShell active="">
       <div className={styles.helpHero} style={{ background: "#0E0E10", color: "#fff", padding: "72px 44px 64px", textAlign: "center" }}>
-        <h1 className={styles.helpHeroTitle} style={{ margin: "0 0 24px", font: "900 48px/1.02 'Archivo'", letterSpacing: "-.03em" }}>
+        <h1 className={styles.helpHeroTitle} style={{ margin: "0 0 24px", font: "900 48px/1.02 var(--font-archivo)", letterSpacing: "-.03em" }}>
           How can we help?
         </h1>
         <div
@@ -51,13 +51,13 @@ export default function HelpPage() {
               flex: 1,
               border: "none",
               outline: "none",
-              font: "500 16px 'Hanken Grotesk'",
+              font: "500 16px var(--font-hanken)",
               color: "#0E0E10",
               background: "transparent",
             }}
           />
         </div>
-        <div className={styles.helpPopularTerms} style={{ marginTop: 18, font: "500 14px 'Hanken Grotesk'", color: "rgba(255,255,255,.55)" }}>
+        <div className={styles.helpPopularTerms} style={{ marginTop: 18, font: "500 14px var(--font-hanken)", color: "rgba(255,255,255,.55)" }}>
           Popular:{" "}
           {["refunds", "reschedule", "cash"].map((term, i) => (
             <span key={term}>
@@ -75,7 +75,7 @@ export default function HelpPage() {
       </div>
 
       <div className={styles.helpCategories} style={{ padding: "64px 44px 40px" }}>
-        <h2 style={{ margin: "0 0 28px", font: "800 30px 'Archivo'", letterSpacing: "-.02em" }}>Browse by topic</h2>
+        <h2 style={{ margin: "0 0 28px", font: "800 30px var(--font-archivo)", letterSpacing: "-.02em" }}>Browse by topic</h2>
         <div className={styles.helpCategoryGrid} style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
           {HELP_CATEGORIES.map((cat) => (
             <button
@@ -101,27 +101,27 @@ export default function HelpPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  font: "900 18px 'Archivo'",
+                  font: "900 18px var(--font-archivo)",
                   color: "#0E0E10",
                   marginBottom: 16,
                 }}
               >
                 {cat.id}
               </div>
-              <h3 style={{ margin: "0 0 6px", font: "800 19px 'Archivo'" }}>{cat.title}</h3>
-              <p style={{ margin: 0, font: "400 14px/1.5 'Hanken Grotesk'", color: "#6B6B70" }}>{cat.body}</p>
+              <h3 style={{ margin: "0 0 6px", font: "800 19px var(--font-archivo)" }}>{cat.title}</h3>
+              <p style={{ margin: 0, font: "400 14px/1.5 var(--font-hanken)", color: "#6B6B70" }}>{cat.body}</p>
             </button>
           ))}
         </div>
       </div>
 
       <div className={styles.helpArticles} style={{ padding: "24px 44px 40px" }}>
-        <h2 style={{ margin: "0 0 20px", font: "800 26px 'Archivo'", letterSpacing: "-.02em" }}>
+        <h2 style={{ margin: "0 0 20px", font: "800 26px var(--font-archivo)", letterSpacing: "-.02em" }}>
           {q ? `Results (${filtered.length})` : "Popular articles"}
         </h2>
         <div style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 18, overflow: "hidden" }}>
           {filtered.length === 0 && (
-            <div style={{ padding: "22px", font: "500 15px 'Hanken Grotesk'", color: "#6B6B70" }}>
+            <div style={{ padding: "22px", font: "500 15px var(--font-hanken)", color: "#6B6B70" }}>
               No articles match “{query}”. Try refunds, tracking, or cash.
             </div>
           )}
@@ -136,14 +136,14 @@ export default function HelpPage() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   padding: "18px 22px",
-                  font: "600 15px 'Hanken Grotesk'",
+                  font: "600 15px var(--font-hanken)",
                   color: "inherit",
                   textDecoration: "none",
                 }}
               >
                 <span>
                   <span style={{ display: "block" }}>{a.title}</span>
-                  <span style={{ display: "block", marginTop: 4, font: "500 13px 'Hanken Grotesk'", color: "#8A8A90" }}>{a.summary}</span>
+                  <span style={{ display: "block", marginTop: 4, font: "500 13px var(--font-hanken)", color: "#8A8A90" }}>{a.summary}</span>
                 </span>
                 <span style={{ color: "#9a9aa0", fontSize: 18 }}>›</span>
               </Link>
@@ -167,8 +167,8 @@ export default function HelpPage() {
           }}
         >
           <div>
-            <h2 style={{ margin: "0 0 8px", font: "900 28px 'Archivo'" }}>Still stuck?</h2>
-            <p style={{ margin: 0, font: "500 15px 'Hanken Grotesk'", color: "rgba(14,14,16,.7)" }}>
+            <h2 style={{ margin: "0 0 8px", font: "900 28px var(--font-archivo)" }}>Still stuck?</h2>
+            <p style={{ margin: 0, font: "500 15px var(--font-hanken)", color: "rgba(14,14,16,.7)" }}>
               Open a dispute from a completed booking, or email support@movethisout.com.
             </p>
           </div>

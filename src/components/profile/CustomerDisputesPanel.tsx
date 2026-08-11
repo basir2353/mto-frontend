@@ -72,11 +72,11 @@ export function CustomerDisputesPanel() {
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
 
-        <h2 style={{ margin: 0, font: "800 22px 'Archivo'" }}>Your disputes</h2>
+        <h2 style={{ margin: 0, font: "800 22px var(--font-archivo)" }}>Your disputes</h2>
 
         {openCount > 0 && (
 
-          <span style={{ font: "700 12px 'Hanken Grotesk'", color: "#a8442a", background: "rgba(168,68,42,.1)", padding: "4px 10px", borderRadius: 999 }}>
+          <span style={{ font: "700 12px var(--font-hanken)", color: "#a8442a", background: "rgba(168,68,42,.1)", padding: "4px 10px", borderRadius: 999 }}>
 
             {openCount} open
 
@@ -86,7 +86,7 @@ export function CustomerDisputesPanel() {
 
       </div>
 
-      <p style={{ margin: "0 0 18px", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
+      <p style={{ margin: "0 0 18px", font: "500 14px var(--font-hanken)", color: "#6B6B70" }}>
 
         Track dispute status and chat with admin and your mover in the dispute room. Need help? See the{" "}
 
@@ -102,13 +102,13 @@ export function CustomerDisputesPanel() {
 
 
 
-      {loading && <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>Loading disputes…</div>}
+      {loading && <div style={{ font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>Loading disputes…</div>}
 
 
 
       {!loading && disputes.length === 0 && (
 
-        <div style={{ padding: "20px 22px", borderRadius: 12, background: "#fafaf8", font: "600 14px 'Hanken Grotesk'", color: "#8A8A90" }}>
+        <div style={{ padding: "20px 22px", borderRadius: 12, background: "#fafaf8", font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>
 
           No disputes on file. If something goes wrong with a move, open Track or History and use Manage this move → Raise dispute.
 
@@ -126,7 +126,7 @@ export function CustomerDisputesPanel() {
 
             {d.route && (
 
-              <div style={{ font: "700 13px 'Hanken Grotesk'", color: "#6B6B70", marginBottom: 6 }}>{d.route}</div>
+              <div style={{ font: "700 13px var(--font-hanken)", color: "#6B6B70", marginBottom: 6 }}>{d.route}</div>
 
             )}
 

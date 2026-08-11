@@ -113,7 +113,7 @@ export default function DatePicker({
         border: "1px solid rgba(0,0,0,.14)",
         borderRadius: 10,
         padding: "0 12px",
-        font: "600 13px 'Hanken Grotesk'",
+        font: "600 13px var(--font-hanken)",
         color: value ? "#0E0E10" : "#8A8A90",
         background: "#fff",
         outline: "none",
@@ -135,7 +135,7 @@ export default function DatePicker({
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          font: "800 9px 'Archivo'",
+          font: "800 9px var(--font-archivo)",
           color: "#6B6B70",
           flex: "none",
         }}
@@ -180,7 +180,7 @@ export default function DatePicker({
         >
           <AppIcon name="chevronLeft" size={16} color="#0E0E10" />
         </button>
-        <div style={{ font: "800 15px 'Archivo'" }}>
+        <div style={{ font: "800 15px var(--font-archivo)" }}>
           {MONTHS[viewMonth.getMonth()]} {viewMonth.getFullYear()}
         </div>
         <button
@@ -194,7 +194,7 @@ export default function DatePicker({
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 4, marginBottom: 6 }}>
         {WEEKDAYS.map((d) => (
-          <div key={d} style={{ textAlign: "center", font: "700 11px 'Hanken Grotesk'", color: "#8A8A90", padding: "4px 0" }}>
+          <div key={d} style={{ textAlign: "center", font: "700 11px var(--font-hanken)", color: "#8A8A90", padding: "4px 0" }}>
             {d}
           </div>
         ))}
@@ -221,7 +221,7 @@ export default function DatePicker({
                 border: isToday && !isSelected ? "1.5px solid var(--accent)" : "1.5px solid transparent",
                 background: isSelected ? "var(--accent)" : disabled ? "transparent" : "#fff",
                 color: disabled ? "#c8c8cc" : "#0E0E10",
-                font: isSelected ? "800 13px 'Archivo'" : "600 13px 'Hanken Grotesk'",
+                font: isSelected ? "800 13px var(--font-archivo)" : "600 13px var(--font-hanken)",
                 cursor: disabled ? "not-allowed" : "pointer",
               }}
             >
@@ -238,7 +238,7 @@ export default function DatePicker({
       <div ref={rootRef} style={{ width: "100%" }}>
         {label && <FieldLabel>{label}</FieldLabel>}
         {value && (
-          <div style={{ font: "600 14px 'Hanken Grotesk'", color: "#0E0E10", marginBottom: 10 }}>
+          <div style={{ font: "600 14px var(--font-hanken)", color: "#0E0E10", marginBottom: 10 }}>
             Selected: {formatMoveDate(value)}
           </div>
         )}
@@ -272,6 +272,6 @@ const navBtn: React.CSSProperties = {
   border: "1.5px solid rgba(0,0,0,.12)",
   background: "#fff",
   cursor: "pointer",
-  font: "700 14px 'Hanken Grotesk'",
+  font: "700 14px var(--font-hanken)",
   color: "#0E0E10",
 };

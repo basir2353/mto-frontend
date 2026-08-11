@@ -50,7 +50,7 @@ export default function ImageSlot({
       ) : (
         <span
           style={{
-            font: "600 13px 'Hanken Grotesk'",
+            font: "600 13px var(--font-hanken)",
             color: "rgba(14,14,16,.4)",
           }}
         >

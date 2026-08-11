@@ -104,13 +104,13 @@ export function PhoneInput({
             borderRight: "1.5px solid rgba(0,0,0,.1)",
             background: "rgba(0,0,0,.02)",
             minWidth: 92,
-            font: "700 13px 'Hanken Grotesk'",
+            font: "700 13px var(--font-hanken)",
             color: "#0E0E10",
           }}
           aria-label="Canada country code"
         >
           <span>CA</span>
-          <span style={{ font: "800 15px 'Archivo'" }}>+1</span>
+          <span style={{ font: "800 15px var(--font-archivo)" }}>+1</span>
         </div>
 
         <input
@@ -130,16 +130,16 @@ export function PhoneInput({
             border: "none",
             outline: "none",
             padding: "0 14px",
-            font: "600 15px 'Hanken Grotesk'",
+            font: "600 15px var(--font-hanken)",
             color: "#0E0E10",
             background: "transparent",
           }}
         />
       </div>
       {error ? (
-        <div style={{ marginTop: 6, font: "600 12px 'Hanken Grotesk'", color: "#a8442a" }}>{error}</div>
+        <div style={{ marginTop: 6, font: "600 12px var(--font-hanken)", color: "#a8442a" }}>{error}</div>
       ) : (
-        <div style={{ marginTop: 6, font: "500 12px 'Hanken Grotesk'", color: "#8A8A90" }}>
+        <div style={{ marginTop: 6, font: "500 12px var(--font-hanken)", color: "#8A8A90" }}>
           Canadian mobile numbers only (+1)
         </div>
       )}

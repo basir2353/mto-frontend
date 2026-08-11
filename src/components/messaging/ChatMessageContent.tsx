@@ -31,7 +31,7 @@ export function ChatMessageContent({
           />
         </a>
         {message.content && message.content !== "Photo" && message.content !== "Dispute evidence photo" && (
-          <span style={{ font: "500 13px/1.4 'Hanken Grotesk'", color: textColor }}>{message.content}</span>
+          <span style={{ font: "500 13px/1.4 var(--font-hanken)", color: textColor }}>{message.content}</span>
         )}
       </div>
     );
@@ -41,12 +41,12 @@ export function ChatMessageContent({
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 200 }}>
         <audio controls src={mediaUrl(message.attachmentUrl)} style={{ width: "100%", maxWidth: 280 }} />
-        <span style={{ font: "500 12px 'Hanken Grotesk'", color: dark ? "rgba(255,255,255,.75)" : "#6B6B70" }}>
+        <span style={{ font: "500 12px var(--font-hanken)", color: dark ? "rgba(255,255,255,.75)" : "#6B6B70" }}>
           Voice message
         </span>
       </div>
     );
   }
 
-  return <span style={{ font: "500 13px/1.4 'Hanken Grotesk'", color: textColor }}>{message.content}</span>;
+  return <span style={{ font: "500 13px/1.4 var(--font-hanken)", color: textColor }}>{message.content}</span>;
 }

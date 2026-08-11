@@ -41,7 +41,7 @@ export default function TimeSelect({ value, onChange, label, height = 42 }: Time
         border: "1px solid rgba(0,0,0,.14)",
         borderRadius: 10,
         padding: "0 12px",
-        font: "600 13px 'Hanken Grotesk'",
+        font: "600 13px var(--font-hanken)",
         color: "#0E0E10",
         background: "#fff",
         outline: "none",
@@ -97,10 +97,10 @@ export default function TimeSelect({ value, onChange, label, height = 42 }: Time
               gap: 2,
             }}
           >
-            <span style={{ font: active ? "800 14px 'Archivo'" : "700 14px 'Hanken Grotesk'", color: "#0E0E10" }}>
+            <span style={{ font: active ? "800 14px var(--font-archivo)" : "700 14px var(--font-hanken)", color: "#0E0E10" }}>
               {option.label}
             </span>
-            <span style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>{option.sub}</span>
+            <span style={{ font: "500 12px var(--font-hanken)", color: "#6B6B70" }}>{option.sub}</span>
           </button>
         );
       })}
