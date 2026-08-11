@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { appUrls } from "@/lib/theme/apps";
+import { getAppUrls, sameAppOrigin } from "@/lib/theme/apps";
 
 type NavKey = "move" | "business" | "about" | "";
 
 export default function SiteNav({ active = "" }: { active?: NavKey }) {
   const [open, setOpen] = useState<"about" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const appUrls = getAppUrls();
+  const customerOnMarketing = sameAppOrigin(appUrls.customerApp, appUrls.marketing);
 
   const on = "#fff";
   const off = "rgba(255,255,255,.6)";
@@ -29,8 +31,12 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
     };
   }, [menuOpen]);
 
-  const loginHref = `${appUrls.customerApp}/auth#login`;
-  const signupHref = `${appUrls.customerApp}/customer-app`;
+  const loginHref = customerOnMarketing
+    ? "/auth#login"
+    : `${appUrls.customerApp}/auth#login`;
+  const signupHref = customerOnMarketing
+    ? "/customer-app"
+    : `${appUrls.customerApp}/customer-app`;
   const signupLabel = "Sign up";
 
   return (

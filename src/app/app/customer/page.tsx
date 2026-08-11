@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
-import { appUrls } from "@/lib/theme/apps";
+import { appUrls, sameAppOrigin } from "@/lib/theme/apps";
 
 export default function CustomerAppEntryRedirect() {
+  if (sameAppOrigin(appUrls.customerApp, appUrls.marketing)) {
+    redirect("/");
+  }
   redirect(appUrls.customerApp);
 }

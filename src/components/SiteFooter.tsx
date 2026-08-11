@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { appUrls } from "@/lib/theme/apps";
+import { getAppUrls } from "@/lib/theme/apps";
 
 export default function SiteFooter() {
+  const appUrls = getAppUrls();
   return (
     <div className="mto-footer">
       <div className="mto-footer-top">

@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import PlaceAutocompleteInput from "@/components/maps/PlaceAutocompleteInput";
 import { hasGoogleMaps } from "@/lib/env";
 import type { MapPlace } from "@/lib/maps";
-import { appUrls } from "@/lib/theme/apps";
+import { getAppUrls } from "@/lib/theme/apps";
 
 type QuoteWidgetProps = {
   onPickupPlaceChange?: (place: MapPlace) => void;
@@ -74,7 +74,8 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
           if (dropoffPlace.lat != null) params.set("destinationLat", String(dropoffPlace.lat));
           if (dropoffPlace.lng != null) params.set("destinationLng", String(dropoffPlace.lng));
           const q = params.toString();
-          return `${appUrls.customerApp}/customer-app${q ? `?${q}` : ""}`;
+          const urls = getAppUrls();
+          return `${urls.customerApp}/customer-app${q ? `?${q}` : ""}`;
         })()}
         style={{
           marginTop: 12,

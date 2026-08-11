@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { appUrls } from "@/lib/theme/apps";
+import { getAppUrls } from "@/lib/theme/apps";
 
 const DISMISS_KEY = "mto_app_prompt_dismissed";
 
@@ -28,6 +28,8 @@ export default function AppPromptPopup() {
   };
 
   if (!visible) return null;
+
+  const appUrls = getAppUrls();
 
   return (
     <div
