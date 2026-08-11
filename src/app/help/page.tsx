@@ -59,7 +59,7 @@ export default function HelpPage() {
         </div>
         <div className={styles.helpPopularTerms} style={{ marginTop: 18, font: "500 14px 'Hanken Grotesk'", color: "rgba(255,255,255,.55)" }}>
           Popular:{" "}
-          {["refunds", "reschedule", "driver"].map((term, i) => (
+          {["refunds", "reschedule", "cash"].map((term, i) => (
             <span key={term}>
               {i > 0 ? " · " : null}
               <button
@@ -67,7 +67,7 @@ export default function HelpPage() {
                 onClick={() => setQuery(term)}
                 style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", font: "inherit", padding: 0 }}
               >
-                {term === "reschedule" ? "reschedule a move" : term === "driver" ? "become a driver" : term}
+                {term === "reschedule" ? "reschedule a move" : term === "cash" ? "cash on site" : term}
               </button>
             </span>
           ))}
@@ -122,7 +122,7 @@ export default function HelpPage() {
         <div style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 18, overflow: "hidden" }}>
           {filtered.length === 0 && (
             <div style={{ padding: "22px", font: "500 15px 'Hanken Grotesk'", color: "#6B6B70" }}>
-              No articles match “{query}”. Try refunds, tracking, or driver.
+              No articles match “{query}”. Try refunds, tracking, or cash.
             </div>
           )}
           {filtered.map((a, i) => (

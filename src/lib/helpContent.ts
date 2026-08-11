@@ -8,11 +8,10 @@ export type HelpArticle = {
 
 export const HELP_CATEGORIES = [
   { id: "1", title: "Booking a move", body: "Requests, quotes, negotiating and scheduling." },
-  { id: "2", title: "Payments & refunds", body: "Charges, receipts, tips and disputes." },
+  { id: "2", title: "Payments & refunds", body: "Cash on site, receipts, tips and disputes." },
   { id: "3", title: "During your move", body: "Tracking, chat, delays and completion." },
-  { id: "4", title: "Driving & earnings", body: "Sign-up, verification, payouts and jobs." },
-  { id: "5", title: "Account & app", body: "Login, notifications, privacy and settings." },
-  { id: "6", title: "Safety & trust", body: "Coverage, reporting and verified movers." },
+  { id: "4", title: "Account & app", body: "Login, notifications, privacy and settings." },
+  { id: "5", title: "Safety & trust", body: "Coverage, reporting and verified movers." },
 ];
 
 export const HELP_ARTICLES: HelpArticle[] = [
@@ -21,7 +20,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: "How do I negotiate a quote with a driver?",
     summary: "Send a counteroffer and wait for the mover to accept or reply.",
     category: "Booking a move",
-    body: `After movers send quotes, open a quote and use Counteroffer to propose a different price. The mover can accept, decline, or counter again. Once you both agree, choose Cash on site or Wallet and confirm the booking.
+    body: `After movers send quotes, open a quote and use Counteroffer to propose a different price. The mover can accept, decline, or counter again. Once you both agree, confirm the booking and pay the mover in cash on site when the job finishes.
 
 Tips:
 • Be specific about stairs, elevators, and fragile items so quotes stay fair.
@@ -47,29 +46,18 @@ If the mover is significantly delayed:
     category: "Payments & refunds",
     body: `After a move is completed, open the booking and choose Dispute. Pick a category, describe what happened, and upload photos if you have them.
 
-Admins review disputes and may offer a partial or full wallet credit. Cash-on-site jobs are handled case-by-case because the cash already changed hands with the mover.
-
-Wallet payments and tips appear in Payments & tips with invoice downloads.`,
+Admins review disputes case-by-case. Because payment is cash on site, refunds are coordinated with support after both sides are reviewed.`,
   },
   {
-    slug: "driver-payouts",
-    title: "How soon do drivers get paid after a job?",
-    summary: "Wallet jobs credit earnings after customer payment; cash jobs stay with you on site.",
-    category: "Driving & earnings",
-    body: `If the customer chose Wallet, your mover wallet is credited (minus platform fee) when they pay after delivery.
+    slug: "cash-on-site",
+    title: "How does cash on site payment work?",
+    summary: "Pay the mover in cash when the job finishes; they confirm receipt in the app.",
+    category: "Payments & refunds",
+    body: `MoveThisOut bookings use cash on site. When your move is complete, pay the agreed amount to the mover in cash.
 
-If they chose Cash on site, you collect cash at the destination and tap “I received the cash” in the driver app so the job is marked paid.
+The mover taps “I received the cash” in the driver app so the job is marked paid. Keep a receipt or chat note if you want a record of the amount.
 
-Request a cash-out from the Wallet tab when you want to move available balance to your bank. Admins approve cash-out requests.`,
-  },
-  {
-    slug: "become-a-driver",
-    title: "How do I become a driver?",
-    summary: "Complete driver signup with vehicle, documents, and base location.",
-    category: "Driving & earnings",
-    body: `Go to Drive → Become a driver to open the driver site's signup flow. You’ll create an account, add vehicle details, upload licence / insurance / vehicle photos, take a selfie for face match, and set your Google Places home base.
-
-An admin verifies your profile before you can go online and receive jobs.`,
+Tips and disputes are handled through the booking and support if something goes wrong.`,
   },
   {
     slug: "reschedule-a-move",

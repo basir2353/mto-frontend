@@ -2,7 +2,7 @@ import SiteNav from "./SiteNav";
 import SiteFooter from "./SiteFooter";
 import AppPromptPopup from "./AppPromptPopup";
 
-type NavKey = "move" | "earn" | "business" | "about" | "";
+type NavKey = "move" | "business" | "about" | "";
 
 export default function MarketingShell({
   active,

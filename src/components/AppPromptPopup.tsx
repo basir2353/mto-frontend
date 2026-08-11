@@ -114,9 +114,9 @@ export default function AppPromptPopup() {
           <a href={`${appUrls.customerApp}/customer-app`} onClick={dismiss} style={primaryBtn}>
             Open customer app
           </a>
-          <a href={appUrls.driverWeb} onClick={dismiss} style={secondaryBtn}>
-            I want to drive
-          </a>
+          <button type="button" onClick={dismiss} style={secondaryBtn}>
+            Not now
+          </button>
         </div>
       </div>
     </div>
@@ -150,4 +150,5 @@ const secondaryBtn: React.CSSProperties = {
   font: "800 13px Archivo",
   textDecoration: "none",
   padding: "0 12px",
+  cursor: "pointer",
 };

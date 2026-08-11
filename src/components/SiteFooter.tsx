@@ -25,14 +25,6 @@ export default function SiteFooter() {
           ]}
         />
         <FooterCol
-          title="Drive"
-          links={[
-            { label: "Become a driver", href: `${appUrls.driverWeb}/signup` },
-            { label: "Driver login", href: `${appUrls.driverWeb}/login` },
-            { label: "Driver app", href: appUrls.driverApp },
-          ]}
-        />
-        <FooterCol
           title="Company"
           links={[
             { label: "About", href: "/about" },

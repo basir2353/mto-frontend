@@ -4,16 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { appUrls } from "@/lib/theme/apps";
 
-type NavKey = "move" | "earn" | "business" | "about" | "";
+type NavKey = "move" | "business" | "about" | "";
 
 export default function SiteNav({ active = "" }: { active?: NavKey }) {
-  const [open, setOpen] = useState<"earn" | "about" | null>(null);
+  const [open, setOpen] = useState<"about" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const on = "#fff";
   const off = "rgba(255,255,255,.6)";
   const cMove = active === "move" ? on : off;
-  const cEarn = active === "earn" ? on : off;
   const cBiz = active === "business" ? on : off;
   const cAbout = active === "about" ? on : off;
 
@@ -45,39 +44,6 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
         <Link href="/" style={{ textDecoration: "none", color: cMove }}>
           Move
         </Link>
-
-        <div
-          style={{ position: "relative" }}
-          onMouseEnter={() => setOpen("earn")}
-          onMouseLeave={() => setOpen(null)}
-        >
-          <a
-            href={`${appUrls.driverWeb}/signup`}
-            style={{
-              textDecoration: "none",
-              color: cEarn,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              cursor: "pointer",
-            }}
-          >
-            Earn <span style={{ fontSize: 8, opacity: 0.7 }}>▼</span>
-          </a>
-          {open === "earn" && (
-            <div style={{ position: "absolute", top: "100%", left: -18, paddingTop: 14 }}>
-              <div className="mto-nav-dropdown">
-                <a href={`${appUrls.driverWeb}/signup`} className="mto-nav-dropdown-link">
-                  <b>Become a driver</b>
-                  <span>Drive with your own vehicle</span>
-                </a>
-                <a href={`${appUrls.driverWeb}/login`} className="mto-nav-dropdown-link">
-                  Driver login
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
 
         <Link href="/business" style={{ textDecoration: "none", color: cBiz }}>
           Business
@@ -153,9 +119,6 @@ export default function SiteNav({ active = "" }: { active?: NavKey }) {
             <Link href="/" onClick={() => setMenuOpen(false)} className={active === "move" ? "is-active" : undefined}>
               Move
             </Link>
-            <a href={`${appUrls.driverWeb}/signup`} onClick={() => setMenuOpen(false)} className={active === "earn" ? "is-active" : undefined}>
-              Earn
-            </a>
             <Link href="/business" onClick={() => setMenuOpen(false)} className={active === "business" ? "is-active" : undefined}>
               Business
             </Link>
