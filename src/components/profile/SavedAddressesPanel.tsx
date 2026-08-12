@@ -140,64 +140,57 @@ export function SavedAddressesPanel() {
   const setField = (key: keyof FormState, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   return (
-    <div className={styles.panel} style={{ background: "#fff", border: "1.5px solid rgba(0,0,0,.1)", borderRadius: 16, padding: "22px 24px" }}>
-      <h2 style={{ margin: "0 0 6px", font: "800 22px var(--font-archivo)" }}>Saved addresses</h2>
-      <p style={{ margin: "0 0 18px", font: "500 14px var(--font-hanken)", color: "#6B6B70" }}>
+    <section className={styles.panel} aria-labelledby="saved-addresses-title">
+      <div className={styles.head}>
+        <h2 id="saved-addresses-title" className={styles.title}>
+          Saved addresses
+        </h2>
+      </div>
+      <p className={styles.subtitle}>
         Store pickup and drop-off locations with delivery instructions for faster booking.
       </p>
 
-      {error && (
-        <div style={{ marginBottom: 14, padding: "10px 12px", borderRadius: 10, background: "rgba(168,68,42,.08)", color: "#a8442a", font: "600 13px var(--font-hanken)" }}>
-          {error}
-        </div>
-      )}
+      {error ? <div className={styles.error}>{error}</div> : null}
 
       {loading ? (
-        <div style={{ font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>Loading…</div>
+        <div className={styles.muted}>Loading…</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+        <div className={styles.list}>
           {addresses.length === 0 ? (
-            <div style={{ font: "600 14px var(--font-hanken)", color: "#8A8A90" }}>No saved addresses yet.</div>
+            <div className={styles.muted}>No saved addresses yet.</div>
           ) : (
             addresses.map((a) => (
               <div
-                className={styles.addressRow}
                 key={a.id}
-                style={{
-                  border: editingId === a.id ? "2px solid var(--accent)" : "1.5px solid rgba(0,0,0,.08)",
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                  display: "flex",
-                  gap: 12,
-                  alignItems: "flex-start",
-                  background: editingId === a.id ? "#fffbe6" : "#fff",
-                }}
+                className={`${styles.addressRow} ${editingId === a.id ? styles.addressRowActive : ""}`}
               >
-                <div style={{ flex: 1 }}>
-                  <div style={{ font: "700 14px var(--font-hanken)" }}>
-                    {a.label} {a.isDefault ? <span style={{ color: "#1f6b1f" }}>· Default</span> : null}
+                <div className={styles.addressBody}>
+                  <div className={styles.addressLabel}>
+                    {a.label}
+                    {a.isDefault ? <span className={styles.defaultBadge}>Default</span> : null}
                   </div>
-                  <div style={{ font: "500 13px var(--font-hanken)", color: "#6B6B70", marginTop: 4 }}>
+                  <div className={styles.addressLine}>
                     {a.street}, {a.city}
                     {a.province ? `, ${a.province}` : ""}
                     {a.postalCode ? ` ${a.postalCode}` : ""}
                   </div>
-                  {a.instructions && (
-                    <div style={{ font: "500 12px var(--font-hanken)", color: "#8A8A90", marginTop: 6, fontStyle: "italic" }}>
-                      Note: {a.instructions}
-                    </div>
-                  )}
+                  {a.instructions ? <div className={styles.addressNote}>Note: {a.instructions}</div> : null}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "flex-end" }}>
-                  <button type="button" disabled={busy} onClick={() => startEdit(a)} style={chipBtn}>
+                <div className={styles.actions}>
+                  <button type="button" disabled={busy} onClick={() => startEdit(a)} className={styles.chipBtn}>
                     Edit
                   </button>
-                  {!a.isDefault && (
-                    <button type="button" disabled={busy} onClick={() => void setDefault(a.id)} style={chipBtn}>
+                  {!a.isDefault ? (
+                    <button type="button" disabled={busy} onClick={() => void setDefault(a.id)} className={styles.chipBtn}>
                       Set default
                     </button>
-                  )}
-                  <button type="button" disabled={busy} onClick={() => void remove(a.id)} style={{ ...chipBtn, color: "#a8442a" }}>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void remove(a.id)}
+                    className={`${styles.chipBtn} ${styles.chipDanger}`}
+                  >
                     Delete
                   </button>
                 </div>
@@ -207,18 +200,28 @@ export function SavedAddressesPanel() {
         </div>
       )}
 
-      <form onSubmit={save} style={{ display: "grid", gap: 12, padding: "16px 18px", borderRadius: 12, background: "#fafaf8", border: "1.5px solid rgba(0,0,0,.08)" }}>
-        <div style={{ font: "800 15px var(--font-archivo)" }}>{editingId ? "Edit address" : "Add new address"}</div>
-        <TextInput label="Label" value={form.label} onChange={(v) => setField("label", v)} placeholder="Home, Office, Storage unit…" />
-        <TextInput label="Street address" value={form.street} onChange={(v) => setField("street", v)} placeholder="123 Main St, Unit 4B" />
-        <div className={styles.cityRow} style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 12 }}>
+      <form onSubmit={save} className={styles.form}>
+        <div className={styles.formTitle}>{editingId ? "Edit address" : "Add new address"}</div>
+        <TextInput
+          label="Label"
+          value={form.label}
+          onChange={(v) => setField("label", v)}
+          placeholder="Home, Office, Storage unit…"
+        />
+        <TextInput
+          label="Street address"
+          value={form.street}
+          onChange={(v) => setField("street", v)}
+          placeholder="123 Main St, Unit 4B"
+        />
+        <div className={styles.cityRow}>
           <TextInput label="City" value={form.city} onChange={(v) => setField("city", v)} placeholder="Toronto" />
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ font: "700 12px var(--font-hanken)", color: "#3a3a40" }}>Province</span>
+          <label className={styles.provinceLabel}>
+            <span>Province</span>
             <select
               value={form.province}
               onChange={(e) => setField("province", e.target.value)}
-              style={{ height: 44, borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", padding: "0 10px", font: "600 14px var(--font-hanken)" }}
+              className={styles.provinceSelect}
             >
               {PROVINCES.map((p) => (
                 <option key={p} value={p}>
@@ -228,7 +231,13 @@ export function SavedAddressesPanel() {
             </select>
           </label>
         </div>
-        <PostalCodeInput label="Postal code" value={form.postalCode} onChange={(v) => setField("postalCode", v)} placeholder="M5V 1A1" height={42} />
+        <PostalCodeInput
+          label="Postal code"
+          value={form.postalCode}
+          onChange={(v) => setField("postalCode", v)}
+          placeholder="M5V 1A1"
+          height={42}
+        />
         <TextArea
           label="Delivery instructions (optional)"
           value={form.instructions}
@@ -236,27 +245,17 @@ export function SavedAddressesPanel() {
           placeholder="Buzz 402, use rear entrance, elevator to 12th floor…"
           minHeight={72}
         />
-        <div className={styles.actions} style={{ display: "flex", gap: 10 }}>
-          <button type="submit" disabled={busy} style={{ flex: 1, height: 44, borderRadius: 10, border: "none", background: "var(--accent)", font: "800 14px var(--font-archivo)", cursor: busy ? "wait" : "pointer" }}>
+        <div className={styles.formActions}>
+          <button type="submit" disabled={busy} className={styles.submitBtn}>
             {busy ? "Saving…" : editingId ? "Update address" : "Add address"}
           </button>
-          {editingId && (
-            <button type="button" disabled={busy} onClick={cancelEdit} style={{ height: 44, padding: "0 16px", borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", background: "#fff", font: "700 13px var(--font-hanken)", cursor: "pointer" }}>
+          {editingId ? (
+            <button type="button" disabled={busy} onClick={cancelEdit} className={styles.cancelBtn}>
               Cancel
             </button>
-          )}
+          ) : null}
         </div>
       </form>
-    </div>
+    </section>
   );
 }
-
-const chipBtn: React.CSSProperties = {
-  height: 34,
-  padding: "0 12px",
-  borderRadius: 8,
-  border: "1.5px solid rgba(0,0,0,.12)",
-  background: "#fff",
-  font: "700 12px var(--font-hanken)",
-  cursor: "pointer",
-};

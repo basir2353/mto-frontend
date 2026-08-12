@@ -28,20 +28,23 @@ function boolSetting(value: unknown, fallback: boolean) {
   return typeof value === "boolean" ? value : fallback;
 }
 
-function applyUserToForm(user: User, setters: {
-  setFirstName: (v: string) => void;
-  setLastName: (v: string) => void;
-  setPhone: (v: string) => void;
-  setAvatarUrl: (v: string) => void;
-  setStreet: (v: string) => void;
-  setCity: (v: string) => void;
-  setProvince: (v: string) => void;
-  setPostalCode: (v: string) => void;
-  setCountry: (v: string) => void;
-  setLanguage: (v: string) => void;
-  setNotifications: (v: Record<NotificationKey, boolean>) => void;
-  setPrivacy: (v: Record<PrivacyKey, boolean>) => void;
-}) {
+function applyUserToForm(
+  user: User,
+  setters: {
+    setFirstName: (v: string) => void;
+    setLastName: (v: string) => void;
+    setPhone: (v: string) => void;
+    setAvatarUrl: (v: string) => void;
+    setStreet: (v: string) => void;
+    setCity: (v: string) => void;
+    setProvince: (v: string) => void;
+    setPostalCode: (v: string) => void;
+    setCountry: (v: string) => void;
+    setLanguage: (v: string) => void;
+    setNotifications: (v: Record<NotificationKey, boolean>) => void;
+    setPrivacy: (v: Record<PrivacyKey, boolean>) => void;
+  },
+) {
   const profile = user.customerProfile;
   const address = (profile?.address ?? {}) as Record<string, string>;
   const notifications = (profile?.notificationSettings ?? {}) as Record<string, unknown>;
@@ -77,12 +80,18 @@ export function AccountProfileForm({
   title = "My profile",
   subtitle = "Update your personal information, photo, and app preferences.",
   moverNote,
+  embedded = false,
+  showChrome = true,
 }: {
-  backHref: string;
+  backHref?: string;
   backLabel?: string;
   title?: string;
   subtitle?: string;
   moverNote?: string;
+  /** When true, skips outer page scroll/background so parent can own layout. */
+  embedded?: boolean;
+  /** When false, hides back link + page title (parent provides them). */
+  showChrome?: boolean;
 }) {
   const { user, refreshUser } = useAuth();
   const toast = useToast();
@@ -192,15 +201,16 @@ export function AccountProfileForm({
         lastName: lastName.trim(),
         phone: phone.trim() || undefined,
         avatarUrl: nextAvatarUrl,
-        address: street.trim() && city.trim()
-          ? {
-              street: street.trim(),
-              city: city.trim(),
-              province: province.trim() || undefined,
-              postalCode: postalCode.trim() || undefined,
-              country: country.trim() || undefined,
-            }
-          : undefined,
+        address:
+          street.trim() && city.trim()
+            ? {
+                street: street.trim(),
+                city: city.trim(),
+                province: province.trim() || undefined,
+                postalCode: postalCode.trim() || undefined,
+                country: country.trim() || undefined,
+              }
+            : undefined,
       });
 
       await usersApi.updateLanguage(language);
@@ -228,94 +238,100 @@ export function AccountProfileForm({
   const displayName = customerDisplayName(user);
   const avatarPreview = avatarFile ? URL.createObjectURL(avatarFile) : avatarUrl || null;
 
-  return (
-    <div style={{ flex: 1, overflow: "auto", background: "#F5F4EF", minHeight: 0 }}>
-      <div className={styles.container} style={{ maxWidth: 760, margin: "0 auto", padding: "32px 28px 48px" }}>
-        <a href={backHref} style={{ font: "700 13px var(--font-hanken)", color: "#6B6B70", textDecoration: "none" }}>
-          ← {backLabel}
-        </a>
-        <h1 style={{ margin: "16px 0 6px", font: "900 34px var(--font-archivo)", letterSpacing: "-.025em" }}>{title}</h1>
-        <p style={{ margin: "0 0 24px", font: "500 15px var(--font-hanken)", color: "#6B6B70" }}>{subtitle}</p>
+  const body = (
+    <>
+      {showChrome && (
+        <>
+          {backHref ? (
+            <a href={backHref} className={styles.back}>
+              ← {backLabel}
+            </a>
+          ) : null}
+          <h1 className={styles.pageTitle}>{title}</h1>
+          <p className={styles.pageSubtitle}>{subtitle}</p>
+        </>
+      )}
 
-        {moverNote && (
-          <div style={{ marginBottom: 20, padding: 14, borderRadius: 12, background: "#fff", border: "1.5px solid rgba(0,0,0,.08)", font: "600 13px var(--font-hanken)", color: "#6B6B70" }}>
-            {moverNote}
-          </div>
-        )}
+      {moverNote ? <div className={styles.note}>{moverNote}</div> : null}
 
-        {error && (
-          <div style={{ marginBottom: 16, padding: 14, borderRadius: 12, background: "#fff0f0", color: "#b00020", font: "600 14px var(--font-hanken)" }}>
-            {error}
-          </div>
-        )}
-        {success && (
-          <div style={{ marginBottom: 16, padding: 14, borderRadius: 12, background: "rgba(31,107,31,.08)", color: "#1f6b1f", font: "600 14px var(--font-hanken)" }}>
-            {success}
-          </div>
-        )}
+      {error ? <div className={`${styles.alert} ${styles.alertError}`}>{error}</div> : null}
+      {success ? <div className={`${styles.alert} ${styles.alertSuccess}`}>{success}</div> : null}
 
-        {loading ? (
-          <BlockLoader label="Loading profile…" minHeight={220} />
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            <section style={sectionStyle}>
-              <SectionTitle title="Photo & account" />
-              <div className={styles.photoRow} style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                <UserAvatar name={displayName} imageUrl={avatarPreview} size={72} />
-                <div>
-                  <div style={{ font: "700 15px var(--font-hanken)" }}>{displayName}</div>
-                  <div style={{ font: "600 13px var(--font-hanken)", color: "#6B6B70", marginTop: 4 }}>{user?.email}</div>
-                  <button
-                    type="button"
-                    onClick={() => avatarInputRef.current?.click()}
-                    style={{ marginTop: 10, height: 38, padding: "0 14px", borderRadius: 10, border: "1.5px solid rgba(0,0,0,.14)", background: "#fff", font: "700 13px var(--font-hanken)", cursor: "pointer" }}
-                  >
-                    {avatarPreview ? "Change photo" : "Upload photo"}
-                  </button>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)}
-                  />
+      {loading ? (
+        <BlockLoader label="Loading profile…" minHeight={220} />
+      ) : (
+        <>
+          <section className={styles.hero} aria-label="Account identity">
+            <div className={styles.heroRow}>
+              <div className={styles.avatarRing}>
+                <UserAvatar name={displayName} imageUrl={avatarPreview} size={88} />
+              </div>
+              <div className={styles.heroMeta}>
+                <div className={styles.heroEyebrow}>Your account</div>
+                <div className={styles.heroName}>{displayName}</div>
+                <div className={styles.heroEmail}>{user?.email ?? "—"}</div>
+              </div>
+            </div>
+            <button type="button" className={styles.photoBtn} onClick={() => avatarInputRef.current?.click()}>
+              {avatarPreview ? "Change photo" : "Upload photo"}
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)}
+            />
+          </section>
+
+          <div className={styles.panel}>
+            <section className={styles.section}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>Personal information</h2>
+                <span className={styles.sectionHint}>Shown to movers</span>
+              </div>
+              <div className={styles.stack}>
+                <div className={styles.grid2}>
+                  <TextInput label="First name" value={firstName} onChange={setFirstName} placeholder="Jane" />
+                  <TextInput label="Last name" value={lastName} onChange={setLastName} placeholder="Customer" />
                 </div>
-              </div>
-            </section>
-
-            <section style={sectionStyle}>
-              <SectionTitle title="Personal information" />
-              <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <TextInput label="First name" value={firstName} onChange={setFirstName} placeholder="Jane" />
-                <TextInput label="Last name" value={lastName} onChange={setLastName} placeholder="Customer" />
-              </div>
-              <div style={{ marginTop: 12 }}>
                 <PhoneInput label="Phone" value={phone} onChange={setPhone} defaultIso="CA" />
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <FieldLabel>Email</FieldLabel>
-                <div style={{ height: 52, borderRadius: 12, border: "1.5px solid rgba(0,0,0,.1)", background: "#F5F4EF", display: "flex", alignItems: "center", padding: "0 14px", font: "600 14px var(--font-hanken)", color: "#6B6B70" }}>
-                  {user?.email ?? "—"}
+                <div>
+                  <FieldLabel>Email</FieldLabel>
+                  <div className={styles.emailReadonly}>{user?.email ?? "—"}</div>
+                  <div className={styles.emailHint}>Email cannot be changed here.</div>
                 </div>
-                <div style={{ font: "500 12px var(--font-hanken)", color: "#8A8A90", marginTop: 6 }}>Email cannot be changed here.</div>
               </div>
             </section>
 
-            <section style={sectionStyle}>
-              <SectionTitle title="Home address" />
-              <TextInput label="Street" value={street} onChange={setStreet} placeholder="123 Main Street" />
-              <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-                <TextInput label="City" value={city} onChange={setCity} placeholder="Toronto" />
-                <TextInput label="Province" value={province} onChange={setProvince} placeholder="ON" />
+            <section className={styles.section}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>Home address</h2>
+                <span className={styles.sectionHint}>Default location</span>
               </div>
-              <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-                <PostalCodeInput label="Postal code" value={postalCode} onChange={setPostalCode} placeholder="M5V 2T6" height={42} />
-                <TextInput label="Country" value={country} onChange={setCountry} placeholder="Canada" />
+              <div className={styles.stack}>
+                <TextInput label="Street" value={street} onChange={setStreet} placeholder="123 Main Street" />
+                <div className={styles.grid2}>
+                  <TextInput label="City" value={city} onChange={setCity} placeholder="Toronto" />
+                  <TextInput label="Province" value={province} onChange={setProvince} placeholder="ON" />
+                </div>
+                <div className={styles.grid2}>
+                  <PostalCodeInput
+                    label="Postal code"
+                    value={postalCode}
+                    onChange={setPostalCode}
+                    placeholder="M5V 2T6"
+                    height={42}
+                  />
+                  <TextInput label="Country" value={country} onChange={setCountry} placeholder="Canada" />
+                </div>
               </div>
             </section>
 
-            <section style={sectionStyle}>
-              <SectionTitle title="Language" />
+            <section className={styles.section}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>Language</h2>
+              </div>
               <ChipToggle
                 label="Preferred language"
                 options={LANGUAGES.map((l) => l.label)}
@@ -327,101 +343,78 @@ export function AccountProfileForm({
               />
             </section>
 
-            <section style={sectionStyle}>
-              <SectionTitle title="Notifications" />
-              <ToggleRow label="Push notifications" active={notifications.push} onToggle={() => toggleNotification("push")} />
-              <ToggleRow label="Email updates" active={notifications.email} onToggle={() => toggleNotification("email")} />
-              <ToggleRow label="SMS alerts" active={notifications.sms} onToggle={() => toggleNotification("sms")} />
-              <ToggleRow label="Booking & move updates" active={notifications.bookingUpdates} onToggle={() => toggleNotification("bookingUpdates")} />
-              <ToggleRow label="Promotions" active={notifications.promotions} onToggle={() => toggleNotification("promotions")} />
+            <section className={styles.section}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>Notifications</h2>
+                <span className={styles.sectionHint}>How we reach you</span>
+              </div>
+              <div className={styles.toggleList}>
+                <ToggleRow label="Push notifications" active={notifications.push} onToggle={() => toggleNotification("push")} />
+                <ToggleRow label="Email updates" active={notifications.email} onToggle={() => toggleNotification("email")} />
+                <ToggleRow label="SMS alerts" active={notifications.sms} onToggle={() => toggleNotification("sms")} />
+                <ToggleRow
+                  label="Booking & move updates"
+                  active={notifications.bookingUpdates}
+                  onToggle={() => toggleNotification("bookingUpdates")}
+                />
+                <ToggleRow label="Promotions" active={notifications.promotions} onToggle={() => toggleNotification("promotions")} />
+              </div>
             </section>
 
-            <section style={sectionStyle}>
-              <SectionTitle title="Privacy" />
-              <ToggleRow label="Show my profile to movers/drivers" active={privacy.showProfile} onToggle={() => togglePrivacy("showProfile")} />
-              <ToggleRow label="Share activity for better matches" active={privacy.shareActivity} onToggle={() => togglePrivacy("shareActivity")} />
-              <ToggleRow label="Allow marketing messages" active={privacy.allowMarketing} onToggle={() => togglePrivacy("allowMarketing")} />
+            <section className={styles.section}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>Privacy</h2>
+                <span className={styles.sectionHint}>Visibility & marketing</span>
+              </div>
+              <div className={styles.toggleList}>
+                <ToggleRow
+                  label="Show my profile to movers/drivers"
+                  active={privacy.showProfile}
+                  onToggle={() => togglePrivacy("showProfile")}
+                />
+                <ToggleRow
+                  label="Share activity for better matches"
+                  active={privacy.shareActivity}
+                  onToggle={() => togglePrivacy("shareActivity")}
+                />
+                <ToggleRow
+                  label="Allow marketing messages"
+                  active={privacy.allowMarketing}
+                  onToggle={() => togglePrivacy("allowMarketing")}
+                />
+              </div>
             </section>
 
-            <button
-              type="button"
-              onClick={() => void save()}
-              disabled={busy}
-              style={{
-                height: 54,
-                borderRadius: 12,
-                border: "none",
-                background: busy ? "rgba(0,0,0,.12)" : "var(--accent)",
-                font: "800 16px var(--font-archivo)",
-                color: "#0E0E10",
-                cursor: busy ? "wait" : "pointer",
-              }}
-            >
-              {busy ? "Saving…" : "Save profile"}
-            </button>
+            <div className={styles.saveBar}>
+              <button type="button" className={styles.saveBtn} onClick={() => void save()} disabled={busy}>
+                {busy ? "Saving…" : "Save profile"}
+              </button>
+              <div className={styles.saveHint}>Movers see your name, photo, phone, and address during negotiations.</div>
+            </div>
           </div>
-        )}
-      </div>
-    </div>
+        </>
+      )}
+    </>
   );
-}
 
-function SectionTitle({ title }: { title: string }) {
+  if (embedded) {
+    return <div className={styles.wrap}>{body}</div>;
+  }
+
   return (
-    <div style={{ font: "800 16px var(--font-archivo)", marginBottom: 14 }}>{title}</div>
+    <div className={styles.wrapPage}>
+      <div className={styles.pageInner}>{body}</div>
+    </div>
   );
 }
 
 function ToggleRow({ label, active, onToggle }: { label: string; active: boolean; onToggle: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      style={{
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 12,
-        padding: "12px 0",
-        border: "none",
-        borderBottom: "1px solid rgba(0,0,0,.06)",
-        background: "transparent",
-        cursor: "pointer",
-        textAlign: "left",
-      }}
-    >
-      <span style={{ font: "600 14px var(--font-hanken)" }}>{label}</span>
-      <span
-        style={{
-          width: 44,
-          height: 26,
-          borderRadius: 999,
-          background: active ? "#0E0E10" : "rgba(0,0,0,.12)",
-          position: "relative",
-          flex: "none",
-        }}
-      >
-        <span
-          style={{
-            position: "absolute",
-            top: 3,
-            left: active ? 21 : 3,
-            width: 20,
-            height: 20,
-            borderRadius: "50%",
-            background: "#fff",
-            transition: "left .15s ease",
-          }}
-        />
+    <button type="button" className={styles.toggleRow} onClick={onToggle} aria-pressed={active}>
+      <span className={styles.toggleLabel}>{label}</span>
+      <span className={`${styles.switch} ${active ? styles.switchOn : ""}`} aria-hidden>
+        <span className={styles.switchKnob} />
       </span>
     </button>
   );
 }
-
-const sectionStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1.5px solid rgba(0,0,0,.08)",
-  borderRadius: 16,
-  padding: 20,
-};

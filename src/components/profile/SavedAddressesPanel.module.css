@@ -1,32 +1,249 @@
+.panel {
+  background: #fff;
+  border: 1.5px solid var(--mto-border, rgba(0, 0, 0, 0.1));
+  border-radius: var(--mto-radius-xl, 20px);
+  padding: 24px;
+  animation: rise 480ms var(--mto-motion-ease) both;
+  animation-delay: 100ms;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.title {
+  margin: 0;
+  font: 800 20px/1.15 var(--font-archivo);
+  letter-spacing: -0.02em;
+  color: var(--mto-ink, #0e0e10);
+}
+
+.subtitle {
+  margin: 0 0 18px;
+  font: 500 14px/1.45 var(--font-hanken);
+  color: var(--mto-text-secondary, #6b6b70);
+}
+
+.error {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--mto-danger-surface, #fbeaea);
+  color: var(--mto-danger, #c23b3b);
+  font: 600 13px var(--font-hanken);
+}
+
+.muted {
+  font: 600 14px var(--font-hanken);
+  color: var(--mto-text-tertiary, #8a8a90);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.addressRow {
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fff;
+  transition: border-color var(--mto-motion-fast) var(--mto-motion-ease), background var(--mto-motion-fast) var(--mto-motion-ease);
+}
+
+.addressRowActive {
+  border-color: var(--accent, #ffde2e);
+  background: #fffbeb;
+  box-shadow: inset 3px 0 0 var(--accent, #ffde2e);
+}
+
+.addressBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.addressLabel {
+  font: 700 14px var(--font-hanken);
+  color: var(--mto-ink, #0e0e10);
+}
+
+.defaultBadge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--mto-success-surface, #e7f5ee);
+  color: var(--mto-success, #146e46);
+  font: 700 10px var(--font-hanken);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.addressLine {
+  font: 500 13px/1.4 var(--font-hanken);
+  color: var(--mto-text-secondary, #6b6b70);
+  margin-top: 4px;
+}
+
+.addressNote {
+  font: 500 12px/1.4 var(--font-hanken);
+  color: var(--mto-text-tertiary, #8a8a90);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.chipBtn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  font: 700 12px var(--font-hanken);
+  cursor: pointer;
+  color: var(--mto-ink, #0e0e10);
+  transition: background var(--mto-motion-fast) var(--mto-motion-ease);
+}
+
+.chipBtn:hover:not(:disabled) {
+  background: #f5f4ef;
+}
+
+.chipBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.chipDanger {
+  color: var(--mto-danger, #c23b3b);
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #f7f6f1;
+  border: 1.5px solid rgba(0, 0, 0, 0.06);
+}
+
+.formTitle {
+  font: 800 15px var(--font-archivo);
+  color: var(--mto-ink, #0e0e10);
+}
+
+.cityRow {
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  gap: 12px;
+}
+
+.provinceLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.provinceLabel > span {
+  font: 700 12px var(--font-hanken);
+  color: #3a3a40;
+}
+
+.provinceSelect {
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0, 0, 0, 0.14);
+  padding: 0 10px;
+  font: 600 14px var(--font-hanken);
+  background: #fff;
+}
+
+.formActions {
+  display: flex;
+  gap: 10px;
+}
+
+.submitBtn {
+  flex: 1;
+  height: 46px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent, #ffde2e);
+  font: 800 14px var(--font-archivo);
+  color: #0e0e10;
+  cursor: pointer;
+}
+
+.submitBtn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.cancelBtn {
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(0, 0, 0, 0.14);
+  background: #fff;
+  font: 700 13px var(--font-hanken);
+  cursor: pointer;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 600px) {
   .panel {
-    padding: 16px !important;
+    padding: 18px 16px;
   }
 
   .addressRow {
     flex-direction: column;
   }
 
-  .addressRow > div {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .addressRow > div:last-child {
-    justify-content: flex-start !important;
+  .actions {
+    justify-content: flex-start;
   }
 
   .cityRow {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1fr);
   }
-}
 
-@media (max-width: 380px) {
-  .actions {
+  .formActions {
     flex-direction: column;
   }
 
-  .actions > button {
+  .formActions > button {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
   }
 }
