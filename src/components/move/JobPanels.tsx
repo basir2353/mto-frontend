@@ -9,14 +9,13 @@ import { messagesApi } from "@/lib/api";
 import { ChatComposer } from "@/components/messaging/ChatComposer";
 import { ChatMessageContent } from "@/components/messaging/ChatMessageContent";
 import type { Message } from "@/lib/api/types";
-import { customerDisplayName, moverDisplayName, partyDisplayName } from "@/lib/displayNames";
 import {
   formatDuration,
   placesFromBooking,
   type MapPlace,
 } from "@/lib/maps";
 import { isPlausibleNearbyKm } from "@/lib/trackingDisplay";
-import type { Booking, BookingItem, MovingRequest, User } from "@/lib/api/types";
+import type { Booking, BookingItem, MovingRequest } from "@/lib/api/types";
 import { AppIcon } from "@/components/ui/Icons";
 
 export function PartyProfileCard({
