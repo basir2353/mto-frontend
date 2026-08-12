@@ -2,24 +2,15 @@
 
 **Move anything, right now.**
 
-<<<<<<< HEAD
-MoveThisOut is an on-demand moving and delivery platform. This repository contains the public marketing site and customer account pages, a [Next.js](https://nextjs.org) application. The driver app, admin panel, and full customer booking wizard are separate deployments (see `src/lib/theme/apps.ts`'s `appUrls`) — this repo redirects to them rather than hosting them.
-=======
-MoveThisOut is an on-demand moving and delivery platform. This repository contains the public marketing site and customer application, built with [Next.js](https://nextjs.org).
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
+MoveThisOut is an on-demand moving and delivery platform. This repository contains the public marketing site and in-site customer booking (`/book`), built with [Next.js](https://nextjs.org). Sibling apps (driver web, admin) are configured in `src/lib/theme/apps.ts`.
 
 **Live app:** [https://mto-frontend.vercel.app/](https://mto-frontend.vercel.app/)
 
 ## Features
 
 - **Marketing site** — landing page, about, business/enterprise contact, and help pages.
-<<<<<<< HEAD
-- **Customer profile & support** — account profile, saved addresses, dispute threads, FAQ.
+- **Customer booking** — `/book` wizard, quotes, negotiation, tracking, profile, and support.
 - **Dispute chat** — text/image/voice messaging in a dispute thread.
-=======
-- **Customer app** — booking flow, live quote widget, move tracking, profile, and support.
-- **Booking & negotiation** — quote estimation, price negotiation, and dispute handling.
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
 - **Maps integration** — route display and place lookups via Google Maps.
 - **Real-time updates** — Socket.IO client for live messaging/notifications.
 - **Web push notifications** — via VAPID keys.
@@ -36,14 +27,9 @@ MoveThisOut is an on-demand moving and delivery platform. This repository contai
 
 ```
 src/
-  app/                # App Router routes (marketing, auth, customer-app, business, help, ...)
-<<<<<<< HEAD
+  app/                # App Router routes (marketing, auth, book, customer-app, business, help, ...)
   components/          # Shared UI + feature components (booking, dispute, maps, messaging, ui, ...)
-  contexts/             # React context providers (auth)
-=======
-  components/          # Shared UI + customer features (booking, dispute, maps, messaging, ui, ...)
-  contexts/             # React context providers
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
+  contexts/             # React context providers (auth, move form/flow)
   hooks/                # Custom hooks
   lib/
     api/                # API client, resource modules, and mock data

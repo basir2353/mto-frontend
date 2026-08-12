@@ -37,11 +37,7 @@ const nextConfig: NextConfig = {
     const dest = apiUrl.replace(/\/$/, "");
     return [
       {
-<<<<<<< HEAD
         // Same-origin proxy so the browser avoids flaky cross-origin multipart uploads.
-=======
-        // Same-origin proxy keeps browser API requests on the frontend origin.
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
         source: "/mto-api/:path*",
         destination: `${dest}/:path*`,
       },

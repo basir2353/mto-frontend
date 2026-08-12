@@ -48,9 +48,6 @@ env/**
 *.tsbuildinfo
 next-env.d.ts
 
-<<<<<<< HEAD
-=======
 /dist/
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
 
 .next-dev*.log
