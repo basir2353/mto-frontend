@@ -31,13 +31,13 @@ export function parsePhoneValue(value: string, fallbackIso = "CA"): { iso: strin
   return { iso: fallbackIso === "CA" ? "CA" : "CA", national: digitsOnly(trimmed).replace(/^1/, "") };
 }
 
-export function formatFullPhone(iso: string, national: string): string {
+export function formatFullPhone(_iso: string, national: string): string {
   const n = digitsOnly(national);
   if (!n) return "";
   return `+1${n}`;
 }
 
-export function isValidNationalPhone(iso: string, national: string): boolean {
+export function isValidNationalPhone(_iso: string, national: string): boolean {
   const n = digitsOnly(national);
   return n.length === 10;
 }

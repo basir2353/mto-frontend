@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import MarketingShell from "@/components/MarketingShell";
 import ImageSlot from "@/components/ImageSlot";
 import QuoteWidget from "@/components/QuoteWidget";

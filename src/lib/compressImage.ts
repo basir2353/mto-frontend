@@ -1,4 +1,4 @@
-/** Compress images before upload so mobile / Capacitor WebView can reach the API reliably. */
+/** Compress images before upload to reduce transfer size and latency. */
 export async function compressImageFile(
   file: File,
   opts: { maxEdge?: number; quality?: number; maxBytes?: number } = {},

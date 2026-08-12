@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -54,10 +55,17 @@ const TONE_STYLES: Record<ToastTone, { bar: string; iconBg: string; icon: string
 
 let toastSeq = 0;
 
+const subscribeToClientEnvironment = () => () => {};
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [confirmState, setConfirmState] = useState<(ConfirmOptions & { resolve: (v: boolean) => void }) | null>(null);
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const canUsePortal = useSyncExternalStore(
+    subscribeToClientEnvironment,
+    () => true,
+    () => false,
+  );
 
   const dismiss = useCallback((id: string) => {
     const timer = timers.current.get(id);
@@ -105,7 +113,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      {typeof document !== "undefined" &&
+      {canUsePortal &&
         createPortal(
           <>
             <div

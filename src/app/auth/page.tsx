@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { TextInput, FieldLabel } from "@/components/FormControls";
 import { PhoneInput, isValidNationalPhone, parsePhoneValue } from "@/components/PhoneInput";
 import { AppIcon } from "@/components/ui/Icons";
@@ -48,20 +48,14 @@ function AuthPageInner() {
   const [signupEmail, setSignupEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
-  const [accountType, setAccountType] = useState<"move" | "drive">("move");
-  const customerOnly = true;
-  const driverOnly = false;
 
   const [forgotEmail, setForgotEmail] = useState("");
   const [resetToken, setResetToken] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
 
-  const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const verifiedName = fullName.trim().split(" ")[0] || "there";
-  const verifiedEmail = signupEmail || loginEmail || forgotEmail || "your email";
 
   useEffect(() => {
     setAppRole("customer");
@@ -106,7 +100,7 @@ function AuthPageInner() {
     setBusy(true);
     setApiError(null);
     try {
-      const u = await login(email, password);
+      await login(email, password);
       redirectToCustomerApp();
     } catch (err) {
       if (err instanceof ApiError) {
@@ -246,16 +240,6 @@ function AuthPageInner() {
     }
   };
 
-  const handleCodeChange = (i: number, v: string) => {
-    const digit = v.replace(/\D/g, "").slice(-1);
-    setCode((c) => {
-      const next = [...c];
-      next[i] = digit;
-      return next;
-    });
-    if (digit && i < 5) codeRefs.current[i + 1]?.focus();
-  };
-
   return (
     <div className="mto-auth-page">
       <style>{`
@@ -359,77 +343,6 @@ function AuthPageInner() {
               <div style={{ animation: "rise .3s ease" }}>
                 <h1 style={heading}>Create your account</h1>
                 <p style={sub2}>Create a customer account to book and track moves.</p>
-                {!customerOnly && (
-                <div className="mto-auth-account-types">
-                  <button
-                    type="button"
-                    className="mto-auth-role-card"
-                    onClick={() => setAccountType("move")}
-                    style={{
-                      flex: 1,
-                      border: accountType === "move" ? "1.5px solid #0E0E10" : "1.5px solid rgba(0,0,0,.14)",
-                      borderRadius: 14,
-                      padding: "14px 16px",
-                      cursor: "pointer",
-                      background: accountType === "move" ? "rgba(255,222,46,.22)" : "#fff",
-                      textAlign: "left",
-                      display: "flex",
-                      gap: 12,
-                      alignItems: "center",
-                    }}
-                  >
-                    <span style={{ width: 40, height: 40, borderRadius: 11, background: "#0E0E10", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
-                      <AppIcon name="package" size={20} color="var(--accent)" />
-                    </span>
-                    <span>
-                      <div style={{ font: "800 15px 'Archivo'" }}>I need a move</div>
-                      <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>Book &amp; track local drivers</div>
-                    </span>
-                  </button>
-                  <Link
-                    href="/auth#signup"
-                    className="mto-auth-role-card"
-                    style={{
-                      flex: 1,
-                      border: accountType === "drive" ? "1.5px solid #0E0E10" : "1.5px solid rgba(0,0,0,.14)",
-                      borderRadius: 14,
-                      padding: "14px 16px",
-                      cursor: "pointer",
-                      textDecoration: "none",
-                      color: "#0E0E10",
-                      background: accountType === "drive" ? "rgba(255,222,46,.22)" : "#fff",
-                      display: "flex",
-                      gap: 12,
-                      alignItems: "center",
-                    }}
-                    onClick={() => setAccountType("drive")}
-                  >
-                    <span style={{ width: 40, height: 40, borderRadius: 11, background: "#0E0E10", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
-                      <AppIcon name="truck" size={20} color="var(--accent)" />
-                    </span>
-                    <span>
-                      <div style={{ font: "800 15px 'Archivo'" }}>I want to drive</div>
-                      <div style={{ font: "500 12px 'Hanken Grotesk'", color: "#6B6B70" }}>Earn with your vehicle</div>
-                    </span>
-                  </Link>
-                </div>
-                )}
-                {!customerOnly && accountType === "drive" ? (
-                  <div style={{ marginTop: 8 }}>
-                    <Link
-                      href="/auth#signup"
-                      style={{ ...primaryBtn, textDecoration: "none", boxSizing: "border-box" }}
-                    >
-                      Continue driver signup →
-                    </Link>
-                    <p style={{ margin: "16px 0 0", textAlign: "center", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
-                      Prefer to book a move?{" "}
-                      <span onClick={() => setAccountType("move")} style={linkText}>
-                        Switch to customer
-                      </span>
-                    </p>
-                  </div>
-                ) : (
                 <form onSubmit={handleSignup}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
                     <TextInput label="Full name" value={fullName} onChange={setFullName} placeholder="Ava Morgan" />
@@ -447,9 +360,6 @@ function AuthPageInner() {
                     {busy ? "Creating account…" : "Create account →"}
                   </button>
                 </form>
-                )}
-                {accountType === "move" && (
-                  <>
                 <p style={{ margin: "16px 0 0", textAlign: "center", font: "400 12px/1.5 'Hanken Grotesk'", color: "#9a9aa0" }}>
                   By continuing you agree to our{" "}
                   <a href="/terms" style={{ color: "inherit", fontWeight: 600 }}>
@@ -467,8 +377,6 @@ function AuthPageInner() {
                     Log in
                   </span>
                 </p>
-                  </>
-                )}
               </div>
             )}
 

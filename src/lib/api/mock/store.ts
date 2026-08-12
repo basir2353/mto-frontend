@@ -161,18 +161,6 @@ function seedDemoCustomer(db: MockDb) {
   });
   db.credentials.push({ userId, password: "password123" });
 
-  const admin = mockId("user");
-  db.users.push({
-    id: admin,
-    email: "admin@moveitout.demo",
-    roles: ["admin"],
-    isActive: true,
-    isVerified: true,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-  });
-  db.credentials.push({ userId: admin, password: "admin123" });
-
   return { customerUserId: userId };
 }
 

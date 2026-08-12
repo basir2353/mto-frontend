@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppIcon } from "@/components/ui/Icons";
 import styles from "./app-welcome.module.css";
 
-/** Combined web entry — native APKs open /app/customer or /app/driver instead. */
+/** Legacy app entry kept as a customer-route alias for existing web links. */
 export default function MobileAppWelcomePage() {
   const router = useRouter();
   const { isAuthenticated, user, loading } = useAuth();

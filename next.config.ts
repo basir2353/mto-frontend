@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
     const dest = apiUrl.replace(/\/$/, "");
     return [
       {
-        // Same-origin proxy so Capacitor WebView avoids flaky cross-origin multipart uploads.
+        // Same-origin proxy keeps browser API requests on the frontend origin.
         source: "/mto-api/:path*",
         destination: `${dest}/:path*`,
       },

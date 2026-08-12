@@ -5,7 +5,7 @@ function canUseStorage() {
   return typeof window !== "undefined";
 }
 
-/** One-time migrate from sessionStorage (old web sessions) → localStorage (Capacitor-safe). */
+/** One-time migration from legacy sessionStorage sessions to localStorage. */
 function migrateFromSession() {
   if (!canUseStorage()) return;
   try {
