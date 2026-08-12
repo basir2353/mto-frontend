@@ -317,37 +317,35 @@ export function PlanScreen({ onNext }: { onNext: () => void }) {
               )}
             </div>
 
-            <div className="plan-sheet-options" style={{ marginTop: 20 }}>
-              <div style={{ font: "700 11px var(--font-hanken, 'Hanken Grotesk')", letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 8 }}>
-                Vehicle preference
-              </div>
-              {tripKm != null ? (
-                <div style={{ marginBottom: 10, font: "600 12px var(--font-hanken, 'Hanken Grotesk')", color: "#6B6B70" }}>
-                  Est. trip {tripKm.toFixed(1)} km
-                  {route.tripMinutes != null ? ` · ~${route.tripMinutes} min` : ""}
-                  {route.resolving ? " · updating…" : ""}
+            {pickupHasCoords && destinationHasCoords ? (
+              <div className="plan-sheet-options" style={{ marginTop: 20 }}>
+                <div style={{ font: "700 11px var(--font-hanken, 'Hanken Grotesk')", letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8A90", marginBottom: 8 }}>
+                  Vehicle preference
                 </div>
-              ) : (
-                <div style={{ marginBottom: 10, font: "600 12px var(--font-hanken, 'Hanken Grotesk')", color: "#8A8A90" }}>
-                  Add pickup & drop-off to see route prices
+                <div style={{ marginBottom: 10, font: "600 12px var(--font-hanken, 'Hanken Grotesk')", color: tripKm != null ? "#6B6B70" : "#8A8A90" }}>
+                  {tripKm != null
+                    ? `Est. trip ${tripKm.toFixed(1)} km${route.tripMinutes != null ? ` · ~${route.tripMinutes} min` : ""}${route.resolving ? " · updating…" : ""}`
+                    : route.resolving
+                      ? "Calculating route prices…"
+                      : "Prices appear once the route is ready"}
                 </div>
-              )}
-              <div className="plan-vehicle-list" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {nearby.vehicleTypes.map((vehicle) => (
-                  <VehicleListRow
-                    key={vehicle.id}
-                    vehicle={vehicle}
-                    tripKm={tripKm}
-                    active={f.vehicleFilter === vehicle.name}
-                    onClick={() => {
-                      f.setVehicleFilter(vehicle.name);
-                      f.setSelectedVehicleId(vehicle.id);
-                      f.setSelectedVehicleName(vehicle.name);
-                    }}
-                  />
-                ))}
+                <div className="plan-vehicle-list" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {nearby.vehicleTypes.map((vehicle) => (
+                    <VehicleListRow
+                      key={vehicle.id}
+                      vehicle={vehicle}
+                      tripKm={tripKm}
+                      active={f.vehicleFilter === vehicle.name}
+                      onClick={() => {
+                        f.setVehicleFilter(vehicle.name);
+                        f.setSelectedVehicleId(vehicle.id);
+                        f.setSelectedVehicleName(vehicle.name);
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
 
             {onlineCount > 0 && (
               <div
@@ -680,7 +678,7 @@ function VehicleListRow({
             letterSpacing: "-.02em",
           }}
         >
-          ${price}
+          {price != null ? `$${price}` : "—"}
         </div>
         <div
           style={{
@@ -689,7 +687,7 @@ function VehicleListRow({
             color: active ? "rgba(255,255,255,.55)" : "#8A8A90",
           }}
         >
-          est. total
+          {price != null ? "est. total" : "pricing…"}
         </div>
       </div>
     </button>

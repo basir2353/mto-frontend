@@ -51,14 +51,16 @@ export function DetailsScreen({
     [nearby.vehicleTypes, f.selectedVehicleId, f.selectedVehicleName, f.vehicleFilter],
   );
 
-  const suggestedBid = estimateVehicleTripPrice(
-    route.tripKm,
-    selectedVehicle?.basePrice,
-    selectedVehicle?.pricePerKm,
-  );
+  const suggestedBid =
+    estimateVehicleTripPrice(
+      route.tripKm,
+      selectedVehicle?.basePrice,
+      selectedVehicle?.pricePerKm,
+    ) ?? 0;
 
   useEffect(() => {
     if (bidTouched.current) return;
+    if (suggestedBid < 1) return;
     f.setStartBid(suggestedBid);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-seed when route/vehicle estimate changes
   }, [suggestedBid]);

@@ -53,15 +53,16 @@ function toMoneyNumber(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
-/** Route estimate — API decimals often arrive as strings ("89.00"). */
+/** Route estimate — API decimals often arrive as strings ("89.00").
+ *  Returns null until distance is known so UI does not invent a fake trip. */
 export function estimateVehicleTripPrice(
   distanceKm: number | null | undefined,
   basePrice: number | string | null | undefined,
   pricePerKm: number | string | null | undefined,
-): number {
+): number | null {
+  const kmRaw = distanceKm == null ? NaN : Number(distanceKm);
+  if (!Number.isFinite(kmRaw) || kmRaw < 0) return null;
   const base = toMoneyNumber(basePrice, 55);
   const perKm = toMoneyNumber(pricePerKm, 2);
-  const kmRaw = distanceKm == null ? NaN : Number(distanceKm);
-  const km = Number.isFinite(kmRaw) && kmRaw >= 0 ? kmRaw : 8;
-  return Math.max(0, Math.round(base + km * perKm));
+  return Math.max(0, Math.round(base + kmRaw * perKm));
 }
