@@ -27,6 +27,19 @@ export const authApi = {
       body: JSON.stringify({ email, password }),
     }),
 
+  google: (input: {
+    idToken: string;
+    role: UserRole;
+    firstName?: string;
+    lastName?: string;
+    businessName?: string;
+    phone?: string;
+  }) =>
+    apiPublic<AuthResponse>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
   logout: () => api<{ message: string }>("/auth/logout", { method: "POST" }),
 
   me: () => api<User | null>("/auth/me"),

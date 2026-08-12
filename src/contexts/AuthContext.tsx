@@ -12,6 +12,7 @@ type AuthContextValue = {
   error: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<User>;
+  loginWithGoogle: (idToken: string) => Promise<User>;
   register: (input: Parameters<typeof authApi.register>[0]) => Promise<{ user: User; verificationToken?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -57,6 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.user;
   }, []);
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    setError(null);
+    const res = await authApi.google({ idToken, role: "customer" });
+    setTokens(res.tokens.accessToken, res.tokens.refreshToken);
+    setUser(res.user);
+    return res.user;
+  }, []);
+
   // react-hooks/preserve-manual-memoization: the compiler's static analysis can't
   // resolve `Parameters<typeof authApi.register>[0]` the same way it does for the
   // (simpler-signature) `login` callback above; reactCompiler isn't enabled in this
@@ -90,13 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       error,
       isAuthenticated: !!user,
       login,
+      loginWithGoogle,
       register,
       logout,
       refreshUser,
       clearError: () => setError(null),
       hasRole,
     }),
-    [user, loading, error, login, register, logout, refreshUser, hasRole],
+    [user, loading, error, login, loginWithGoogle, register, logout, refreshUser, hasRole],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

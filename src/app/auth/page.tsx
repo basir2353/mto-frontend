@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { TextInput, FieldLabel } from "@/components/FormControls";
 import { PhoneInput, isValidNationalPhone, parsePhoneValue } from "@/components/PhoneInput";
+import { GoogleSignInButton, isGoogleWebAuthConfigured } from "@/components/auth/GoogleSignInButton";
 import { AppIcon } from "@/components/ui/Icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi, verificationApi, ApiError } from "@/lib/api";
@@ -31,7 +32,7 @@ export default function AuthPage() {
 function AuthPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, register, isAuthenticated, user } = useAuth();
+  const { login, loginWithGoogle, register, isAuthenticated, user } = useAuth();
 
   const returnTo = searchParams.get("returnTo");
   const afterAuthHref = (() => {
@@ -95,6 +96,27 @@ function AuthPageInner() {
   }, [isAuthenticated, user, router, afterAuthHref]);
 
   const redirectAfterAuth = () => router.push(afterAuthHref);
+
+  const handleGoogle = async (idToken: string) => {
+    setBusy(true);
+    setApiError(null);
+    try {
+      const googleUser = await loginWithGoogle(idToken);
+      if (!googleUser.roles.includes("customer") && !googleUser.roles.includes("admin")) {
+        setApiError("This Google account is not a customer account. Use the driver signup instead.");
+        return;
+      }
+      redirectAfterAuth();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setApiError(err.messages.join(" "));
+      } else {
+        setApiError(err instanceof Error ? err.message : "Google sign-in failed");
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -423,6 +445,25 @@ function AuthPageInner() {
                   {busy ? "Logging in…" : "Log in →"}
                 </button>
               </form>
+              {isGoogleWebAuthConfigured() ? (
+                <>
+                  <p
+                    style={{
+                      margin: "16px 0 0",
+                      textAlign: "center",
+                      font: "600 12px var(--font-hanken)",
+                      color: "#8A8A90",
+                    }}
+                  >
+                    or
+                  </p>
+                  <GoogleSignInButton
+                    disabled={busy}
+                    label="continue_with"
+                    onCredential={(credential) => void handleGoogle(credential)}
+                  />
+                </>
+              ) : null}
               <p
                 style={{
                   margin: "24px 0 0",
@@ -478,6 +519,25 @@ function AuthPageInner() {
                   {busy ? "Creating account…" : "Create account →"}
                 </button>
               </form>
+              {isGoogleWebAuthConfigured() ? (
+                <>
+                  <p
+                    style={{
+                      margin: "16px 0 0",
+                      textAlign: "center",
+                      font: "600 12px var(--font-hanken)",
+                      color: "#8A8A90",
+                    }}
+                  >
+                    or
+                  </p>
+                  <GoogleSignInButton
+                    disabled={busy}
+                    label="signup_with"
+                    onCredential={(credential) => void handleGoogle(credential)}
+                  />
+                </>
+              ) : null}
               <p
                 style={{
                   margin: "16px 0 0",
