@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() || "";
+/** Google Identity Services caps button width at 400px. */
+const GSI_MAX_WIDTH = 400;
 
 declare global {
   interface Window {
@@ -47,6 +49,14 @@ export function GoogleSignInButton({
     if (!CLIENT_ID || !hostRef.current || disabled) return;
 
     let cancelled = false;
+    let resizeObserver: ResizeObserver | null = null;
+
+    const buttonWidth = () => {
+      const el = hostRef.current;
+      if (!el) return GSI_MAX_WIDTH;
+      const w = Math.round(el.getBoundingClientRect().width);
+      return Math.max(200, Math.min(GSI_MAX_WIDTH, w || GSI_MAX_WIDTH));
+    };
 
     const render = () => {
       if (cancelled || !hostRef.current || !window.google?.accounts?.id) return;
@@ -62,14 +72,40 @@ export function GoogleSignInButton({
         size: "large",
         text: label,
         shape: "rectangular",
-        width: 360,
+        width: buttonWidth(),
       });
+
+      // Force the GSI wrapper + iframe to fill the form column.
+      const child = hostRef.current.firstElementChild as HTMLElement | null;
+      if (child) {
+        child.style.width = "100%";
+        child.style.display = "block";
+        const iframe = child.querySelector("iframe");
+        if (iframe) {
+          iframe.style.width = "100%";
+          iframe.setAttribute("width", String(buttonWidth()));
+        }
+      }
+    };
+
+    const setup = () => {
+      render();
+      if (!hostRef.current || typeof ResizeObserver === "undefined") return;
+      let last = buttonWidth();
+      resizeObserver = new ResizeObserver(() => {
+        const next = buttonWidth();
+        if (Math.abs(next - last) < 2) return;
+        last = next;
+        render();
+      });
+      resizeObserver.observe(hostRef.current);
     };
 
     if (window.google?.accounts?.id) {
-      render();
+      setup();
       return () => {
         cancelled = true;
+        resizeObserver?.disconnect();
       };
     }
 
@@ -77,10 +113,11 @@ export function GoogleSignInButton({
       'script[data-google-gsi="1"]',
     );
     if (existing) {
-      existing.addEventListener("load", render);
+      existing.addEventListener("load", setup);
       return () => {
         cancelled = true;
-        existing.removeEventListener("load", render);
+        resizeObserver?.disconnect();
+        existing.removeEventListener("load", setup);
       };
     }
 
@@ -89,12 +126,13 @@ export function GoogleSignInButton({
     script.async = true;
     script.defer = true;
     script.dataset.googleGsi = "1";
-    script.addEventListener("load", render);
+    script.addEventListener("load", setup);
     document.head.appendChild(script);
 
     return () => {
       cancelled = true;
-      script.removeEventListener("load", render);
+      resizeObserver?.disconnect();
+      script.removeEventListener("load", setup);
     };
   }, [disabled, label]);
 
@@ -103,9 +141,9 @@ export function GoogleSignInButton({
   return (
     <div
       ref={hostRef}
+      className="mto-google-btn"
       style={{
-        display: "flex",
-        justifyContent: "center",
+        width: "100%",
         marginTop: 12,
         opacity: disabled ? 0.55 : 1,
         pointerEvents: disabled ? "none" : "auto",
