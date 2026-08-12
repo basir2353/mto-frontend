@@ -62,13 +62,53 @@ type MockDb = {
   moverWalletBalances: Record<string, number>;
 };
 
-const STORAGE_KEY = "mto_mock_db_v1";
+const STORAGE_KEY = "mto_mock_db_v2";
 
 const vehicleTypes: VehicleType[] = [
-  { id: "vt_suv", name: "SUV", description: "Small loads, boxes, single items", basePrice: 35, pricePerKm: 1.4, maxWeightKg: 300, maxVolumeM3: 2, moverCapacity: 1, isActive: true },
-  { id: "vt_van", name: "Cargo Van", description: "Furniture, appliances, multi-box moves", basePrice: 55, pricePerKm: 2.0, maxWeightKg: 900, maxVolumeM3: 9, moverCapacity: 2, isActive: true },
-  { id: "vt_pickup", name: "Pickup Truck", description: "Bulky single items, store pickups", basePrice: 45, pricePerKm: 1.8, maxWeightKg: 700, maxVolumeM3: 5, moverCapacity: 1, isActive: true },
-  { id: "vt_box", name: "Box Truck", description: "Full apartment or studio moves", basePrice: 85, pricePerKm: 2.6, maxWeightKg: 2500, maxVolumeM3: 20, moverCapacity: 2, isActive: true },
+  {
+    id: "vt_pickup",
+    name: "Pickup Truck",
+    description: "Open-bed hauls, garden & bulky gear",
+    basePrice: 75,
+    pricePerKm: 1.5,
+    maxWeightKg: 900,
+    maxVolumeM3: 6,
+    moverCapacity: 1,
+    isActive: true,
+  },
+  {
+    id: "vt_van",
+    name: "Cargo Van",
+    description: "Best for studio and one-bedroom moves",
+    basePrice: 89,
+    pricePerKm: 1.75,
+    maxWeightKg: 800,
+    maxVolumeM3: 8,
+    moverCapacity: 2,
+    isActive: true,
+  },
+  {
+    id: "vt_box",
+    name: "Box Truck",
+    description: "Enclosed box truck for apartment and house moves",
+    basePrice: 149,
+    pricePerKm: 2.4,
+    maxWeightKg: 2500,
+    maxVolumeM3: 24,
+    moverCapacity: 2,
+    isActive: true,
+  },
+  {
+    id: "vt_suv",
+    name: "Car/SUV",
+    description: "Small deliveries and single items only",
+    basePrice: 45,
+    pricePerKm: 1.25,
+    maxWeightKg: 200,
+    maxVolumeM3: 2,
+    moverCapacity: 1,
+    isActive: true,
+  },
 ];
 
 const moverSeeds: Array<{ businessName: string; rating: number; completed: number; vehicleTypeIds: string[]; bio: string }> = [
@@ -76,7 +116,7 @@ const moverSeeds: Array<{ businessName: string; rating: number; completed: numbe
   { businessName: "Quickhaul Co.", rating: 4.7, completed: 268, vehicleTypeIds: ["vt_pickup"], bio: "Pickup Truck · Ram 1500 2019 · 1 helper available" },
   { businessName: "CityVan Express", rating: 4.8, completed: 355, vehicleTypeIds: ["vt_van"], bio: "Cargo Van · Mercedes Sprinter 2022 · 2 helpers available" },
   { businessName: "Big Load Bros", rating: 4.6, completed: 190, vehicleTypeIds: ["vt_box"], bio: "Box Truck · Isuzu NPR 2020 · 2 helpers available" },
-  { businessName: "SwiftSUV Moves", rating: 4.9, completed: 501, vehicleTypeIds: ["vt_suv"], bio: "SUV · Toyota Highlander 2021 · driver only" },
+  { businessName: "SwiftSUV Moves", rating: 4.9, completed: 501, vehicleTypeIds: ["vt_suv"], bio: "Car/SUV · Toyota Highlander 2021 · small deliveries only" },
   { businessName: "Metro Muscle Moving", rating: 4.5, completed: 134, vehicleTypeIds: ["vt_van", "vt_pickup"], bio: "Cargo Van · Nissan NV200 2020 · 1 helper available" },
 ];
 

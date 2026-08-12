@@ -628,7 +628,10 @@ function VehicleListRow({
     vehicle.moverCapacity != null && vehicle.moverCapacity > 0
       ? `${vehicle.moverCapacity} mover${vehicle.moverCapacity === 1 ? "" : "s"}`
       : null;
-  const meta = [movers, capacity].filter(Boolean).join(" · ");
+  const isSmallDelivery = /car|suv/i.test(vehicle.name);
+  const meta = isSmallDelivery
+    ? "Small deliveries only"
+    : [movers, capacity].filter(Boolean).join(" · ");
 
   return (
     <button

@@ -106,7 +106,8 @@ function BookWizard() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [selectedVehicleName, setSelectedVehicleName] = useState("");
   const [estimatedLoad, setEstimatedLoad] = useState("");
-  const [helperCount, setHelperCount] = useState(1);
+  const [helpNeeded, setHelpNeeded] = useState(false);
+  const [startBid, setStartBid] = useState<number | null>(null);
   const [moveDescription, setMoveDescription] = useState("");
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [stars, setStars] = useState(5);
@@ -170,8 +171,10 @@ function BookWizard() {
       setSelectedVehicleName,
       estimatedLoad,
       setEstimatedLoad,
-      helperCount,
-      setHelperCount,
+      helpNeeded,
+      setHelpNeeded,
+      startBid,
+      setStartBid,
       moveDescription,
       setMoveDescription,
       photos,
@@ -205,6 +208,8 @@ function BookWizard() {
       selectedVehicleId,
       selectedVehicleName,
       estimatedLoad,
+      helpNeeded,
+      startBid,
       moveDescription,
       photos,
       stars,
@@ -212,7 +217,6 @@ function BookWizard() {
       reviewText,
       tip,
       customTip,
-      helperCount,
     ],
   );
 
@@ -221,12 +225,15 @@ function BookWizard() {
       moveType === "now"
         ? "Move Now"
         : `${formatMoveDate(moveDate) || "Scheduled"} · ${timeWindow} (${timeZone.replace(/_/g, " ")})`;
+    const vehicleLabel = /16\s*ft|26\s*ft/i.test(selectedVehicleName || vehicleFilter)
+      ? "Box Truck"
+      : selectedVehicleName || vehicleFilter;
     const notes = [
-      `Vehicle: ${selectedVehicleName || vehicleFilter}`,
+      `Vehicle: ${vehicleLabel}`,
       `Timing: ${scheduleLabel}`,
       flexibleTime ? "Flexible time: yes" : "Flexible time: no",
       estimatedLoad ? `Load: ${estimatedLoad}` : "",
-      `Helpers: ${helperCount}`,
+      `Help needed: ${helpNeeded ? "yes" : "no"}`,
       `Description: ${moveDescription.trim()}`,
       photos.length ? `Photos: ${photos.map((p) => p.url).join(", ")}` : "",
     ]
@@ -241,11 +248,14 @@ function BookWizard() {
       selectedVehicleName,
       estimatedLoad,
     );
-    const { estimatedPrice, distanceKm } = await computeMoveEstimate(
+    const estimate = await computeMoveEstimate(
       pickupPlace,
       destinationPlace,
       publishItems,
     );
+    const estimatedPrice =
+      startBid != null && startBid > 0 ? Math.round(startBid) : estimate.estimatedPrice;
+    const distanceKm = estimate.distanceKm;
     const req = await flow.publishRequest({
       pickup,
       destination,
@@ -273,7 +283,8 @@ function BookWizard() {
       setSelectedVehicleId(null);
       setSelectedVehicleName("");
       setEstimatedLoad("");
-      setHelperCount(1);
+      setHelpNeeded(false);
+      setStartBid(null);
       setMoveDescription("");
       setPhotos([]);
       setScreen("quotes");
@@ -326,7 +337,8 @@ function BookWizard() {
     setSelectedVehicleId(null);
     setSelectedVehicleName("");
     setEstimatedLoad("");
-    setHelperCount(1);
+    setHelpNeeded(false);
+    setStartBid(null);
     setMoveDescription("");
     setPhotos([]);
     setSelectedQuoteId(null);

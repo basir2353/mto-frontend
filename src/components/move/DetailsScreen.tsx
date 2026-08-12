@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DatePicker, { formatMoveDate } from "@/components/DatePicker";
 import TimeSelect from "@/components/TimeSelect";
 import RouteMap from "@/components/maps/RouteMap";
@@ -13,9 +13,13 @@ import { useRouteMetrics } from "@/hooks/useRouteMetrics";
 import { estimateVehicleTripPrice } from "@/lib/vehicleVisuals";
 import { RouteMetricsBadge, WizardFooter, WizardShell, stepHeading, stepSub } from "@/components/move/WizardChrome";
 
-const HELPER_MIN = 1;
-const HELPER_MAX = 4;
-const EXTRA_HELPER_FEE = 35;
+/** Normalize legacy size labels stored from older sessions. */
+function displayVehicleName(name: string): string {
+  const n = name.trim();
+  if (!n) return "Vehicle TBD";
+  if (/16\s*ft|26\s*ft/i.test(n) || /^box\s*truck$/i.test(n)) return "Box Truck";
+  return n;
+}
 
 export function DetailsScreen({
   onNext,
@@ -30,6 +34,7 @@ export function DetailsScreen({
 }) {
   const f = useForm();
   const [localError, setLocalError] = useState<string | null>(null);
+  const bidTouched = useRef(false);
   const nearby = useNearbyMovers({
     pickup: f.pickupPlace,
     destination: f.destinationPlace,
@@ -46,13 +51,21 @@ export function DetailsScreen({
     [nearby.vehicleTypes, f.selectedVehicleId, f.selectedVehicleName, f.vehicleFilter],
   );
 
-  const basePrice = estimateVehicleTripPrice(
+  const suggestedBid = estimateVehicleTripPrice(
     route.tripKm,
     selectedVehicle?.basePrice,
     selectedVehicle?.pricePerKm,
   );
-  const helpers = Math.min(HELPER_MAX, Math.max(HELPER_MIN, f.helperCount || HELPER_MIN));
-  const estTotal = basePrice + Math.max(0, helpers - 1) * EXTRA_HELPER_FEE;
+
+  useEffect(() => {
+    if (bidTouched.current) return;
+    f.setStartBid(suggestedBid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-seed when route/vehicle estimate changes
+  }, [suggestedBid]);
+
+  const vehicleLabel = displayVehicleName(
+    selectedVehicle?.name || f.selectedVehicleName || f.vehicleFilter || "",
+  );
 
   const whenLabel =
     f.moveType === "now"
@@ -61,24 +74,24 @@ export function DetailsScreen({
 
   const itemsLabel =
     f.moveDescription.trim().slice(0, 42) ||
-    f.selectedVehicleName ||
-    f.vehicleFilter ||
+    vehicleLabel ||
     "Your move";
 
   const canContinue = f.moveDescription.trim().length >= 10;
+  const startBid = f.startBid != null && f.startBid > 0 ? f.startBid : suggestedBid;
 
   const handleNext = async () => {
     if (!canContinue) {
       setLocalError("Describe your move in at least 10 characters.");
       return;
     }
+    if (!Number.isFinite(startBid) || startBid < 1) {
+      setLocalError("Enter a starting bid of at least $1.");
+      return;
+    }
+    f.setStartBid(Math.round(startBid));
     setLocalError(null);
     await onNext();
-  };
-
-  const bumpHelpers = (delta: number) => {
-    const next = Math.min(HELPER_MAX, Math.max(HELPER_MIN, helpers + delta));
-    f.setHelperCount(next);
   };
 
   return (
@@ -117,14 +130,21 @@ export function DetailsScreen({
 
             <MoveSummaryBox
               itemsLabel={itemsLabel}
-              vehicleLabel={f.selectedVehicleName || f.vehicleFilter || "Vehicle TBD"}
+              vehicleLabel={vehicleLabel}
               whenLabel={whenLabel}
-              helpers={helpers}
-              estTotal={estTotal}
-              onMinus={() => bumpHelpers(-1)}
-              onPlus={() => bumpHelpers(1)}
+              startBid={startBid}
+              suggestedBid={suggestedBid}
+              helpNeeded={f.helpNeeded}
+              onHelpNeededChange={f.setHelpNeeded}
+              onStartBidChange={(value) => {
+                bidTouched.current = true;
+                f.setStartBid(value);
+              }}
+              onResetBid={() => {
+                bidTouched.current = false;
+                f.setStartBid(suggestedBid);
+              }}
             />
-
           </div>
 
           <div style={{ flex: "none", padding: "16px 28px 22px", borderTop: "1px solid rgba(0,0,0,.07)" }}>
@@ -152,22 +172,23 @@ function MoveSummaryBox({
   itemsLabel,
   vehicleLabel,
   whenLabel,
-  helpers,
-  estTotal,
-  onMinus,
-  onPlus,
+  startBid,
+  suggestedBid,
+  helpNeeded,
+  onHelpNeededChange,
+  onStartBidChange,
+  onResetBid,
 }: {
   itemsLabel: string;
   vehicleLabel: string;
   whenLabel: string;
-  helpers: number;
-  estTotal: number;
-  onMinus: () => void;
-  onPlus: () => void;
+  startBid: number;
+  suggestedBid: number;
+  helpNeeded: boolean;
+  onHelpNeededChange: (v: boolean) => void;
+  onStartBidChange: (v: number) => void;
+  onResetBid: () => void;
 }) {
-  const atMin = helpers <= HELPER_MIN;
-  const atMax = helpers >= HELPER_MAX;
-
   return (
     <div
       style={{
@@ -177,7 +198,7 @@ function MoveSummaryBox({
         background: "#FAFAF8",
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 12,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
@@ -201,59 +222,137 @@ function MoveSummaryBox({
           </div>
         </div>
         <div style={{ textAlign: "right", flex: "none" }}>
-          <div style={{ font: "800 18px var(--font-archivo, Archivo)", color: "#0E0E10", letterSpacing: "-.02em" }}>
-            ${estTotal}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2 }}>
+            <span style={{ font: "800 18px var(--font-archivo, Archivo)", color: "#0E0E10" }}>$</span>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={Number.isFinite(startBid) ? startBid : ""}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                if (!Number.isFinite(n)) {
+                  onStartBidChange(0);
+                  return;
+                }
+                onStartBidChange(Math.max(0, Math.round(n)));
+              }}
+              aria-label="Starting bid"
+              style={{
+                width: 72,
+                border: "1.5px solid rgba(0,0,0,.14)",
+                borderRadius: 10,
+                padding: "4px 8px",
+                font: "800 18px var(--font-archivo, Archivo)",
+                color: "#0E0E10",
+                letterSpacing: "-.02em",
+                textAlign: "right",
+                background: "#fff",
+                outline: "none",
+              }}
+            />
           </div>
-          <div style={{ font: "500 11px var(--font-hanken, 'Hanken Grotesk')", color: "#8A8A90" }}>est. total</div>
+          <div style={{ marginTop: 2, font: "500 11px var(--font-hanken, 'Hanken Grotesk')", color: "#8A8A90" }}>
+            your start bid
+          </div>
+          {startBid !== suggestedBid ? (
+            <button
+              type="button"
+              onClick={onResetBid}
+              style={{
+                marginTop: 4,
+                border: "none",
+                background: "transparent",
+                padding: 0,
+                font: "600 11px var(--font-hanken, 'Hanken Grotesk')",
+                color: "#0E0E10",
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
+            >
+              Reset to ${suggestedBid}
+            </button>
+          ) : null}
         </div>
       </div>
 
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 10,
-          paddingTop: 8,
+          paddingTop: 10,
           borderTop: "1px solid rgba(0,0,0,.08)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
         }}
       >
         <div style={{ font: "600 12px var(--font-hanken, 'Hanken Grotesk')", color: "#6B6B70" }}>
-          Helpers
-          <span style={{ color: "#8A8A90", fontWeight: 500 }}> · min {HELPER_MIN}</span>
+          Help needed?
+          <span style={{ color: "#8A8A90", fontWeight: 500 }}> · does not change your bid</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <StepBtn label="−" disabled={atMin} onClick={onMinus} />
-          <span style={{ minWidth: 18, textAlign: "center", font: "800 14px var(--font-archivo, Archivo)" }}>
-            {helpers}
-          </span>
-          <StepBtn label="+" disabled={atMax} onClick={onPlus} />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <HelpOption
+            label="No thanks"
+            selected={!helpNeeded}
+            onClick={() => onHelpNeededChange(false)}
+          />
+          <HelpOption
+            label="Yes, I need help"
+            selected={helpNeeded}
+            onClick={() => onHelpNeededChange(true)}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function StepBtn({ label, disabled, onClick }: { label: string; disabled?: boolean; onClick: () => void }) {
+function HelpOption({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
-      aria-label={label === "+" ? "Add helper" : "Remove helper"}
-      disabled={disabled}
       onClick={onClick}
+      aria-pressed={selected}
       style={{
-        width: 30,
-        height: 30,
-        borderRadius: 999,
-        border: "1.5px solid rgba(0,0,0,.14)",
-        background: disabled ? "#F0F0F2" : "#fff",
-        color: disabled ? "#A0A0A6" : "#0E0E10",
-        font: "800 16px var(--font-hanken, 'Hanken Grotesk')",
-        lineHeight: 1,
-        cursor: disabled ? "not-allowed" : "pointer",
+        flex: "1 1 140px",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "10px 12px",
+        borderRadius: 12,
+        border: selected ? "2px solid #0E0E10" : "1.5px solid rgba(0,0,0,.12)",
+        background: selected ? "#0E0E10" : "#fff",
+        cursor: "pointer",
+        textAlign: "left",
       }}
     >
-      {label}
+      <span
+        aria-hidden
+        style={{
+          width: 16,
+          height: 16,
+          borderRadius: 999,
+          border: selected ? "5px solid var(--accent)" : "1.5px solid rgba(0,0,0,.25)",
+          background: selected ? "#0E0E10" : "#fff",
+          flex: "none",
+          boxSizing: "border-box",
+        }}
+      />
+      <span
+        style={{
+          font: "700 13px var(--font-hanken, 'Hanken Grotesk')",
+          color: selected ? "#fff" : "#0E0E10",
+        }}
+      >
+        {label}
+      </span>
     </button>
   );
 }

@@ -36,9 +36,12 @@ export type FormState = {
   setSelectedVehicleName: (v: string) => void;
   estimatedLoad: string;
   setEstimatedLoad: (v: string) => void;
-  /** Extra helpers on site — min 1 (driver included). */
-  helperCount: number;
-  setHelperCount: (v: number) => void;
+  /** Whether the customer wants loading help (does not change start bid). */
+  helpNeeded: boolean;
+  setHelpNeeded: (v: boolean) => void;
+  /** Customer starting bid shown to movers (editable). */
+  startBid: number | null;
+  setStartBid: (v: number | null) => void;
   moveDescription: string;
   setMoveDescription: (v: string) => void;
   photos: Photo[];

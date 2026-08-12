@@ -49,7 +49,19 @@ export function useNearbyMovers({
   useEffect(() => {
     vehiclesApi
       .listTypes()
-      .then(setVehicleTypes)
+      .then((types) => {
+        const order = ["pickup truck", "cargo van", "box truck", "car/suv"];
+        const sorted = [...types]
+          .filter((t) => t.isActive !== false)
+          .sort((a, b) => {
+            const ai = order.indexOf(a.name.toLowerCase());
+            const bi = order.indexOf(b.name.toLowerCase());
+            const aRank = ai === -1 ? 100 + Number(a.maxVolumeM3 ?? 0) : ai;
+            const bRank = bi === -1 ? 100 + Number(b.maxVolumeM3 ?? 0) : bi;
+            return aRank - bRank;
+          });
+        setVehicleTypes(sorted);
+      })
       .catch(() => setVehicleTypes([]));
   }, []);
 
