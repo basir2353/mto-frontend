@@ -123,15 +123,29 @@ export function useRouteMetrics(
       if (cancelled) return;
 
       const fallback = metricsFromHaversine(pickupGeo, destinationGeo, driverGeo);
+      const saneMinutes = (km: number | null | undefined, minutes: number | null | undefined) => {
+        if (km != null && km > 400) return null;
+        if (minutes != null && minutes > 240) return null;
+        return minutes ?? null;
+      };
       setMetrics({
         pickup: pickupGeo,
         destination: destinationGeo,
         tripKm: tripLeg?.distanceKm ?? fallback.tripKm,
-        tripMinutes: tripLeg?.durationMinutes ?? fallback.tripMinutes,
+        tripMinutes: saneMinutes(
+          tripLeg?.distanceKm ?? fallback.tripKm,
+          tripLeg?.durationMinutes ?? fallback.tripMinutes,
+        ),
         toPickupKm: toPickupLeg?.distanceKm ?? fallback.toPickupKm,
-        toPickupMinutes: toPickupLeg?.durationMinutes ?? fallback.toPickupMinutes,
+        toPickupMinutes: saneMinutes(
+          toPickupLeg?.distanceKm ?? fallback.toPickupKm,
+          toPickupLeg?.durationMinutes ?? fallback.toPickupMinutes,
+        ),
         toDropoffKm: toDropoffLeg?.distanceKm ?? fallback.toDropoffKm,
-        toDropoffMinutes: toDropoffLeg?.durationMinutes ?? fallback.toDropoffMinutes,
+        toDropoffMinutes: saneMinutes(
+          toDropoffLeg?.distanceKm ?? fallback.toDropoffKm,
+          toDropoffLeg?.durationMinutes ?? fallback.toDropoffMinutes,
+        ),
         resolving: false,
       });
     };

@@ -1,17 +1,35 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import PlaceAutocompleteInput from "@/components/maps/PlaceAutocompleteInput";
 import { hasGoogleMaps } from "@/lib/env";
 import type { MapPlace } from "@/lib/maps";
-import { getAppUrls } from "@/lib/theme/apps";
 
 type QuoteWidgetProps = {
   onPickupPlaceChange?: (place: MapPlace) => void;
   onDropoffPlaceChange?: (place: MapPlace) => void;
 };
 
+function buildBookHref(
+  pickup: string,
+  dropoff: string,
+  pickupPlace: MapPlace,
+  dropoffPlace: MapPlace,
+) {
+  const params = new URLSearchParams();
+  if (pickup) params.set("pickup", pickup);
+  if (dropoff) params.set("destination", dropoff);
+  if (pickupPlace.lat != null) params.set("pickupLat", String(pickupPlace.lat));
+  if (pickupPlace.lng != null) params.set("pickupLng", String(pickupPlace.lng));
+  if (dropoffPlace.lat != null) params.set("destinationLat", String(dropoffPlace.lat));
+  if (dropoffPlace.lng != null) params.set("destinationLng", String(dropoffPlace.lng));
+  const q = params.toString();
+  return `/book${q ? `?${q}` : ""}`;
+}
+
 export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange }: QuoteWidgetProps = {}) {
+  const router = useRouter();
   const [pickup, setPickup] = useState("");
   const [pickupPlace, setPickupPlace] = useState<MapPlace>({ address: "" });
   const [dropoff, setDropoff] = useState("");
@@ -23,7 +41,7 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
       setPickup(place.address);
       onPickupPlaceChange?.(place);
     },
-    [onPickupPlaceChange]
+    [onPickupPlaceChange],
   );
 
   const handleDropoffSelect = useCallback(
@@ -32,8 +50,13 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
       setDropoff(place.address);
       onDropoffPlaceChange?.(place);
     },
-    [onDropoffPlaceChange]
+    [onDropoffPlaceChange],
   );
+
+  const goBook = () => {
+    if (!pickup.trim() || !dropoff.trim()) return;
+    router.push(buildBookHref(pickup, dropoff, pickupPlace, dropoffPlace));
+  };
 
   return (
     <div className="mto-quote-widget">
@@ -64,22 +87,15 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
           Start typing an address to see Google Maps suggestions
         </p>
       )}
-      <a
-        href={(() => {
-          const params = new URLSearchParams();
-          if (pickup) params.set("pickup", pickup);
-          if (dropoff) params.set("destination", dropoff);
-          if (pickupPlace.lat != null) params.set("pickupLat", String(pickupPlace.lat));
-          if (pickupPlace.lng != null) params.set("pickupLng", String(pickupPlace.lng));
-          if (dropoffPlace.lat != null) params.set("destinationLat", String(dropoffPlace.lat));
-          if (dropoffPlace.lng != null) params.set("destinationLng", String(dropoffPlace.lng));
-          const q = params.toString();
-          const urls = getAppUrls();
-          return `${urls.customerApp}/customer-app${q ? `?${q}` : ""}`;
-        })()}
+      <button
+        type="button"
+        onClick={goBook}
+        disabled={!pickup.trim() || !dropoff.trim()}
         style={{
           marginTop: 12,
           height: 54,
+          width: "100%",
+          border: "none",
           borderRadius: 12,
           background: "var(--accent)",
           display: "flex",
@@ -87,11 +103,12 @@ export default function QuoteWidget({ onPickupPlaceChange, onDropoffPlaceChange 
           justifyContent: "center",
           font: "800 16px var(--font-archivo)",
           color: "#0E0E10",
-          textDecoration: "none",
+          cursor: !pickup.trim() || !dropoff.trim() ? "default" : "pointer",
+          opacity: !pickup.trim() || !dropoff.trim() ? 0.65 : 1,
         }}
       >
         See prices →
-      </a>
+      </button>
     </div>
   );
 }

@@ -1,0 +1,261 @@
+.finding {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.radar {
+  position: relative;
+  height: 220px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #0e0e10;
+  box-shadow: 0 18px 42px -24px rgba(14, 14, 16, 0.65);
+  isolation: isolate;
+}
+
+.radar::before {
+  position: absolute;
+  inset: -35%;
+  content: "";
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 222, 46, 0.02) 245deg,
+    rgba(255, 222, 46, 0.34) 345deg,
+    transparent 360deg
+  );
+  animation: radarSweep 3s linear infinite;
+}
+
+.ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ringOne {
+  width: 84px;
+  height: 84px;
+}
+
+.ringTwo {
+  width: 148px;
+  height: 148px;
+}
+
+.ringThree {
+  width: 214px;
+  height: 214px;
+}
+
+.brandMark {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 5px solid #0e0e10;
+  border-radius: 18px;
+  background: var(--accent);
+  color: #0e0e10;
+  font: 900 27px "Archivo";
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px rgba(255, 222, 46, 0.3), 0 0 28px rgba(255, 222, 46, 0.25);
+  animation: markPulse 1.8s ease-in-out infinite;
+}
+
+.mover {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: #fff;
+  color: #0e0e10;
+  font-size: 13px;
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.35);
+}
+
+.mover::after {
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(255, 222, 46, 0.45);
+  border-radius: 50%;
+  content: "";
+  animation: moverPing 1.8s ease-out infinite;
+}
+
+.moverOne {
+  top: 28px;
+  right: 55px;
+  animation: moverFloat 2.6s ease-in-out infinite;
+}
+
+.moverTwo {
+  bottom: 35px;
+  left: 42px;
+  animation: moverFloat 2.9s 0.5s ease-in-out infinite;
+}
+
+.moverThree {
+  right: 32px;
+  bottom: 46px;
+  animation: moverFloat 2.4s 0.9s ease-in-out infinite;
+}
+
+.livePill {
+  position: absolute;
+  z-index: 4;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: 700 10px "Hanken Grotesk";
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(255, 222, 46, 0.14);
+  animation: livePulse 1.2s ease-in-out infinite;
+}
+
+.statusList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 13px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 13px;
+  background: #fafaf8;
+}
+
+.statusIcon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: #0e0e10;
+  color: #fff;
+  font: 800 12px "Archivo";
+}
+
+.statusIconSearching {
+  border: 2px solid rgba(14, 14, 16, 0.13);
+  border-top-color: #0e0e10;
+  background: var(--accent);
+  animation: iconSpin 0.9s linear infinite;
+}
+
+.statusText {
+  font: 700 14px "Hanken Grotesk";
+  color: #0e0e10;
+}
+
+.statusSub {
+  margin-top: 2px;
+  color: #8a8a90;
+  font: 500 11px "Hanken Grotesk";
+}
+
+@keyframes radarSweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes markPulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+@keyframes moverFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes moverPing {
+  from {
+    opacity: 0.8;
+    transform: scale(0.75);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes livePulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes iconSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .radar {
+    height: 190px;
+    margin-bottom: 18px;
+  }
+
+  .ringThree {
+    width: 190px;
+    height: 190px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar::before,
+  .brandMark,
+  .mover,
+  .mover::after,
+  .liveDot,
+  .statusIconSearching {
+    animation: none;
+  }
+}

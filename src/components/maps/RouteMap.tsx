@@ -29,6 +29,95 @@ const fallbackMapStyle: React.CSSProperties = {
     "repeating-linear-gradient(0deg, transparent 0 78px, rgba(0,0,0,.04) 78px 79px), repeating-linear-gradient(90deg, transparent 0 78px, rgba(0,0,0,.04) 78px 79px)",
 };
 
+/** Map/Satellite under zoom (+/−) on the right, Google-style spacing. */
+function MapControlsBottomRight() {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || typeof google === "undefined" || !google.maps?.ControlPosition) return;
+
+    map.setOptions({
+      mapTypeControl: false,
+      fullscreenControl: false,
+      streetViewControl: false,
+      zoomControl: true,
+      zoomControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_BOTTOM,
+      },
+    });
+
+    const wrap = document.createElement("div");
+    wrap.className = "mto-map-type-ctrl";
+    wrap.style.cssText = [
+      "margin:10px 10px 10px 0",
+      "display:flex",
+      "background:#fff",
+      "border-radius:8px",
+      "overflow:hidden",
+      "box-shadow:0 1px 4px rgba(0,0,0,.3)",
+      "font:600 13px Roboto,Arial,sans-serif",
+      "user-select:none",
+    ].join(";");
+
+    const mkBtn = (label: string, type: string) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = label;
+      btn.style.cssText = [
+        "border:0",
+        "margin:0",
+        "padding:8px 12px",
+        "background:transparent",
+        "cursor:pointer",
+        "color:#565656",
+        "font:inherit",
+        "line-height:1.2",
+      ].join(";");
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        map.setMapTypeId(type);
+        paint();
+      });
+      return btn;
+    };
+
+    const mapBtn = mkBtn("Map", "roadmap");
+    const satBtn = mkBtn("Satellite", "hybrid");
+    const divider = document.createElement("div");
+    divider.style.cssText = "width:1px;background:rgba(0,0,0,.12);align-self:stretch;margin:6px 0";
+    wrap.append(mapBtn, divider, satBtn);
+
+    const paint = () => {
+      const id = String(map.getMapTypeId() ?? "roadmap");
+      const onRoad = id === "roadmap" || id === "terrain";
+      mapBtn.style.fontWeight = onRoad ? "700" : "500";
+      mapBtn.style.color = onRoad ? "#0E0E10" : "#565656";
+      satBtn.style.fontWeight = !onRoad ? "700" : "500";
+      satBtn.style.color = !onRoad ? "#0E0E10" : "#565656";
+    };
+    paint();
+
+    const controls = map.controls[google.maps.ControlPosition.RIGHT_BOTTOM];
+    // index 0 = bottom of stack → sits under +/- with same right gutter
+    controls.insertAt(0, wrap);
+
+    const listener = map.addListener("maptypeid_changed", paint);
+
+    return () => {
+      google.maps.event.removeListener(listener);
+      for (let i = controls.getLength() - 1; i >= 0; i -= 1) {
+        if (controls.getAt(i) === wrap) {
+          controls.removeAt(i);
+          break;
+        }
+      }
+    };
+  }, [map]);
+
+  return null;
+}
+
 function FitBounds({
   pickup,
   destination,
@@ -182,7 +271,7 @@ export default function RouteMap({
         defaultZoom={zoom}
         gestureHandling="greedy"
         disableDefaultUI={false}
-        mapTypeControl
+        mapTypeControl={false}
         zoomControl
         scaleControl
         streetViewControl={false}
@@ -190,6 +279,7 @@ export default function RouteMap({
         clickableIcons={false}
         style={{ width: "100%", height: "100%" }}
       >
+        <MapControlsBottomRight />
         <FitBounds pickup={pickup} destination={destination} driver={driver} />
         {shouldShowRoute && <DrivingRoute pickup={pickup} destination={destination} />}
         {pickupCoords && <Marker position={pickupCoords} title={pickup?.address ?? "Pickup"} label={{ text: "P", color: "#0E0E10", fontWeight: "800" }} />}

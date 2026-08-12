@@ -26,7 +26,7 @@ export function FlowSteps({ steps, current, inverted = false }: { steps: string[
                 borderRadius: 999,
                 background: bg,
                 color: fg,
-                font: active ? "700 12px var(--font-hanken)" : "600 12px var(--font-hanken)",
+                font: active ? "700 12px 'Hanken Grotesk'" : "600 12px 'Hanken Grotesk'",
               }}
             >
               <span
@@ -39,7 +39,7 @@ export function FlowSteps({ steps, current, inverted = false }: { steps: string[
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  font: "800 11px var(--font-archivo)",
+                  font: "800 11px 'Archivo'",
                   flexShrink: 0,
                 }}
               >
@@ -73,11 +73,11 @@ export function MoveProcessOverview({ current }: { current: number }) {
         gap: 10,
       }}
     >
-      <div style={{ font: "700 11px var(--font-hanken)", letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8A90" }}>
+      <div style={{ font: "700 11px 'Hanken Grotesk'", letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8A90" }}>
         Your move · step {Math.min(current + 1, MOVE_PROCESS_STEPS.length)} of {MOVE_PROCESS_STEPS.length}
       </div>
       <FlowSteps steps={MOVE_PROCESS_STEPS.map((s) => s.title)} current={current} />
-      <div style={{ font: "500 13px/1.45 var(--font-hanken)", color: "#6B6B70" }}>
+      <div style={{ font: "500 13px/1.45 'Hanken Grotesk'", color: "#6B6B70" }}>
         {MOVE_PROCESS_STEPS[Math.min(current, MOVE_PROCESS_STEPS.length - 1)]?.description}
       </div>
     </div>
@@ -120,7 +120,7 @@ export function UserAvatar({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        font: `800 ${Math.round(size * 0.36)}px var(--font-archivo)`,
+        font: `800 ${Math.round(size * 0.36)}px 'Archivo'`,
         color: "#0E0E10",
       }}
     >
@@ -161,7 +161,7 @@ export function StatusBadge({
         alignItems: "center",
         padding: "4px 10px",
         borderRadius: 999,
-        font: "700 11px var(--font-hanken)",
+        font: "700 11px 'Hanken Grotesk'",
         letterSpacing: ".02em",
         ...styles[tone],
       }}
@@ -185,7 +185,7 @@ export function HintBanner({
     waiting: { background: "rgba(0,0,0,.03)", border: "1px dashed rgba(0,0,0,.12)", color: "#6B6B70" },
   };
   return (
-    <div style={{ ...styles[variant], borderRadius: 12, padding: "12px 14px", font: "500 13px/1.45 var(--font-hanken)" }}>
+    <div style={{ ...styles[variant], borderRadius: 12, padding: "12px 14px", font: "500 13px/1.45 'Hanken Grotesk'" }}>
       {children}
     </div>
   );
@@ -203,8 +203,8 @@ export function EmptyState({
   return (
     <div style={{ textAlign: "center", padding: "28px 20px" }}>
       {icon && <div style={{ marginBottom: 4 }}>{icon}</div>}
-      <div style={{ font: "800 16px var(--font-archivo)", marginBottom: 6 }}>{title}</div>
-      <div style={{ font: "500 13px/1.5 var(--font-hanken)", color: "#6B6B70", maxWidth: 280, margin: "0 auto" }}>{description}</div>
+      <div style={{ font: "800 16px 'Archivo'", marginBottom: 6 }}>{title}</div>
+      <div style={{ font: "500 13px/1.5 'Hanken Grotesk'", color: "#6B6B70", maxWidth: 280, margin: "0 auto" }}>{description}</div>
     </div>
   );
 }
@@ -212,8 +212,8 @@ export function EmptyState({
 export function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <h2 style={{ margin: 0, font: "800 22px var(--font-archivo)", letterSpacing: "-.02em" }}>{title}</h2>
-      {subtitle && <p style={{ margin: "6px 0 0", font: "500 14px var(--font-hanken)", color: "#6B6B70" }}>{subtitle}</p>}
+      <h2 style={{ margin: 0, font: "800 22px 'Archivo'", letterSpacing: "-.02em" }}>{title}</h2>
+      {subtitle && <p style={{ margin: "6px 0 0", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>{subtitle}</p>}
     </div>
   );
 }
@@ -246,7 +246,7 @@ export function TabBar<T extends string>({
               border: isActive ? "1.5px solid #0E0E10" : "1.5px solid rgba(255,255,255,.15)",
               background: isActive ? "var(--accent)" : "rgba(255,255,255,.06)",
               color: isActive ? "#0E0E10" : "#fff",
-              font: isActive ? "800 13px var(--font-archivo)" : "700 13px var(--font-hanken)",
+              font: isActive ? "800 13px 'Archivo'" : "700 13px 'Hanken Grotesk'",
               cursor: "pointer",
               display: "inline-flex",
               alignItems: "center",
@@ -263,7 +263,7 @@ export function TabBar<T extends string>({
                   borderRadius: 999,
                   background: isActive ? "#0E0E10" : "var(--accent)",
                   color: isActive ? "#fff" : "#0E0E10",
-                  font: "800 11px var(--font-archivo)",
+                  font: "800 11px 'Archivo'",
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",

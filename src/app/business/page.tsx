@@ -64,7 +64,7 @@ export default function BusinessPage() {
               Talk to sales →
             </Link>
             <Link
-              href="/customer-app"
+              href="/book"
               style={{
                 height: 56,
                 padding: "0 28px",

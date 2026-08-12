@@ -4,8 +4,17 @@ import { useEffect, useState } from "react";
 
 const DISMISS_KEY = "mto_app_prompt_dismissed";
 
+/** Optional native/Expo customer app — never required to book on the website. */
+function nativeCustomerAppUrl() {
+  const fromEnv = process.env.NEXT_PUBLIC_CUSTOMER_NATIVE_APP_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/+$/, "");
+  if (process.env.NODE_ENV !== "production") return "http://localhost:8081";
+  return "";
+}
+
 export default function AppPromptPopup() {
   const [visible, setVisible] = useState(false);
+  const appUrl = nativeCustomerAppUrl();
 
   useEffect(() => {
     try {
@@ -31,7 +40,7 @@ export default function AppPromptPopup() {
   return (
     <div
       role="dialog"
-      aria-label="Open MoveThisOut apps"
+      aria-label="Book on website or open the app"
       style={{
         position: "fixed",
         zIndex: 1200,
@@ -60,7 +69,7 @@ export default function AppPromptPopup() {
           @keyframes mtoAppPromptIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
           @media(max-width:520px){
             .mto-app-prompt-actions{flex-direction:column!important}
-            .mto-app-prompt-actions a{width:100%}
+            .mto-app-prompt-actions a,.mto-app-prompt-actions button{width:100%}
           }
         `}</style>
 
@@ -82,10 +91,10 @@ export default function AppPromptPopup() {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ font: "800 16px/1.2 var(--font-archivo)", letterSpacing: "-.02em" }}>
-              Use the MoveThisOut app
+              Book on this website
             </div>
             <p style={{ margin: "6px 0 0", font: "500 13px/1.4 var(--font-hanken)", color: "rgba(255,255,255,.62)" }}>
-              Start a move with locations first. Account details only when you book.
+              Enter pickup and drop-off, then finish your move here. Prefer the app? You can open it anytime — optional.
             </p>
           </div>
           <button
@@ -110,12 +119,20 @@ export default function AppPromptPopup() {
         </div>
 
         <div className="mto-app-prompt-actions" style={{ display: "flex", gap: 8 }}>
-          <a href="/auth#signup" onClick={dismiss} style={primaryBtn}>
-            Sign up
-          </a>
-          <a href="/auth#login" onClick={dismiss} style={secondaryBtn}>
-            Log in
-          </a>
+          <button type="button" onClick={dismiss} style={{ ...primaryBtn, border: "none", cursor: "pointer" }}>
+            Continue on website
+          </button>
+          {appUrl ? (
+            <a
+              href={appUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={dismiss}
+              style={secondaryBtn}
+            >
+              Open app
+            </a>
+          ) : null}
         </div>
       </div>
     </div>

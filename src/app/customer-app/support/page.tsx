@@ -107,8 +107,8 @@ export default function CustomerSupportPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginBottom: 32 }}>
             {[
-              { title: "Book a move", href: "/customer-app", desc: "Start a new request" },
-              { title: "Track a move", href: "/customer-app", desc: "Live status and chat" },
+              { title: "Book a move", href: "/book", desc: "Start a new request" },
+              { title: "Track a move", href: "/book", desc: "Live status and chat" },
               { title: "Your profile", href: "/customer-app/profile", desc: "Addresses & settings" },
               { title: "General help", href: "/help", desc: "Platform overview" },
             ].map((card) => (

@@ -6,23 +6,51 @@ import type { NearbyMoversSortBy } from "@/lib/api/public";
 import type { MapPlace } from "@/lib/maps";
 import { toLatLng } from "@/lib/maps";
 
-type Options = { pickup?: MapPlace | null; destination?: MapPlace | null; vehicleFilter: string; sortBy: NearbyMoversSortBy };
+type UseNearbyMoversOptions = {
+  pickup?: MapPlace | null;
+  destination?: MapPlace | null;
+  vehicleFilter: string;
+  sortBy: NearbyMoversSortBy;
+};
 
-function matchesFilter(mover: NearbyMover, filter: string, types: VehicleType[]) {
-  if (!filter) return true;
-  const typeId = types.find((type) => type.name === filter)?.id;
+function moverMatchesVehicleFilter(mover: NearbyMover, vehicleFilter: string, vehicleTypes: VehicleType[]) {
+  if (!vehicleFilter) return true;
+  const typeId = vehicleTypes.find((type) => type.name === vehicleFilter)?.id;
   if (typeId) return mover.vehicleTypes.some((vehicle) => vehicle.id === typeId);
-  return mover.vehicleTypes.some((vehicle) => vehicle.name.toLowerCase() === filter.toLowerCase());
+  const normalized = vehicleFilter.toLowerCase();
+  return mover.vehicleTypes.some((vehicle) => vehicle.name.toLowerCase() === normalized);
 }
 
-export function useNearbyMovers({ pickup, destination, vehicleFilter, sortBy }: Options) {
+function sortMoversForDisplay(
+  movers: NearbyMover[],
+  vehicleFilter: string,
+  vehicleTypes: VehicleType[],
+): NearbyMover[] {
+  if (!vehicleFilter) return movers;
+  return [...movers].sort((a, b) => {
+    const aMatch = moverMatchesVehicleFilter(a, vehicleFilter, vehicleTypes);
+    const bMatch = moverMatchesVehicleFilter(b, vehicleFilter, vehicleTypes);
+    if (aMatch === bMatch) return 0;
+    return aMatch ? -1 : 1;
+  });
+}
+
+export function useNearbyMovers({
+  pickup,
+  destination,
+  vehicleFilter,
+  sortBy,
+}: UseNearbyMoversOptions) {
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
   const [data, setData] = useState<NearbyMoversResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    vehiclesApi.listTypes().then(setVehicleTypes).catch(() => setVehicleTypes([]));
+    vehiclesApi
+      .listTypes()
+      .then(setVehicleTypes)
+      .catch(() => setVehicleTypes([]));
   }, []);
 
   const refresh = useCallback(async () => {
@@ -32,38 +60,52 @@ export function useNearbyMovers({ pickup, destination, vehicleFilter, sortBy }: 
       setError(null);
       return;
     }
+
     const destinationCoords = toLatLng(destination);
     setLoading(true);
     setError(null);
+
     try {
-      setData(await discoveryApi.nearbyMovers({
+      const response = await discoveryApi.nearbyMovers({
         latitude: pickupCoords.lat,
         longitude: pickupCoords.lng,
         radiusKm: 40,
         sortBy,
         destinationLatitude: destinationCoords?.lat,
         destinationLongitude: destinationCoords?.lng,
-      }));
-    } catch (caught) {
+      });
+      setData(response);
+    } catch (e) {
       setData(null);
-      setError(caught instanceof Error ? caught.message : "Failed to load nearby movers");
+      setError(e instanceof Error ? e.message : "Failed to load nearby movers");
     } finally {
       setLoading(false);
     }
   }, [pickup, destination, sortBy]);
 
   useEffect(() => {
-    void refresh();
-    const timer = setInterval(() => void refresh(), 30000);
+    refresh();
+    const timer = setInterval(refresh, 30000);
     return () => clearInterval(timer);
   }, [refresh]);
 
-  const allMovers = useMemo(() => data?.movers ?? [], [data?.movers]);
-  const movers = useMemo(() => {
-    if (!vehicleFilter) return allMovers;
-    return [...allMovers].sort((left, right) => Number(matchesFilter(right, vehicleFilter, vehicleTypes)) - Number(matchesFilter(left, vehicleFilter, vehicleTypes)));
-  }, [allMovers, vehicleFilter, vehicleTypes]);
-  const matchingCount = useMemo(() => allMovers.filter((mover) => matchesFilter(mover, vehicleFilter, vehicleTypes)).length, [allMovers, vehicleFilter, vehicleTypes]);
+  const allMovers = (data?.movers ?? []) as NearbyMover[];
+  const movers = useMemo(
+    () => sortMoversForDisplay(allMovers, vehicleFilter, vehicleTypes),
+    [allMovers, vehicleFilter, vehicleTypes],
+  );
+  const matchingCount = useMemo(
+    () => allMovers.filter((mover) => moverMatchesVehicleFilter(mover, vehicleFilter, vehicleTypes)).length,
+    [allMovers, vehicleFilter, vehicleTypes],
+  );
+
+  const mapMovers: Array<MapPlace & { id: string }> =
+    movers.map((mover) => ({
+      id: mover.id,
+      address: mover.businessName,
+      lat: mover.latitude,
+      lng: mover.longitude,
+    }));
 
   return {
     vehicleTypes,
@@ -71,7 +113,7 @@ export function useNearbyMovers({ pickup, destination, vehicleFilter, sortBy }: 
     allMovers,
     matchingCount,
     summary: data?.summary ?? { total: 0, onlineCount: 0, averageArrivalMinutes: 0 },
-    mapMovers: movers.map((mover) => ({ id: mover.id, address: mover.businessName, lat: mover.latitude, lng: mover.longitude })),
+    mapMovers,
     loading,
     error,
     refresh,

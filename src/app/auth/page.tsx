@@ -8,11 +8,6 @@ import { PhoneInput, isValidNationalPhone, parsePhoneValue } from "@/components/
 import { AppIcon } from "@/components/ui/Icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi, verificationApi, ApiError } from "@/lib/api";
-<<<<<<< HEAD
-import { getAppUrls } from "@/lib/theme/apps";
-=======
-import { setAppRole } from "@/lib/appRole";
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
 
 type Screen = "login" | "signup" | "verify" | "forgot" | "reset" | "done";
 
@@ -37,16 +32,17 @@ function AuthPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, register, isAuthenticated, user } = useAuth();
-  const urls = getAppUrls();
 
+  const returnTo = searchParams.get("returnTo");
   const afterAuthHref = (() => {
+    if (returnTo?.startsWith("/")) return returnTo;
     const params = new URLSearchParams();
     CARRYOVER_PARAMS.forEach((key) => {
       const value = searchParams.get(key);
       if (value) params.set(key, value);
     });
     const query = params.toString();
-    return query ? `/?${query}` : "/customer-app/profile";
+    return query ? `/book?${query}` : "/book";
   })();
 
   const [screen, setScreen] = useState<Screen>("login");
@@ -67,7 +63,6 @@ function AuthPageInner() {
   const [resetPassword, setResetPassword] = useState("");
   const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
 
-<<<<<<< HEAD
   const verifiedName = fullName.trim().split(" ")[0] || "there";
 
   useEffect(() => {
@@ -81,28 +76,12 @@ function AuthPageInner() {
     applyHash();
     window.addEventListener("hashchange", applyHash);
     return () => window.removeEventListener("hashchange", applyHash);
-=======
-
-  const verifiedName = fullName.trim().split(" ")[0] || "there";
-
-  useEffect(() => {
-    setAppRole("customer");
-  }, []);
-
-  useEffect(() => {
-    const h = (window.location.hash || "").replace("#", "");
-    if (["login", "signup", "verify", "forgot", "reset", "done"].includes(h)) setScreen(h as Screen);
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
   }, []);
 
   useEffect(() => {
     const intent = searchParams.get("intent");
-<<<<<<< HEAD
     if (intent === "move" || intent === "signup") setScreen("signup");
     if (intent === "login") setScreen("login");
-=======
-    if (intent === "move") setScreen("signup");
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
     const token = searchParams.get("resetToken") ?? searchParams.get("token");
     if (token) {
       setResetToken(token);
@@ -112,28 +91,10 @@ function AuthPageInner() {
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
-<<<<<<< HEAD
-    redirectByRole(user.roles);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user]);
+    router.replace(afterAuthHref);
+  }, [isAuthenticated, user, router, afterAuthHref]);
 
-  const redirectByRole = (roles: string[]) => {
-    if (roles.includes("admin")) {
-      window.location.href = urls.admin;
-      return;
-    }
-    if (roles.includes("mover")) {
-      window.location.href = `${urls.driverWeb}/login`;
-      return;
-    }
-    router.push(afterAuthHref);
-  };
-=======
-    router.replace(customerAppHref);
-  }, [isAuthenticated, user, router, customerAppHref]);
-
-  const redirectToCustomerApp = () => router.push(customerAppHref);
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
+  const redirectAfterAuth = () => router.push(afterAuthHref);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,7 +114,7 @@ function AuthPageInner() {
     setApiError(null);
     try {
       await login(email, password);
-      redirectToCustomerApp();
+      redirectAfterAuth();
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.statusCode === 401) {
@@ -296,7 +257,6 @@ function AuthPageInner() {
     }
   };
 
-<<<<<<< HEAD
   const goLogin = () => {
     setApiError(null);
     setScreen("login");
@@ -309,8 +269,6 @@ function AuthPageInner() {
     if (typeof window !== "undefined") window.location.hash = "signup";
   };
 
-=======
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
   return (
     <div className="mto-auth-page">
       <style>{`
@@ -401,7 +359,6 @@ function AuthPageInner() {
         />
       </div>
 
-<<<<<<< HEAD
       <div className="mto-auth-form-side">
         <div className="mto-auth-form">
           {apiError && (
@@ -516,91 +473,6 @@ function AuthPageInner() {
                       />
                     </div>
                   </div>
-=======
-        {/* FORM SIDE */}
-        <div className="mto-auth-form-side">
-          <div className="mto-auth-form">
-            {apiError && (
-              <div style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 10, background: "#fff0f0", color: "#b00020", font: "600 13px 'Hanken Grotesk'" }}>
-                {apiError}
-              </div>
-            )}
-            {screen === "login" && (
-              <div style={{ animation: "rise .3s ease" }}>
-                <h1 style={heading}>Welcome back</h1>
-                <p style={sub}>Log in to book, track and manage your moves.</p>
-                <form onSubmit={handleLogin}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                    <TextInput label="Email" type="email" value={loginEmail} onChange={setLoginEmail} placeholder="ava@email.com" />
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 }}>
-                        <FieldLabel>Password</FieldLabel>
-                        <span onClick={() => setScreen("forgot")} style={{ font: "600 12px 'Hanken Grotesk'", color: "#0E0E10", textDecoration: "underline", cursor: "pointer" }}>
-                          Forgot?
-                        </span>
-                      </div>
-                      <TextInput value={loginPassword} onChange={setLoginPassword} type="password" placeholder="••••••••" />
-                    </div>
-                  </div>
-                  <button type="submit" disabled={busy} style={{ ...primaryBtn, opacity: busy ? 0.7 : 1 }}>
-                    {busy ? "Logging in…" : "Log in →"}
-                  </button>
-                </form>
-                <p style={{ margin: "24px 0 0", textAlign: "center", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
-                  New here?{" "}
-                  <span onClick={() => setScreen("signup")} style={linkText}>
-                    Create an account
-                  </span>
-                </p>
-              </div>
-            )}
-
-            {screen === "signup" && (
-              <div style={{ animation: "rise .3s ease" }}>
-                <h1 style={heading}>Create your account</h1>
-                <p style={sub2}>Create a customer account to book and track moves.</p>
-                <form onSubmit={handleSignup}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
-                    <TextInput label="Full name" value={fullName} onChange={setFullName} placeholder="Ava Morgan" />
-                    <TextInput label="Email" type="email" value={signupEmail} onChange={setSignupEmail} placeholder="ava@email.com" />
-                    <div className="mto-auth-fields-row">
-                      <div>
-                        <PhoneInput label="Phone" height={50} value={phone} onChange={setPhone} />
-                      </div>
-                      <div>
-                        <TextInput label="Password" type="password" height={50} value={signupPassword} onChange={setSignupPassword} placeholder="••••••" />
-                      </div>
-                    </div>
-                  </div>
-                  <button type="submit" disabled={busy} style={{ ...primaryBtn, opacity: busy ? 0.7 : 1 }}>
-                    {busy ? "Creating account…" : "Create account →"}
-                  </button>
-                </form>
-                <p style={{ margin: "16px 0 0", textAlign: "center", font: "400 12px/1.5 'Hanken Grotesk'", color: "#9a9aa0" }}>
-                  By continuing you agree to our{" "}
-                  <a href="/terms" style={{ color: "inherit", fontWeight: 600 }}>
-                    Terms
-                  </a>{" "}
-                  &amp;{" "}
-                  <a href="/privacy" style={{ color: "inherit", fontWeight: 600 }}>
-                    Privacy Policy
-                  </a>
-                  .
-                </p>
-                <p style={{ margin: "16px 0 0", textAlign: "center", font: "500 14px 'Hanken Grotesk'", color: "#6B6B70" }}>
-                  Already have an account?{" "}
-                  <span onClick={() => setScreen("login")} style={linkText}>
-                    Log in
-                  </span>
-                </p>
-              </div>
-            )}
-
-            {screen === "verify" && (
-              <div style={{ animation: "rise .3s ease", textAlign: "center" }}>
-                <div style={{ width: 64, height: 64, borderRadius: 16, background: "#0E0E10", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-                  <AppIcon name="mail" size={28} color="var(--accent)" />
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
                 </div>
                 <button type="submit" disabled={busy} style={{ ...primaryBtn, opacity: busy ? 0.7 : 1 }}>
                   {busy ? "Creating account…" : "Create account →"}

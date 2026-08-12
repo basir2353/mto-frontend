@@ -14,7 +14,8 @@ const LOCAL = {
   marketing: "http://localhost:3000",
   admin: "http://localhost:3001",
   driverWeb: "http://localhost:3002",
-  customerApp: "http://localhost:8081",
+  /** Customer booking lives on marketing web (same-site). */
+  customerApp: "http://localhost:3000",
   driverApp: "http://localhost:8082",
 } as const;
 

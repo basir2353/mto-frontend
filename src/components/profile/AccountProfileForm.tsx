@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChipToggle, FieldLabel, TextInput } from "@/components/FormControls";
+import PostalCodeInput from "@/components/maps/PostalCodeInput";
 import { PhoneInput } from "@/components/PhoneInput";
 import { UserAvatar } from "@/components/ui/AppUi";
 import { BlockLoader } from "@/components/ui/MtoLoader";
@@ -308,7 +309,7 @@ export function AccountProfileForm({
                 <TextInput label="Province" value={province} onChange={setProvince} placeholder="ON" />
               </div>
               <div className={styles.twoColumns} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-                <TextInput label="Postal code" value={postalCode} onChange={setPostalCode} placeholder="M5V 2T6" />
+                <PostalCodeInput label="Postal code" value={postalCode} onChange={setPostalCode} placeholder="M5V 2T6" height={42} />
                 <TextInput label="Country" value={country} onChange={setCountry} placeholder="Canada" />
               </div>
             </section>

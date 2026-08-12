@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TextArea, TextInput } from "@/components/FormControls";
+import PostalCodeInput from "@/components/maps/PostalCodeInput";
 import { savedAddressesApi, type SavedAddress } from "@/lib/api";
 import styles from "./SavedAddressesPanel.module.css";
 
@@ -227,7 +228,7 @@ export function SavedAddressesPanel() {
             </select>
           </label>
         </div>
-        <TextInput label="Postal code" value={form.postalCode} onChange={(v) => setField("postalCode", v)} placeholder="M5V 1A1" />
+        <PostalCodeInput label="Postal code" value={form.postalCode} onChange={(v) => setField("postalCode", v)} placeholder="M5V 1A1" height={42} />
         <TextArea
           label="Delivery instructions (optional)"
           value={form.instructions}
