@@ -7,19 +7,11 @@ export type HelpArticle = {
 };
 
 export const HELP_CATEGORIES = [
-<<<<<<< HEAD
-  { id: "1", title: "Booking a move", body: "Requests, quotes, negotiating and scheduling." },
-  { id: "2", title: "Payments & refunds", body: "Cash on site, receipts, tips and disputes." },
-  { id: "3", title: "During your move", body: "Tracking, chat, delays and completion." },
-  { id: "4", title: "Account & app", body: "Login, notifications, privacy and settings." },
-  { id: "5", title: "Safety & trust", body: "Coverage, reporting and verified movers." },
-=======
   { id: "1", title: "Booking a move", body: "Requests, quotes, negotiating, and scheduling." },
-  { id: "2", title: "Payments & refunds", body: "Charges, receipts, tips, and disputes." },
+  { id: "2", title: "Payments & refunds", body: "Cash on site, receipts, tips, and disputes." },
   { id: "3", title: "During your move", body: "Tracking, chat, delays, and completion." },
   { id: "4", title: "Account & app", body: "Login, notifications, privacy, and settings." },
   { id: "5", title: "Safety & trust", body: "Coverage, reporting, and verified movers." },
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
 ];
 
 export const HELP_ARTICLES: HelpArticle[] = [
@@ -54,7 +46,6 @@ If the mover is significantly delayed:
     category: "Payments & refunds",
     body: `After a move is completed, open the booking and choose Dispute. Pick a category, describe what happened, and upload photos if you have them.
 
-<<<<<<< HEAD
 Admins review disputes case-by-case. Because payment is cash on site, refunds are coordinated with support after both sides are reviewed.`,
   },
   {
@@ -69,13 +60,6 @@ The mover taps “I received the cash” in the driver app so the job is marked 
 Tips and disputes are handled through the booking and support if something goes wrong.`,
   },
   {
-=======
-Support reviews disputes and may offer a partial or full wallet credit. Cash-on-site jobs are handled case by case because payment already changed hands with the mover.
-
-Wallet payments and tips appear in Payments & tips with invoice downloads.`,
-  },
-  {
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
     slug: "reschedule-a-move",
     title: "Can I reschedule a move?",
     summary: "Yes, from Manage move while the booking is still active.",

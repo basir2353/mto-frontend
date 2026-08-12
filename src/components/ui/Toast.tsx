@@ -61,19 +61,12 @@ const subscribeToClientEnvironment = () => () => {};
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [confirmState, setConfirmState] = useState<(ConfirmOptions & { resolve: (v: boolean) => void }) | null>(null);
-  const [mounted, setMounted] = useState(false);
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const canUsePortal = useSyncExternalStore(
     subscribeToClientEnvironment,
     () => true,
     () => false,
   );
-
-  useEffect(() => {
-    // SSR guard: the toast/confirm portal target (document.body) only exists client-side.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
 
   const dismiss = useCallback((id: string) => {
     const timer = timers.current.get(id);
@@ -121,11 +114,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-<<<<<<< HEAD
-      {mounted &&
-=======
       {canUsePortal &&
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
         createPortal(
           <>
             <div

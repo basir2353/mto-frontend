@@ -5,11 +5,7 @@ function canUseStorage() {
   return typeof window !== "undefined";
 }
 
-<<<<<<< HEAD
-/** One-time migrate from sessionStorage (old web sessions) → localStorage. */
-=======
 /** One-time migration from legacy sessionStorage sessions to localStorage. */
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
 function migrateFromSession() {
   if (!canUseStorage()) return;
   try {

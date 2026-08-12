@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-/** Compress images before upload so mobile connections can reach the API reliably. */
-=======
 /** Compress images before upload to reduce transfer size and latency. */
->>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
 export async function compressImageFile(
   file: File,
   opts: { maxEdge?: number; quality?: number; maxBytes?: number } = {},
