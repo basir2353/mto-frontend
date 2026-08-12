@@ -10,8 +10,13 @@ export const directApiBaseUrl =
   (process.env.NODE_ENV === "production" ? PROD_API_FALLBACK : DEV_API_FALLBACK);
 
 /**
+<<<<<<< HEAD
  * Browser fetch base. On Vercel (and local Next) use the same-origin `/mto-api`
  * rewrite so uploads and requests avoid cross-origin issues.
+=======
+ * Browser fetch base. On Vercel and local Next, use the same-origin `/mto-api`
+ * rewrite to avoid cross-origin request failures.
+>>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
  */
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {

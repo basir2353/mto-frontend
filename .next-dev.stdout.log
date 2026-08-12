@@ -1,0 +1,16 @@
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.219:3000
+- Environments: .env
+✓ Ready in 362ms
+✓ Running next.config.ts took 31ms
+
+ GET /auth 200 in 514ms (next.js: 461ms, application-code: 53ms)
+ GET /auth 200 in 520ms (next.js: 446ms, application-code: 74ms)
+ GET / 200 in 487ms (next.js: 173ms, application-code: 315ms)
+ GET / 200 in 27ms (next.js: 2ms, application-code: 25ms)
+ HEAD / 200 in 28ms (next.js: 2ms, application-code: 26ms)
+ GET / 200 in 42ms (next.js: 3ms, application-code: 38ms)
+ GET /auth 200 in 14ms (next.js: 3ms, application-code: 12ms)
+ GET /customer-app 200 in 427ms (next.js: 385ms, application-code: 42ms)
+ GET /customer-app 200 in 25ms (next.js: 3ms, application-code: 22ms)

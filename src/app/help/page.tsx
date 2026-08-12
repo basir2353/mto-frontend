@@ -59,7 +59,11 @@ export default function HelpPage() {
         </div>
         <div className={styles.helpPopularTerms} style={{ marginTop: 18, font: "500 14px var(--font-hanken)", color: "rgba(255,255,255,.55)" }}>
           Popular:{" "}
+<<<<<<< HEAD
           {["refunds", "reschedule", "cash"].map((term, i) => (
+=======
+          {["refunds", "reschedule", "tracking"].map((term, i) => (
+>>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
             <span key={term}>
               {i > 0 ? " · " : null}
               <button
@@ -67,7 +71,11 @@ export default function HelpPage() {
                 onClick={() => setQuery(term)}
                 style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", font: "inherit", padding: 0 }}
               >
+<<<<<<< HEAD
                 {term === "reschedule" ? "reschedule a move" : term === "cash" ? "cash on site" : term}
+=======
+                {term === "reschedule" ? "reschedule a move" : term}
+>>>>>>> ac960226d218fcf032389f207fde44cc1d48f28f
               </button>
             </span>
           ))}

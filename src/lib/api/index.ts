@@ -7,6 +7,6 @@ export { vehiclesApi, zonesApi, discoveryApi, platformApi } from "./public";
 export { savedAddressesApi, notificationsApi, usersApi } from "./users";
 export { uploadsApi } from "./uploads";
 export { verificationApi } from "./verification";
-export type { AvailabilityResult, VerificationResult, DocumentType } from "./verification";
+export type { AvailabilityResult } from "./verification";
 export { api, apiPublic, ApiError } from "./client";
 export * from "./types";
