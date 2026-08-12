@@ -1,20 +1,7 @@
 import type { Metadata } from "next";
-import { Archivo, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
 import "@/lib/theme/tokens.css";
 import "./globals.css";
-
-const archivo = Archivo({
-  variable: "--font-archivo",
-  weight: ["500", "600", "700", "800", "900"],
-  subsets: ["latin"],
-});
-
-const hanken = Hanken_Grotesk({
-  variable: "--font-hanken",
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "MoveThisOut",
@@ -31,7 +18,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${archivo.variable} ${hanken.variable}`}>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
         <AppProviders>{children}</AppProviders>
       </body>

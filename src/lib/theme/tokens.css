@@ -1,4 +1,7 @@
 :root {
+  --font-archivo: "Archivo", system-ui, sans-serif;
+  --font-hanken: "Hanken Grotesk", system-ui, sans-serif;
+
   --mto-accent: #ffde2e;
   --mto-ink: #0e0e10;
   --mto-surface: #ffffff;
