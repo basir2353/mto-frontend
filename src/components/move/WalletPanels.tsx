@@ -746,8 +746,6 @@ export function CustomerWalletCheckout({
   invoice,
   loading,
   paying,
-  topUpBusy,
-  onTopUp,
   onPay,
   onRefresh,
   onContinue,
@@ -758,13 +756,12 @@ export function CustomerWalletCheckout({
   loading?: boolean;
   paying?: boolean;
   topUpBusy?: boolean;
-  onTopUp: (amount: number) => Promise<void>;
+  onTopUp?: (amount: number) => Promise<void>;
   onPay?: () => Promise<void>;
   onRefresh?: () => void;
   onContinue?: () => void;
   continueLabel?: string;
 }) {
-  const [topUpAmount, setTopUpAmount] = useState("50");
   const [shareNote, setShareNote] = useState<string | null>(null);
   const balance = wallet?.balance ?? invoice?.walletBalance ?? 0;
   const shortfall =
@@ -804,65 +801,7 @@ export function CustomerWalletCheckout({
             {loading && wallet == null ? "…" : money(balance)}
           </div>
           <div style={{ font: "500 13px 'Hanken Grotesk'", color: "rgba(255,255,255,.55)", marginBottom: 16 }}>
-            Add funds first, review your invoice, then pay from wallet.
-          </div>
-
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-            {["25", "50", "100", "200"].map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setTopUpAmount(preset)}
-                style={{
-                  height: 34,
-                  padding: "0 12px",
-                  borderRadius: 999,
-                  border: topUpAmount === preset ? "2px solid var(--accent)" : "1px solid rgba(255,255,255,.2)",
-                  background: topUpAmount === preset ? "rgba(255,222,46,.2)" : "rgba(255,255,255,.06)",
-                  color: "#fff",
-                  font: "700 12px 'Hanken Grotesk'",
-                  cursor: "pointer",
-                }}
-              >
-                ${preset}
-              </button>
-            ))}
-          </div>
-
-          <div className="wallet-topup-row" style={{ display: "flex", gap: 8 }}>
-            <input
-              value={topUpAmount}
-              onChange={(e) => setTopUpAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-              placeholder="Amount"
-              style={{
-                flex: 1,
-                height: 44,
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,.2)",
-                background: "rgba(255,255,255,.08)",
-                color: "#fff",
-                padding: "0 14px",
-                font: "700 15px 'Archivo'",
-                outline: "none",
-              }}
-            />
-            <button
-              type="button"
-              disabled={topUpBusy || !Number(topUpAmount)}
-              onClick={() => void onTopUp(Number(topUpAmount))}
-              style={{
-                height: 44,
-                padding: "0 18px",
-                borderRadius: 10,
-                border: "none",
-                background: "var(--accent)",
-                color: "#0E0E10",
-                font: "800 14px 'Archivo'",
-                cursor: topUpBusy ? "wait" : "pointer",
-              }}
-            >
-              {topUpBusy ? "Adding…" : "Add funds"}
-            </button>
+            Jobs are paid in cash on site. Your mover wallet is credited when cash received is confirmed at the end of the move.
           </div>
 
           {onRefresh && (

@@ -238,6 +238,7 @@ export type VehicleType = {
   maxVolumeM3?: number;
   moverCapacity?: number;
   isActive: boolean;
+  imageUrl?: string | null;
 };
 
 export type SavedAddress = {

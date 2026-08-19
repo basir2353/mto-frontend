@@ -1,19 +1,18 @@
 "use client";
 
-import type { VehicleVisualKind } from "@/lib/vehicleVisuals";
-import { kindForVehicleTypeName, vehicleTypePhotos } from "@/lib/vehicleVisuals";
+import { apiOrigin } from "@/lib/env";
+import { resolveVehicleTypePhoto } from "@/lib/vehicleVisuals";
 
 type Props = {
   name?: string;
-  kind?: VehicleVisualKind;
+  imageUrl?: string | null;
   active?: boolean;
   size?: number;
 };
 
-/** Uber-style 3D vehicle product renders. */
-export function VehicleTypeIcon({ name = "", kind, active = false, size = 72 }: Props) {
-  const resolved = kind ?? kindForVehicleTypeName(name);
-  const src = vehicleTypePhotos[resolved];
+/** Vehicle picker icon — uses admin-uploaded image when set. */
+export function VehicleTypeIcon({ name = "", imageUrl, active = false, size = 72 }: Props) {
+  const src = resolveVehicleTypePhoto({ name, imageUrl }, apiOrigin);
 
   return (
     <div

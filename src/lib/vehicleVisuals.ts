@@ -32,6 +32,20 @@ export function photoForVehicleTypeName(name: string): string {
   return vehicleTypePhotos[kindForVehicleTypeName(name)];
 }
 
+/** Prefer admin-uploaded image URL; fall back to bundled asset by name. */
+export function resolveVehicleTypePhoto(
+  vehicle: { name?: string; imageUrl?: string | null },
+  apiOriginBase?: string,
+): string {
+  const url = vehicle.imageUrl?.trim();
+  if (url) {
+    if (/^(https?|blob|data):/i.test(url)) return url;
+    const base = apiOriginBase ?? "";
+    return base ? `${base.replace(/\/$/, "")}${url.startsWith("/") ? url : `/${url}`}` : url;
+  }
+  return vehicle.name ? photoForVehicleTypeName(vehicle.name) : vehicleTypePhotos.boxTruck;
+}
+
 export function formatCapacityLabel(
   maxVolumeM3: number | string | null | undefined,
   maxWeightKg: number | string | null | undefined,
